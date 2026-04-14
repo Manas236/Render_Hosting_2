@@ -1,6 +1,6 @@
 import os
 import logging
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, jsonify
 import config
 
 def create_app():
@@ -24,16 +24,29 @@ def create_app():
     app.register_blueprint(codeview_bp)
     app.register_blueprint(editor_bp)
 
+    # ─────────────────────────────────────────────
+    # Health Check (required by Render)
+    # ─────────────────────────────────────────────
+    @app.route('/health')
+    def health():
+        return jsonify({"status": "ok"}), 200
+
     @app.route('/static_files/<path:filename>')
     def serve_static(filename):
         return send_from_directory('.', filename)
 
     return app
 
+# ─────────────────────────────────────────────
+# Module-level app instance for Gunicorn
+# Gunicorn imports this as:  main:app
+# ─────────────────────────────────────────────
+app = create_app()
+
 if __name__ == "__main__":
     # Clean up legacy files if they exist
     if os.path.exists("opt-7.html"):
         os.remove("opt-7.html")
-        
-    app = create_app()
-    app.run(debug=True, port=5000)
+
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=True, host="0.0.0.0", port=port)
