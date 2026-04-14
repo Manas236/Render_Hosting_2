@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newsletter Blueprint</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #e0e0e0;
+            margin: 0;
+            padding: 0;
+        }
+
+        @media screen and (max-width: 794px) {
+
+            body {
+                overflow-x: hidden;
+            }
+
+            table.nb-wrapper {
+                zoom: 0.75;
+                -moz-transform: scale(0.75);
+                -moz-transform-origin: top left;
+            }
+
+        }
+
+        /* ===================================================================== */
+    </style>
+</head>
+
+<body>
+
+    <!-- A4 WRAPPER — nb-wrapper is the single scaling hook for mobile -->
+    <table class="nb-wrapper" width="794" align="center" cellpadding="0" cellspacing="0" border="0"
+        style="width:794px; background:#e0e0e0;">
+        <tr>
+            <td style="padding:40px 20px;">
+
+                <!-- NEWSLETTER SHELL -->
+                <table width="754" align="center" cellpadding="0" cellspacing="0" border="0" style="width:754px; background:#ffffff; border-radius:12px; overflow:hidden;
+               box-shadow:0 4px 20px rgba(0,0,0,0.15);">
+
+                    <!-- ====== HEADER ====== -->
+                    <tr>
+                        <td
+                            style="background:#ffffff; background-image:url('https://singlecolorimage.com/get/ffffff/600x400'); background-size:cover; padding:16px 24px; border-bottom:1px solid #eeeeee;">
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td style="font-size:26px; font-weight:700; letter-spacing:3px; color:#1a1a1a;">
+                                        <img src="https://raw.githubusercontent.com/Manas236/Newsband/main/newsband-logo-0022.png"
+                                            style="width: 200px;">
+                                    </td>
+                                    <td align="right">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr>
+                                                <td
+                                                    style="background:#f5f5f5; background-image:url('https://singlecolorimage.com/get/f5f5f5/100x100'); background-size:cover; border-radius:6px; padding:6px 12px; text-align:right;">
+                                                    <!-- Date -->
+                                                    <div style="font-size:11px; font-weight:600; color:#737373;">Date:
+                                                        03/04/2026
+                                                    </div>
+                                                    <!-- RNI -->
+                                                    <div style="font-size:9px; color:#888888;">RNI: MAHENG/2007/21778
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- ====== LIGHT BODY ====== -->
+                    <tr>
+                        <td style="background:#ffffff; padding:0;">
+
+                            <!-- SPACER -->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td style="height:20px;">&nbsp;</td>
+                                </tr>
+                            </table>
+
+                            <!-- ====== SECTION 1: Yellow Block + Image ====== -->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td style="padding:0 20px 20px 20px;">
+                                        <!-- Article Link -->
+                                        <a href="https://example.com" target="_blank"
+                                            style="display:block; text-decoration:none;">
+                                            <table width="714" cellpadding="0" cellspacing="0" border="0"
+                                                style="width:714px; min-height: 200px;">
+                                                <tr valign="top">
+
+                                                    <td width="414"
+                                                        style="width:414px; background:#E9B824; padding:24px 20px; vertical-align:middle; border-radius:1px;">
+                                                        <!-- Main Headline -->
+                                                        <div style="font-size:18px; font-weight:800; color:#1a1a1a;
+                                     line-height:1.2; text-transform:uppercase;
+                                     margin-bottom:12px; font-family:'Segoe UI',sans-serif;">
+                                                            Main Headline<br>Goes Here
+                                                        </div>
+                                                        <!-- Content -->
+                                                        <p
+                                                            style="font-size:10px; line-height:1.6; color:#333333; font-family:'Segoe UI',sans-serif; margin:0 0 12px 0; text-align:justify;">
+                                                            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
+                                                            do
+                                                            eiusmod
+                                                            tempor incididunt ut labore et dolore magna aliqua
+                                                            vestibulum.
+                                                        </p>
+                                                        <b style="font-size:8px; font-weight:700; letter-spacing:1px;
+                                     text-transform:uppercase; color:#f5f5f5;
+                                     font-family:'Segoe UI',sans-serif;">
+                                                            Read more &rarr;
+                                                        </b>
+                                                    </td>
+
+                                                    <!-- Right: Image -->
+                                                    <td width="300"
+                                                        style="width:300px; vertical-align:top; background-color:#eaeaea; background-image:url('https://www.newsband.in/uploads/blog_main_img/main_headline_placeholder.jpg'); background-size:cover; background-position:center center; border-radius:1px; overflow:hidden;">
+                                                    </td>
+
+                                                </tr>
+                                            </table>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- ====== THREE SQUARE CARDS ====== -->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td style="padding:0 20px 24px 20px;">
+
+                                        <!-- Section label -->
+                                        <div style="font-size:9px; font-weight:700; letter-spacing:2px;
+                               text-transform:uppercase; color:#E9B824; margin-bottom:12px;">
+                                            Featured Stories
+                                        </div>
+
+                                        <table width="714" cellpadding="0" cellspacing="0" border="0"
+                                            style="width:714px;">
+                                            <tr valign="top">
+                                                <!-- card 2 of 5: border-radius set to 1px -->
+                                                <td width="231"
+                                                    style="width:231px; background:#f5f5f5; border-radius:1px; overflow:hidden; vertical-align:top;">
+                                                    <!-- Article Link -->
+                                                    <a href="https://example.com" target="_blank"
+                                                        style="display:block; text-decoration:none;">
+                                                        <table width="231" cellpadding="0" cellspacing="0" border="0">
+                                                            <tr>
+                                                                <td width="231" height="231" style="width:231px; height:231px; background:#eaeaea;
+                                     text-align:center; vertical-align:middle;
+                                     font-size:10px; color:#666666; font-family:'Segoe UI',sans-serif;">
+                                                                    <!-- Image -->
+                                                                    <img src="https://www.newsband.in/uploads/blog_main_img/card_1_placeholder.jpg"
+                                                                        alt="Card 1 Image" width="231" height="231"
+                                                                        style="width:231px; height:231px; object-fit:cover; display:block;">
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="padding:12px 10px 14px 10px;">
+                                                                    <!-- Topic/Category -->
+                                                                    <div style="font-size:8px; font-weight:700; letter-spacing:1px;
+                                           text-transform:uppercase; color:#E9B824; margin-bottom:6px;
+                                           font-family:'Segoe UI',sans-serif;">Topic One</div>
+                                                                    <!-- Headline -->
+                                                                    <div style="font-size:11px; font-weight:700; color:#1a1a1a;
+                                           line-height:1.35; text-transform:uppercase;
+                                           margin-bottom:8px; font-family:'Segoe UI',sans-serif;">
+                                                                        Card Title Goes Here
+                                                                    </div>
+                                                                    <!-- Content -->
+                                                                    <p style="font-size:9px; line-height:1.6; color:#555555;
+                                         margin-bottom:10px; font-family:'Segoe UI',sans-serif; text-align:justify;">
+                                                                        Lorem ipsum dolor sit amet, consectetur
+                                                                        adipiscing
+                                                                        elit incididunt.
+                                                                    </p>
+                                                                    <span style="font-size:8px; font-weight:700; letter-spacing:1px;
+                                                  text-transform:uppercase; color:#E9B824;
+                                                  font-family:'Segoe UI',sans-serif;">
+                                                                        Read more &rarr;
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </a>
+                                                </td>
+
+                                                <td width="10" style="width:10px;">&nbsp;</td>
+
+                                                <!-- card 3 of 5: border-radius set to 1px -->
+                                                <td width="231"
+                                                    style="width:231px; background:#f5f5f5; border-radius:1px; overflow:hidden; vertical-align:top;">
+                                                    <!-- Article Link -->
+                                                    <a href="https://example.com" target="_blank"
+                                                        style="display:block; text-decoration:none;">
+                                                        <table width="231" cellpadding="0" cellspacing="0" border="0">
+                                                            <tr>
+                                                                <td width="231" height="231" style="width:231px; height:231px; background:#eaeaea;
+                                     text-align:center; vertical-align:middle;
+                                     font-size:10px; color:#666666; font-family:'Segoe UI',sans-serif;">
+                                                                    <!-- Image -->
+                                                                    <img src="https://www.newsband.in/uploads/blog_main_img/card_2_placeholder.jpg"
+                                                                        alt="Card 2 Image" width="231" height="231"
+                                                                        style="width:231px; height:231px; object-fit:cover; display:block;">
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="padding:12px 10px 14px 10px;">
+                                                                    <!-- Topic/Category -->
+                                                                    <div style="font-size:8px; font-weight:700; letter-spacing:1px;
+                                           text-transform:uppercase; color:#E9B824; margin-bottom:6px;
+                                           font-family:'Segoe UI',sans-serif;">Topic Two</div>
+                                                                    <!-- Headline -->
+                                                                    <div style="font-size:11px; font-weight:700; color:#1a1a1a;
+                                           line-height:1.35; text-transform:uppercase;
+                                           margin-bottom:8px; font-family:'Segoe UI',sans-serif;">
+                                                                        Card Title Goes Here
+                                                                    </div>
+                                                                    <!-- Content -->
+                                                                    <p style="font-size:9px; line-height:1.6; color:#555555;
+                                         margin-bottom:10px; font-family:'Segoe UI',sans-serif; text-align:justify;">
+                                                                        Lorem ipsum dolor sit amet, consectetur
+                                                                        adipiscing
+                                                                        elit incididunt.
+                                                                    </p>
+                                                                    <span style="font-size:8px; font-weight:700; letter-spacing:1px;
+                                                  text-transform:uppercase; color:#E9B824;
+                                                  font-family:'Segoe UI',sans-serif;">
+                                                                        Read more &rarr;
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </a>
+                                                </td>
+
+                                                <td width="10" style="width:10px;">&nbsp;</td>
+
+                                                <!-- card 4 of 5: border-radius set to 1px -->
+                                                <td width="231"
+                                                    style="width:231px; background:#f5f5f5; border-radius:1px; overflow:hidden; vertical-align:top;">
+                                                    <!-- Article Link -->
+                                                    <a href="https://example.com" target="_blank"
+                                                        style="display:block; text-decoration:none;">
+                                                        <table width="231" cellpadding="0" cellspacing="0" border="0">
+                                                            <tr>
+                                                                <td width="231" height="231" style="width:231px; height:231px; background:#eaeaea;
+                                     text-align:center; vertical-align:middle;
+                                     font-size:10px; color:#666666; font-family:'Segoe UI',sans-serif;">
+                                                                    <!-- Image -->
+                                                                    <img src="https://www.newsband.in/uploads/blog_main_img/card_3_placeholder.jpg"
+                                                                        alt="Card 3 Image" width="231" height="231"
+                                                                        style="width:231px; height:231px; object-fit:cover; display:block;">
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="padding:12px 10px 14px 10px;">
+                                                                    <!-- Topic/Category -->
+                                                                    <div style="font-size:8px; font-weight:700; letter-spacing:1px;
+                                           text-transform:uppercase; color:#E9B824; margin-bottom:6px;
+                                           font-family:'Segoe UI',sans-serif;">Topic Three</div>
+                                                                    <!-- Headline -->
+                                                                    <div style="font-size:11px; font-weight:700; color:#1a1a1a;
+                                           line-height:1.35; text-transform:uppercase;
+                                           margin-bottom:8px; font-family:'Segoe UI',sans-serif;">
+                                                                        Card Title Goes Here
+                                                                    </div>
+                                                                    <!-- Content -->
+                                                                    <p style="font-size:9px; line-height:1.6; color:#555555;
+                                         margin-bottom:10px; font-family:'Segoe UI',sans-serif; text-align:justify;">
+                                                                        Lorem ipsum dolor sit amet, consectetur
+                                                                        adipiscing
+                                                                        elit incididunt.
+                                                                    </p>
+                                                                    <span style="font-size:8px; font-weight:700; letter-spacing:1px;
+                                                  text-transform:uppercase; color:#E9B824;
+                                                  font-family:'Segoe UI',sans-serif;">
+                                                                        Read more &rarr;
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </a>
+                                                </td>
+
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+
+                            <!-- ====== SECTION 2: Image + Yellow Card ====== -->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td style="padding:0 20px 20px 20px;">
+                                        <!-- Article Link -->
+                                        <a href="https://example.com" target="_blank"
+                                            style="display:block; text-decoration:none;">
+                                            <table width="714" cellpadding="0" cellspacing="0" border="0"
+                                                style="width:714px; min-height: 200px;">
+                                                <tr valign="top">
+
+                                                    <!-- card 5 of 5: border-radius set to 1px -->
+                                                    <!-- Image -->
+                                                    <td width="270"
+                                                        style="width:270px; vertical-align:top; background-color:#eaeaea; background-image:url('https://www.newsband.in/uploads/blog_main_img/section_1_placeholder.jpg'); background-size:cover; background-position:center center; border-radius:1px; overflow:hidden;">
+                                                    </td>
+
+                                                    <!-- Right: Yellow Content Block -->
+                                                    <td width="444"
+                                                        style="width:444px; background:#E9B824; padding:20px; vertical-align:top; border-radius:1px;">
+                                                        <!-- Headline -->
+                                                        <div style="font-size:18px; font-weight:800; color:#1a1a1a;
+                                     text-transform:uppercase; line-height:1.2;
+                                     margin-bottom:10px; font-family:'Segoe UI',sans-serif;">
+                                                            Section Title
+                                                        </div>
+                                                        <!-- Content -->
+                                                        <p style="font-size:10px; line-height:1.6; color:#333333;
+                                     font-family:'Segoe UI',sans-serif; margin:0 0 12px 0; text-align:justify;">
+                                                            Lorem ipsum dolor sit amet, consectetur
+                                                            adipiscing elit,
+                                                            sed do eiusmod tempor incididunt.
+                                                        </p>
+                                                        <b style="font-size:8px; font-weight:700; letter-spacing:1px;
+                                     text-transform:uppercase; color:#f5f5f5;
+                                     font-family:'Segoe UI',sans-serif;">
+                                                            Read more &rarr;
+                                                        </b>
+                                                    </td>
+
+                                                </tr>
+                                            </table>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                        </td>
+                    </tr>
+
+                    <!-- ===================== ROW 2: Footer ===================== -->
+                    <tr>
+                        <td colspan="2" id="footer-cell" style="border: none; padding: 0;">
+                            <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td align="center"
+                                        style="background-color: #0a0a0a; padding: 38px 24px 30px; text-align: center;">
+
+                                        <p
+                                            style="font-family: Georgia, 'Times New Roman', serif; font-size: 12px; color: #bfbfbf; font-style: italic; margin: 0 0 16px 0;">
+                                        </p>
+
+                                        <table role="presentation" border="0" cellpadding="0" cellspacing="0"
+                                            align="center" style="margin: 0 auto 16px auto;">
+                                            <tr>
+                                                <td style="padding: 0 5px; border: 0;">
+                                                    <a href="https://www.instagram.com/newsbandofficial/"
+                                                        target="_blank" style="text-decoration: none;">
+                                                        <table role="presentation" border="0" cellpadding="0"
+                                                            cellspacing="0">
+                                                            <tr>
+                                                                <td width="38" height="38"
+                                                                    style="background-color: #ffffff; border-radius: 50%; text-align: center; vertical-align: middle;">
+                                                                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/instagram.svg"
+                                                                        width="17" height="17" alt="Instagram"
+                                                                        style="display: block; margin: 0 auto;">
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </a>
+                                                </td>
+                                                <td style="padding: 0 5px; border: 0;">
+                                                    <a href="https://www.facebook.com/newsband.in" target="_blank"
+                                                        style="text-decoration: none;">
+                                                        <table role="presentation" border="0" cellpadding="0"
+                                                            cellspacing="0">
+                                                            <tr>
+                                                                <td width="38" height="38"
+                                                                    style="background-color: #ffffff; border-radius: 50%; text-align: center; vertical-align: middle;">
+                                                                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/facebook.svg"
+                                                                        width="17" height="17" alt="Facebook"
+                                                                        style="display: block; margin: 0 auto;">
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </a>
+                                                </td>
+                                                <td style="padding: 0 5px; border: 0;">
+                                                    <a href="https://x.com/NewsbandTweets" target="_blank"
+                                                        style="text-decoration: none;">
+                                                        <table role="presentation" border="0" cellpadding="0"
+                                                            cellspacing="0">
+                                                            <tr>
+                                                                <td width="38" height="38"
+                                                                    style="background-color: #ffffff; border-radius: 50%; text-align: center; vertical-align: middle;">
+                                                                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/x.svg"
+                                                                        width="17" height="17" alt="X"
+                                                                        style="display: block; margin: 0 auto;">
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </a>
+                                                </td>
+                                                <td style="padding: 0 5px; border: 0;">
+                                                    <a href="https://www.youtube.com/@Newsband-" target="_blank"
+                                                        style="text-decoration: none;">
+                                                        <table role="presentation" border="0" cellpadding="0"
+                                                            cellspacing="0">
+                                                            <tr>
+                                                                <td width="38" height="38"
+                                                                    style="background-color: #ffffff; border-radius: 50%; text-align: center; vertical-align: middle;">
+                                                                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/youtube.svg"
+                                                                        width="17" height="17" alt="YouTube"
+                                                                        style="display: block; margin: 0 auto;">
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                        <table role="presentation" border="0" cellpadding="0" cellspacing="0"
+                                            align="center" style="margin: 0 auto 14px auto;">
+                                            <tr>
+                                                <td align="center" valign="middle"
+                                                    style="vertical-align: middle; padding: 0 14px;">
+                                                    <a href="https://www.newsband.in/" target="_blank"
+                                                        style="font-family: Georgia, 'Times New Roman', serif; font-size: 11px; color: #bbbbbb; text-decoration: none;">Visit
+                                                        Website</a>
+                                                </td>
+                                                <td align="center" valign="middle"
+                                                    style="vertical-align: middle; color: #666666; font-size: 14px;">
+                                                    |</td>
+                                                <td align="center" valign="middle"
+                                                    style="vertical-align: middle; padding: 0 14px;">
+                                                    <a href="https://www.newsband.in/privacy-policy" target="_blank"
+                                                        style="font-family: Georgia, 'Times New Roman', serif; font-size: 11px; color: #bbbbbb; text-decoration: none;">Privacy
+                                                        Policy</a>
+                                                </td>
+                                                <td align="center" valign="middle"
+                                                    style="vertical-align: middle; color: #666666; font-size: 14px;">
+                                                    |</td>
+                                                <td align="center" valign="middle"
+                                                    style="vertical-align: middle; padding: 0 14px;">
+                                                    <a href="*|UNSUB|*" target="_blank"
+                                                        style="font-family: Georgia, 'Times New Roman', serif; font-size: 11px; color: #bbbbbb; text-decoration: none;">Unsubscribe</a>
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                        <div
+                                            style="font-family: 'Arial Narrow', Arial, sans-serif; font-size: 9px; letter-spacing: 2.5px; color: #999999;">
+                                            All rights reserved
+                                        </div>
+
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <!-- ===================== END FOOTER ===================== -->
+
+
+                </table>
+                <!-- END NEWSLETTER SHELL -->
+
+            </td>
+        </tr>
+    </table>
+    <!-- END A4 WRAPPER -->
+
+</body>
+
+</html>
