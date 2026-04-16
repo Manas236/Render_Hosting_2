@@ -38,89 +38,23 @@
         }
 
         /* ─────────────────────────────────────────────────────────────
-       MOBILE  ≤ 600px
-       Base table layout is the fallback — these overrides stack
-       columns and constrain the shell width for small screens.
+       MOBILE SCALING  ≤ 794px
+       Forces fixed-canvas layout to render at ~0.75 visual scale.
+       zoom handles WebKit/Blink layout reflow; transform is the
+       cross-browser rendering fallback. No stacking or reflow.
     ───────────────────────────────────────────────────────────── */
-        @media screen and (max-width:600px) {
+        @media screen and (max-width: 794px) {
 
-            /* Scale the outer A4 frame to full viewport */
-            table.outer-wrapper {
-                width: 100% !important;
+            table.nb-wrapper {
+                zoom: 0.75;
+                -webkit-transform: scale(0.75);
+                -moz-transform: scale(0.75);
+                transform: scale(0.75);
+                transform-origin: top left;
             }
 
-            table.shell {
-                width: 100% !important;
-                max-width: 100% !important;
-            }
-
-            /* Logo resizing */
-            img.logo-img {
-                width: 130px !important;
-                max-width: 130px !important;
-                height: auto !important;
-            }
-
-            /* Graceful scale - font sizes down */
-            .shell h2.hero-hl {
-                font-size: 16px !important;
-                line-height: 1.2 !important;
-                margin-bottom: 6px !important;
-            }
-
-            .shell h2 {
-                font-size: 11px !important;
-                line-height: 1.2 !important;
-                margin-bottom: 4px !important;
-            }
-
-            .shell p {
-                font-size: 9px !important;
-                line-height: 1.4 !important;
-                margin-bottom: 4px !important;
-            }
-
-            .shell p[style*="letter-spacing:4px"] {
-                font-size: 7px !important;
-                letter-spacing: 2px !important;
-                margin-bottom: 4px !important;
-            }
-
-            /* Image elements must shrink proportionally */
-            .shell img:not(.logo-img):not([src*="simple-icons"]) {
-                height: auto !important;
-            }
-
-            /* Top Story Image Cell Background */
-            .shell td.hero-img-td {
-                min-height: 120px !important;
-            }
-
-            .shell td.hero-img-td div {
-                min-height: 120px !important;
-                height: 120px !important;
-            }
-
-            /* Padding tighten */
-            td.content-pad {
-                padding: 10px !important;
-            }
-
-            td.shell-outer-pad {
-                padding: 10px 5px !important;
-            }
-
-            /* Tighten padding on all inner tds to prevent horizontal squeeze */
-            td[style*="padding:16px 18px 22px"] {
-                padding: 8px !important;
-            }
-
-            td[style*="padding:13px 15px 18px"] {
-                padding: 6px !important;
-            }
-
-            td[style*="padding:26px 28px 26px 22px"] {
-                padding: 12px 10px !important;
+            body {
+                overflow-x: hidden;
             }
         }
     </style>
@@ -131,7 +65,7 @@
     <!-- ═══════════════════════════════════════════════════════════════
      A4 OUTER WRAPPER
 ═══════════════════════════════════════════════════════════════ -->
-    <table class="outer-wrapper" width="794" align="center" cellpadding="0" cellspacing="0" border="0"
+    <table class="outer-wrapper nb-wrapper" width="794" align="center" cellpadding="0" cellspacing="0" border="0"
         style="width:794px; background:#e0e0e0;">
         <tr>
             <td class="shell-outer-pad" style="padding:40px 20px;">
@@ -158,10 +92,10 @@
                                                 <td style="background:#f5f5f5; background-image:url('https://singlecolorimage.com/get/f5f5f5/100x100');
                                  background-size:cover; border-radius:6px; padding:6px 12px; text-align:right;">
                                                     <!--DATE-->
-                                                    <div style="font-size:11px; font-weight:600; color:#737373;">Date:
+                                                    <div style="font-size:13px; font-weight:600; color:#737373;">Date:
                                                         03/04/2026</div>
                                                     <!--RNI NUMBER-->
-                                                    <div style="font-size:9px; color:#888888;">RNI: MAHENG/2007/21778
+                                                    <div style="font-size:11px; color:#888888;">RNI: MAHENG/2007/21778
                                                     </div>
                                                 </td>
                                             </tr>
@@ -178,7 +112,7 @@
                         <td style="background:#f5dfe2; padding:0;">
                             <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                                 <tr>
-                                    <td class="content-pad" style="padding:22px 18px 0;">
+                                    <td class="content-pad" style="padding:22px 20px 0;">
 
 
 
@@ -188,7 +122,7 @@
                                             <tr>
                                                 <td style="border-top:3px solid #7a1a2e; padding:5px 0 14px;
                                  font-family:'Playfair Display',Georgia,'Times New Roman',serif;
-                                 font-size:10px; font-weight:700; letter-spacing:4px;
+                                 font-size:12px; font-weight:700; letter-spacing:4px;
                                  text-transform:uppercase; color:#7a1a2e;
  line-height:18px;">
                                                     TOP STORY
@@ -199,28 +133,39 @@
                                         <!-- Featured card -->
                                         <!--Article Link-->
                                         <a href="https://www.articlelinkhere.com" target="_blank"
-                                            style="text-decoration:none; color:inherit; display:block; height:100%;">
-                                            <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                                            style="text-decoration:none; color:inherit; display:block;">
+                                            <table width="714" cellpadding="0" cellspacing="0" border="0"
                                                 role="presentation"
-                                                style="background:#ffffff; border:1px solid #d8cece; border-collapse:collapse;">
-                                                <tr>
+                                                style="width:714px; background:#ffffff; border:1px solid #d8cece; border-collapse:collapse;">
 
-                                                    <td class="col-stack" width="60%" valign="top" style="width:60%; padding:26px 28px 26px 22px; border-right:1px solid #e0d6d6;
-                                 vertical-align:top;">
+                                                <!-- Image row -->
+                                                <tr>
+                                                    <td style="padding:0; font-size:0; line-height:0;">
+                                                        <!-- Replace Image URL -->
+                                                        <img src="https://picsum.photos/seed/featured/1428/560"
+                                                            width="714" height="280" alt="Featured article image"
+                                                            style="display:block; width:714px; height:280px; object-fit:cover; border:0; outline:none;">
+                                                    </td>
+                                                </tr>
+
+                                                <!-- Text row -->
+                                                <tr>
+                                                    <td valign="top"
+                                                        style="padding:20px 22px 22px; vertical-align:top;">
 
                                                         <!-- Card tag: Category -->
                                                         <p style="margin:0 0 8px 0;
                                   font-family:'Playfair Display',Georgia,'Times New Roman',serif;
-                                  font-size:10px; font-weight:700; letter-spacing:4px;
+                                  font-size:12px; font-weight:700; letter-spacing:4px;
                                   text-transform:uppercase; color:#7a1a2e;
- line-height:16px;">
+                                  line-height:16px;">
                                                             NATIONAL
                                                         </p>
 
                                                         <!-- Headline: Title -->
                                                         <h2 class="hero-hl" style="margin:0 0 12px 0;
                                    font-family:'Playfair Display',Georgia,'Times New Roman',serif;
-                                   font-size:27px; font-weight:700; color:#111111;
+                                   font-size:29px; font-weight:700; color:#111111;
                                    line-height:1.22;">
                                                             Replace This Headline With Your Main Featured Article Title
                                                         </h2>
@@ -228,35 +173,23 @@
                                                         <!-- Article Summary (2–3 sentences) -->
                                                         <p style="margin:0 0 14px 0;
                                   font-family:'Source Serif 4',Georgia,'Times New Roman',serif;
-                                  font-size:14px; line-height:1.68; color:#333333; text-align:justify;
-">
+                                  font-size:16px; line-height:1.68; color:#333333; text-align:justify;">
                                                             Replace this with a two-to-three sentence summary of your
                                                             lead story. The text should pull the reader in and provide
                                                             just enough context to make them want to read more.
                                                         </p>
+
                                                         <!-- Read More -->
                                                         <p style="margin:8px 0 0 0; text-align:right;
                                   font-family:'Source Serif 4',Georgia,'Times New Roman',serif;
-                                  font-size:13px; font-weight:600; letter-spacing:0.5px;">
+                                  font-size:15px; font-weight:600; letter-spacing:0.5px;">
                                                             <span style="color:#7a1a2e; text-decoration:none;">Read More
                                                                 &#8594;</span>
                                                         </p>
 
                                                     </td>
-                                                    <!-- END TEXT COLUMN -->
-
-                                                    <!-- IMAGE COLUMN  -->
-                                                    <td class="col-stack hero-img-td" width="40%" valign="top"
-                                                        background="https://picsum.photos/seed/featured/640/420" style="width:40%; min-height:280px;
-                                 background-image:url('https://picsum.photos/seed/featured/640/420');
-                                 background-size:cover; background-position:center center;
-                                 vertical-align:top;">
-                                                        <div style="min-height:280px; height:280px; font-size:0;
-                                    line-height:0;">&nbsp;</div>
-                                                    </td>
-                                                    <!-- END IMAGE COLUMN -->
-
                                                 </tr>
+
                                             </table>
                                         </a>
                                         <!-- END Featured card -->
@@ -275,7 +208,7 @@
                                             <tr>
                                                 <td style="border-top:3px solid #7a1a2e; padding:5px 0 14px;
                                  font-family:'Playfair Display',Georgia,'Times New Roman',serif;
-                                 font-size:10px; font-weight:700; letter-spacing:4px;
+                                 font-size:12px; font-weight:700; letter-spacing:4px;
                                  text-transform:uppercase; color:#7a1a2e;
  line-height:18px;">
                                                     IN FOCUS
@@ -283,26 +216,26 @@
                                             </tr>
                                         </table>
 
-                                        <table width="100%" cellpadding="0" cellspacing="0" border="0"
-                                            role="presentation">
+                                        <table width="714" cellpadding="0" cellspacing="0" border="0"
+                                            role="presentation" style="width:714px;">
                                             <tr>
 
                                                 <!-- CARD 2A — Left -->
-                                                <td class="col-stack" width="49%" height="100%" valign="top"
-                                                    style="width:49%; vertical-align:top;">
+                                                <td width="352" valign="top" style="width:352px; vertical-align:top;">
                                                     <!--Article Link-->
                                                     <a href="https://www.articlelinkhere.com" target="_blank"
-                                                        style="text-decoration:none; color:inherit; display:block; height:100%;">
-                                                        <table width="100%" height="480" cellpadding="0" cellspacing="0"
+                                                        style="text-decoration:none; color:inherit; display:block;">
+                                                        <table width="352" height="460" cellpadding="0" cellspacing="0"
                                                             border="0" role="presentation"
-                                                            style="background:#ffffff; border:1px solid #d8cece; border-collapse:collapse; height:480px;">
+                                                            style="width:352px; height:460px; background:#ffffff; border:1px solid #d8cece; border-collapse:collapse;">
                                                             <!-- Image -->
                                                             <tr>
-                                                                <td style="padding:0; font-size:0; line-height:0;">
+                                                                <td height="200"
+                                                                    style="padding:0; font-size:0; line-height:0; height:200px;">
                                                                     <!-- Replace Image URL -->
-                                                                    <img src="https://picsum.photos/seed/card2a/560/320"
-                                                                        width="100%" height="185" alt="Article image"
-                                                                        style="width:100%; height:185px; display:block;
+                                                                    <img src="https://picsum.photos/seed/card2a/704/370"
+                                                                        width="100%" height="200" alt="Article image"
+                                                                        style="width:100%; height:200px; display:block;
                                           object-fit:cover; border:0; outline:none;">
                                                                 </td>
                                                             </tr>
@@ -314,22 +247,22 @@
                                                                         <!-- Category -->
                                                                         <p style="margin:0 0 8px 0;
                                         font-family:'Playfair Display',Georgia,'Times New Roman',serif;
-                                        font-size:10px; font-weight:700; letter-spacing:4px;
+                                        font-size:12px; font-weight:700; letter-spacing:4px;
                                         text-transform:uppercase; color:#7a1a2e;
- line-height:16px;">
+                                        line-height:16px;">
                                                                             POLITICS
                                                                         </p>
                                                                         <!-- Article Headline -->
                                                                         <h2 style="margin:0 0 10px 0;
                                          font-family:'Playfair Display',Georgia,'Times New Roman',serif;
-                                         font-size:18px; font-weight:700; color:#111111;
+                                         font-size:20px; font-weight:700; color:#111111;
                                          line-height:1.22;">
                                                                             Replace With Your Second Article Headline
                                                                             Here
                                                                         </h2>
                                                                         <!-- Article Summary -->
                                                                         <p
-                                                                            style="margin:0; font-family:'Source Serif 4',Georgia,'Times New Roman',serif; font-size:14px; line-height:1.68; color:#333333; text-align:justify;">
+                                                                            style="margin:0; font-family:'Source Serif 4',Georgia,'Times New Roman',serif; font-size:16px; line-height:1.68; color:#333333; text-align:justify;">
                                                                             Replace with a two-sentence summary. State
                                                                             the core news angle and one supporting
                                                                             detail.
@@ -345,7 +278,7 @@
                                                             <tr>
                                                                 <td align="right" style="padding:8px 18px 22px;">
                                                                     <p
-                                                                        style="margin:0; text-align:right; font-family:'Source Serif 4',Georgia,'Times New Roman',serif; font-size:13px; font-weight:600; letter-spacing:0.5px;">
+                                                                        style="margin:0; text-align:right; font-family:'Source Serif 4',Georgia,'Times New Roman',serif; font-size:15px; font-weight:600; letter-spacing:0.5px;">
                                                                         <span
                                                                             style="color:#7a1a2e; text-decoration:none;">Read
                                                                             More &#8594;</span>
@@ -357,24 +290,25 @@
                                                 </td>
                                                 <!-- END CARD 2A -->
 
-                                                <td class="gap-col" width="2%" style="width:2%;">&nbsp;</td>
+                                                <td class="gap-col" width="10"
+                                                    style="width:10px; font-size:0; line-height:0;">&nbsp;</td>
 
                                                 <!-- CARD 2B — Right -->
-                                                <td class="col-stack" width="49%" height="100%" valign="top"
-                                                    style="width:49%; vertical-align:top;">
+                                                <td width="352" valign="top" style="width:352px; vertical-align:top;">
                                                     <!--Article Link-->
                                                     <a href="https://www.articlelinkhere.com" target="_blank"
-                                                        style="text-decoration:none; color:inherit; display:block; height:100%;">
-                                                        <table width="100%" height="480" cellpadding="0" cellspacing="0"
+                                                        style="text-decoration:none; color:inherit; display:block;">
+                                                        <table width="352" height="460" cellpadding="0" cellspacing="0"
                                                             border="0" role="presentation"
-                                                            style="background:#ffffff; border:1px solid #d8cece; border-collapse:collapse; height:480px;">
+                                                            style="width:352px; height:460px; background:#ffffff; border:1px solid #d8cece; border-collapse:collapse;">
                                                             <!-- Image -->
                                                             <tr>
-                                                                <td style="padding:0; font-size:0; line-height:0;">
-                                                                    <!-- Image URL -->
-                                                                    <img src="https://picsum.photos/seed/card2b/560/320"
-                                                                        width="100%" height="185" alt="Article image"
-                                                                        style="width:100%; height:185px; display:block;
+                                                                <td height="200"
+                                                                    style="padding:0; font-size:0; line-height:0; height:200px;">
+                                                                    <!-- Replace Image URL -->
+                                                                    <img src="https://picsum.photos/seed/card2b/704/370"
+                                                                        width="100%" height="200" alt="Article image"
+                                                                        style="width:100%; height:200px; display:block;
                                           object-fit:cover; border:0; outline:none;">
                                                                 </td>
                                                             </tr>
@@ -386,22 +320,22 @@
                                                                         <!-- Category -->
                                                                         <p style="margin:0 0 8px 0;
                                         font-family:'Playfair Display',Georgia,'Times New Roman',serif;
-                                        font-size:10px; font-weight:700; letter-spacing:4px;
+                                        font-size:12px; font-weight:700; letter-spacing:4px;
                                         text-transform:uppercase; color:#7a1a2e;
- line-height:16px;">
+                                        line-height:16px;">
                                                                             ECONOMY
                                                                         </p>
                                                                         <!-- Article Headline -->
                                                                         <h2 style="margin:0 0 10px 0;
                                          font-family:'Playfair Display',Georgia,'Times New Roman',serif;
-                                         font-size:18px; font-weight:700; color:#111111;
+                                         font-size:20px; font-weight:700; color:#111111;
                                          line-height:1.22;">
                                                                             Replace With Your Third Article Headline
                                                                             Here
                                                                         </h2>
                                                                         <!-- Article Summary -->
                                                                         <p
-                                                                            style="margin:0; font-family:'Source Serif 4',Georgia,'Times New Roman',serif; font-size:14px; line-height:1.68; color:#333333; text-align:justify;">
+                                                                            style="margin:0; font-family:'Source Serif 4',Georgia,'Times New Roman',serif; font-size:16px; line-height:1.68; color:#333333; text-align:justify;">
                                                                             Replace with a two-sentence summary. Keep
                                                                             tone and length consistent with the adjacent
                                                                             card.
@@ -417,7 +351,7 @@
                                                             <tr>
                                                                 <td align="right" style="padding:8px 18px 22px;">
                                                                     <p
-                                                                        style="margin:0; text-align:right; font-family:'Source Serif 4',Georgia,'Times New Roman',serif; font-size:13px; font-weight:600; letter-spacing:0.5px;">
+                                                                        style="margin:0; text-align:right; font-family:'Source Serif 4',Georgia,'Times New Roman',serif; font-size:15px; font-weight:600; letter-spacing:0.5px;">
                                                                         <span
                                                                             style="color:#7a1a2e; text-decoration:none;">Read
                                                                             More &#8594;</span>
@@ -448,7 +382,7 @@
                                             <tr>
                                                 <td style="border-top:3px solid #7a1a2e; padding:5px 0 14px;
                                  font-family:'Playfair Display',Georgia,'Times New Roman',serif;
-                                 font-size:10px; font-weight:700; letter-spacing:4px;
+                                 font-size:12px; font-weight:700; letter-spacing:4px;
                                  text-transform:uppercase; color:#7a1a2e;
  line-height:18px;">
                                                     MORE STORIES
@@ -457,26 +391,27 @@
                                         </table>
 
                                         <!-- Three-card row table -->
-                                        <table width="100%" cellpadding="0" cellspacing="0" border="0"
-                                            role="presentation">
+                                        <table width="714" cellpadding="0" cellspacing="0" border="0"
+                                            role="presentation" style="width:714px;">
                                             <tr>
 
                                                 <!-- CARD 3A — Left -->
-                                                <td class="col-stack" width="230" valign="top"
-                                                    style="width:230px; vertical-align:top;">
+                                                <td class="col-stack" width="231" valign="top"
+                                                    style="width:231px; vertical-align:top;">
                                                     <!--Article Link-->
                                                     <a href="https://www.articlelinkhere.com" target="_blank"
                                                         style="text-decoration:none; color:inherit; display:block; height:100%;">
-                                                        <table width="230" height="420" cellpadding="0" cellspacing="0"
+                                                        <table width="231" height="420" cellpadding="0" cellspacing="0"
                                                             border="0" role="presentation"
-                                                            style="width:230px; background:#ffffff; border:1px solid #d8cece; border-collapse:collapse; height:420px;">
+                                                            style="width:231px; background:#ffffff; border:1px solid #d8cece; border-collapse:collapse; height:420px;">
                                                             <!-- Image -->
                                                             <tr>
-                                                                <td style="padding:0; font-size:0; line-height:0;">
+                                                                <td height="180"
+                                                                    style="padding:0; font-size:0; line-height:0; height:180px;">
                                                                     <!-- Image URL -->
                                                                     <img src="https://picsum.photos/seed/card3a/420/260"
-                                                                        width="100%" height="140" alt="Article image"
-                                                                        style="width:100%; height:140px; display:block;
+                                                                        width="100%" height="180" alt="Article image"
+                                                                        style="width:100%; height:180px; display:block;
                                           object-fit:cover; border:0; outline:none;">
                                                                 </td>
                                                             </tr>
@@ -488,7 +423,7 @@
                                                                         <!-- Category -->
                                                                         <p style="margin:0 0 7px 0;
                                         font-family:'Playfair Display',Georgia,'Times New Roman',serif;
-                                        font-size:10px; font-weight:700; letter-spacing:4px;
+                                        font-size:12px; font-weight:700; letter-spacing:4px;
                                         text-transform:uppercase; color:#7a1a2e;
  line-height:16px;">
                                                                             CITY
@@ -496,13 +431,13 @@
                                                                         <!-- Article Headline -->
                                                                         <h2 style="margin:0 0 8px 0;
                                          font-family:'Playfair Display',Georgia,'Times New Roman',serif;
-                                         font-size:16px; font-weight:700; color:#111111;
+                                         font-size:18px; font-weight:700; color:#111111;
                                          line-height:1.22;">
                                                                             Replace With Fourth Article Headline
                                                                         </h2>
                                                                         <!-- Article Summary -->
                                                                         <p
-                                                                            style="margin:0; font-family:'Source Serif 4',Georgia,'Times New Roman',serif; font-size:13px; line-height:1.65; color:#333333; text-align:justify;">
+                                                                            style="margin:0; font-family:'Source Serif 4',Georgia,'Times New Roman',serif; font-size:15px; line-height:1.65; color:#333333; text-align:justify;">
                                                                             Replace with a brief two-sentence summary
                                                                             for this compact card.
                                                                         </p>
@@ -517,7 +452,7 @@
                                                             <tr>
                                                                 <td align="right" style="padding:8px 15px 18px;">
                                                                     <p
-                                                                        style="margin:0; text-align:right; font-family:'Source Serif 4',Georgia,'Times New Roman',serif; font-size:13px; font-weight:600; letter-spacing:0.5px;">
+                                                                        style="margin:0; text-align:right; font-family:'Source Serif 4',Georgia,'Times New Roman',serif; font-size:15px; font-weight:600; letter-spacing:0.5px;">
                                                                         <span
                                                                             style="color:#7a1a2e; text-decoration:none;">Read
                                                                             More &#8594;</span>
@@ -529,25 +464,26 @@
                                                 </td>
                                                 <!-- END CARD 3A -->
 
-                                                <td class="gap-col" width="14"
-                                                    style="width:14px; font-size:0; line-height:0;">&nbsp;</td>
+                                                <td class="gap-col" width="10"
+                                                    style="width:10px; font-size:0; line-height:0;">&nbsp;</td>
 
                                                 <!-- CARD 3B — Centre -->
-                                                <td class="col-stack" width="230" valign="top"
-                                                    style="width:230px; vertical-align:top;">
+                                                <td class="col-stack" width="231" valign="top"
+                                                    style="width:231px; vertical-align:top;">
                                                     <!--Article Link-->
                                                     <a href="https://www.articlelinkhere.com" target="_blank"
                                                         style="text-decoration:none; color:inherit; display:block; height:100%;">
-                                                        <table width="230" height="420" cellpadding="0" cellspacing="0"
+                                                        <table width="231" height="420" cellpadding="0" cellspacing="0"
                                                             border="0" role="presentation"
-                                                            style="width:230px; background:#ffffff; border:1px solid #d8cece; border-collapse:collapse; height:420px;">
+                                                            style="width:231px; background:#ffffff; border:1px solid #d8cece; border-collapse:collapse; height:420px;">
                                                             <!-- Image -->
                                                             <tr>
-                                                                <td style="padding:0; font-size:0; line-height:0;">
+                                                                <td height="180"
+                                                                    style="padding:0; font-size:0; line-height:0; height:180px;">
                                                                     <!-- Image URL -->
                                                                     <img src="https://picsum.photos/seed/card3b/420/260"
-                                                                        width="100%" height="140" alt="Article image"
-                                                                        style="width:100%; height:140px; display:block;
+                                                                        width="100%" height="180" alt="Article image"
+                                                                        style="width:100%; height:180px; display:block;
                                           object-fit:cover; border:0; outline:none;">
                                                                 </td>
                                                             </tr>
@@ -559,7 +495,7 @@
                                                                         <!-- Category -->
                                                                         <p style="margin:0 0 7px 0;
                                         font-family:'Playfair Display',Georgia,'Times New Roman',serif;
-                                        font-size:10px; font-weight:700; letter-spacing:4px;
+                                        font-size:12px; font-weight:700; letter-spacing:4px;
                                         text-transform:uppercase; color:#7a1a2e;
  line-height:16px;">
                                                                             SPORTS
@@ -567,13 +503,13 @@
                                                                         <!-- Article Headline -->
                                                                         <h2 style="margin:0 0 8px 0;
                                          font-family:'Playfair Display',Georgia,'Times New Roman',serif;
-                                         font-size:16px; font-weight:700; color:#111111;
+                                         font-size:18px; font-weight:700; color:#111111;
                                          line-height:1.22;">
                                                                             Replace With Fifth Article Headline
                                                                         </h2>
                                                                         <!-- Article Summary -->
                                                                         <p
-                                                                            style="margin:0; font-family:'Source Serif 4',Georgia,'Times New Roman',serif; font-size:13px; line-height:1.65; color:#333333; text-align:justify;">
+                                                                            style="margin:0; font-family:'Source Serif 4',Georgia,'Times New Roman',serif; font-size:15px; line-height:1.65; color:#333333; text-align:justify;">
                                                                             Replace with a brief two-sentence summary
                                                                             for this compact card.
                                                                         </p>
@@ -588,7 +524,7 @@
                                                             <tr>
                                                                 <td align="right" style="padding:8px 15px 18px;">
                                                                     <p
-                                                                        style="margin:0; text-align:right; font-family:'Source Serif 4',Georgia,'Times New Roman',serif; font-size:13px; font-weight:600; letter-spacing:0.5px;">
+                                                                        style="margin:0; text-align:right; font-family:'Source Serif 4',Georgia,'Times New Roman',serif; font-size:15px; font-weight:600; letter-spacing:0.5px;">
                                                                         <span
                                                                             style="color:#7a1a2e; text-decoration:none;">Read
                                                                             More &#8594;</span>
@@ -600,25 +536,26 @@
                                                 </td>
                                                 <!-- END CARD 3B -->
 
-                                                <td class="gap-col" width="14"
-                                                    style="width:14px; font-size:0; line-height:0;">&nbsp;</td>
+                                                <td class="gap-col" width="10"
+                                                    style="width:10px; font-size:0; line-height:0;">&nbsp;</td>
 
                                                 <!-- CARD 3C — Right -->
-                                                <td class="col-stack" width="230" valign="top"
-                                                    style="width:230px; vertical-align:top;">
+                                                <td class="col-stack" width="231" valign="top"
+                                                    style="width:231px; vertical-align:top;">
                                                     <!--Article Link-->
                                                     <a href="https://www.articlelinkhere.com" target="_blank"
                                                         style="text-decoration:none; color:inherit; display:block; height:100%;">
-                                                        <table width="230" height="420" cellpadding="0" cellspacing="0"
+                                                        <table width="231" height="420" cellpadding="0" cellspacing="0"
                                                             border="0" role="presentation"
-                                                            style="width:230px; background:#ffffff; border:1px solid #d8cece; border-collapse:collapse; height:420px;">
+                                                            style="width:231px; background:#ffffff; border:1px solid #d8cece; border-collapse:collapse; height:420px;">
                                                             <!-- Image -->
                                                             <tr>
-                                                                <td style="padding:0; font-size:0; line-height:0;">
+                                                                <td height="180"
+                                                                    style="padding:0; font-size:0; line-height:0; height:180px;">
                                                                     <!-- Image URL -->
                                                                     <img src="https://picsum.photos/seed/card3c/420/260"
-                                                                        width="100%" height="140" alt="Article image"
-                                                                        style="width:100%; height:140px; display:block;
+                                                                        width="100%" height="180" alt="Article image"
+                                                                        style="width:100%; height:180px; display:block;
                                           object-fit:cover; border:0; outline:none;">
                                                                 </td>
                                                             </tr>
@@ -630,7 +567,7 @@
                                                                         <!-- Category -->
                                                                         <p style="margin:0 0 7px 0;
                                         font-family:'Playfair Display',Georgia,'Times New Roman',serif;
-                                        font-size:10px; font-weight:700; letter-spacing:4px;
+                                        font-size:12px; font-weight:700; letter-spacing:4px;
                                         text-transform:uppercase; color:#7a1a2e;
  line-height:16px;">
                                                                             WORLD
@@ -638,13 +575,13 @@
                                                                         <!-- Article Headline -->
                                                                         <h2 style="margin:0 0 8px 0;
                                          font-family:'Playfair Display',Georgia,'Times New Roman',serif;
-                                         font-size:16px; font-weight:700; color:#111111;
+                                         font-size:18px; font-weight:700; color:#111111;
                                          line-height:1.22;">
                                                                             Replace With Sixth Article Headline
                                                                         </h2>
                                                                         <!-- Article Summary -->
                                                                         <p
-                                                                            style="margin:0; font-family:'Source Serif 4',Georgia,'Times New Roman',serif; font-size:13px; line-height:1.65; color:#333333; text-align:justify;">
+                                                                            style="margin:0; font-family:'Source Serif 4',Georgia,'Times New Roman',serif; font-size:15px; line-height:1.65; color:#333333; text-align:justify;">
                                                                             Replace with a brief two-sentence summary
                                                                             for this compact card.
                                                                         </p>
@@ -659,7 +596,7 @@
                                                             <tr>
                                                                 <td align="right" style="padding:8px 15px 18px;">
                                                                     <p
-                                                                        style="margin:0; text-align:right; font-family:'Source Serif 4',Georgia,'Times New Roman',serif; font-size:13px; font-weight:600; letter-spacing:0.5px;">
+                                                                        style="margin:0; text-align:right; font-family:'Source Serif 4',Georgia,'Times New Roman',serif; font-size:15px; font-weight:600; letter-spacing:0.5px;">
                                                                         <span
                                                                             style="color:#7a1a2e; text-decoration:none;">Read
                                                                             More &#8594;</span>
@@ -696,7 +633,7 @@
                                     <td align="center"
                                         style="background-color:#0a0a0a; padding:38px 24px 30px; text-align:center;">
 
-                                        <p style="font-family:Georgia,'Times New Roman',serif; font-size:12px;
+                                        <p style="font-family:Georgia,'Times New Roman',serif; font-size:14px;
                              color:#bfbfbf; font-style:italic; margin:0 0 16px 0;"></p>
 
                                         <!-- Social icons -->
@@ -776,7 +713,7 @@
                                             <tr>
                                                 <td align="center" valign="middle"
                                                     style="vertical-align:middle; padding:0 14px;">
-                                                    <a href="https://www.newsband.in/" target="_blank" style="font-family:Georgia,'Times New Roman',serif; font-size:11px;
+                                                    <a href="https://www.newsband.in/" target="_blank" style="font-family:Georgia,'Times New Roman',serif; font-size:13px;
                                   color:#bbbbbb; text-decoration:none;">Website</a>
                                                 </td>
                                                 <td align="center" valign="middle"
@@ -784,20 +721,20 @@
                                                 <td align="center" valign="middle"
                                                     style="vertical-align:middle; padding:0 14px;">
                                                     <a href="https://www.newsband.in/privacy-policy" target="_blank"
-                                                        style="font-family:Georgia,'Times New Roman',serif; font-size:11px;
+                                                        style="font-family:Georgia,'Times New Roman',serif; font-size:13px;
                                   color:#bbbbbb; text-decoration:none;">Privacy Policy</a>
                                                 </td>
                                                 <td align="center" valign="middle"
                                                     style="vertical-align:middle; color:#666666; font-size:14px;">|</td>
                                                 <td align="center" valign="middle"
                                                     style="vertical-align:middle; padding:0 14px;">
-                                                    <a href="*|UNSUB|*" target="_blank" style="font-family:Georgia,'Times New Roman',serif; font-size:11px;
+                                                    <a href="*|UNSUB|*" target="_blank" style="font-family:Georgia,'Times New Roman',serif; font-size:13px;
                                   color:#bbbbbb; text-decoration:none;">Unsubscribe</a>
                                                 </td>
                                             </tr>
                                         </table>
 
-                                        <div style="font-family:'Arial Narrow',Arial,sans-serif; font-size:9px;
+                                        <div style="font-family:'Arial Narrow',Arial,sans-serif; font-size:11px;
                                letter-spacing:2.5px; color:#999999;">
                                             All rights reserved
                                         </div>
