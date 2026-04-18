@@ -73,6 +73,18 @@ DASHBOARD_HTML = """
           <div class="dash-btn-title">Code Viewer</div>
           <div class="dash-btn-desc">Upload and copy raw HTML code.</div>
         </a>
+        <a href="{{ url_for('extractor_bp.index') }}" target="_blank" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+          <span class="dash-btn-icon">📰</span>
+          <div class="dash-btn-title">News Extractor Analyzer</div>
+          <div class="dash-btn-desc">Extract and analyze news content.</div>
+        </a>
+        <a href="{{ url_for('day8_editor.editor') }}" class="dash-btn">
+          <div class="dash-btn-photo-wrap">
+            <img src="/static_files/Day8.png" class="dash-btn-photo" alt="Day8 Editor" />
+          </div>
+          <div class="dash-btn-title">Day8 Editor</div>
+          <div class="dash-btn-desc">Visual editor specifically for Day8.</div>
+        </a>
       </div>
     </div>
     <div class="footer-note">NEWSBAND JOURNALISM PLATFORM &nbsp;·&nbsp; CONFIDENTIAL</div>
