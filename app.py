@@ -18,11 +18,21 @@ def create_app():
     from dashboard import dashboard_bp
     from codeview import codeview_bp
     from editor import editor_bp
+    from extractor import extractor_bp
+    import importlib.util
+    import sys
+    spec = importlib.util.spec_from_file_location("day8_editor", "editor(for Day8.html).py")
+    day8_module = importlib.util.module_from_spec(spec)
+    sys.modules["day8_editor"] = day8_module
+    spec.loader.exec_module(day8_module)
+    day8_editor_bp = day8_module.day8_editor_bp
 
     app.register_blueprint(login_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(codeview_bp)
     app.register_blueprint(editor_bp)
+    app.register_blueprint(extractor_bp)
+    app.register_blueprint(day8_editor_bp, url_prefix='/day8-editor')
 
     # ─────────────────────────────────────────────
     # Health Check (required by Render)

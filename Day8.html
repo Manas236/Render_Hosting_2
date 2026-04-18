@@ -1,0 +1,539 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="x-apple-disable-message-reformatting">
+    <title>Newsband Newsletter</title>
+
+    <!--[if mso]>
+    <xml>
+        <o:OfficeDocumentSettings>
+            <o:PixelsPerInch>96</o:PixelsPerInch>
+            <o:AllowPNG/>
+        </o:OfficeDocumentSettings>
+    </xml>
+    <![endif]-->
+
+    <style type="text/css">
+        /* Reset */
+        body,
+        table,
+        td,
+        a {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+
+        table,
+        td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+
+        img {
+            -ms-interpolation-mode: bicubic;
+            border: 0;
+            outline: none;
+            text-decoration: none;
+            display: block;
+        }
+
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            background: #e0e0e0;
+        }
+
+        /* ========== MOBILE ========== */
+        @media only screen and (max-width: 600px) {
+
+            /* Shrink outer wrapper */
+            .wrapper-a4 {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            .shell {
+                width: 100% !important;
+                max-width: 100% !important;
+                border-radius: 0 !important;
+            }
+
+            .outer-pad {
+                padding: 16px 10px !important;
+            }
+
+            /* Force card tables to full width */
+            .card-table {
+                width: 100% !important;
+            }
+
+            /* Make the two <td>s in each card STACK.
+               This is the critical fix: display:block on td forces stacking in
+               Gmail/Apple Mail/most modern clients. */
+            .stack {
+                display: block !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            /* Image cell: becomes a proper responsive image */
+            .card-img {
+                width: 100% !important;
+                height: 200px !important;
+            }
+
+            .card-img img {
+                width: 100% !important;
+                height: 200px !important;
+                object-fit: cover !important;
+                display: block !important;
+            }
+
+            /* Content cell: full width padding */
+            .card-content {
+                width: 100% !important;
+                padding: 16px 18px !important;
+            }
+
+            /* Headings scale down slightly */
+            .card-headline {
+                font-size: 18px !important;
+                line-height: 1.3 !important;
+            }
+
+            /* Header bits */
+            .header-logo img {
+                width: 150px !important;
+            }
+
+            .header-date {
+                font-size: 10px !important;
+            }
+
+            /* Section label row */
+            .section-pad {
+                padding: 20px 18px 6px 18px !important;
+            }
+
+            .card-pad {
+                padding: 10px 18px 0 18px !important;
+            }
+
+            .card-pad-last {
+                padding: 10px 18px 20px 18px !important;
+            }
+        }
+    </style>
+</head>
+
+<body bgcolor="#e0e0e0" style="margin:0; padding:0; background-color:#e0e0e0;">
+
+    <!-- TINT WRAPPER -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#e0e0e0"
+        style="background-color:#e0e0e0;">
+        <tr>
+            <td align="center" class="outer-pad" style="padding:40px 20px;">
+
+                <!-- A4 WRAPPER -->
+                <table role="presentation" class="wrapper-a4" width="794" cellpadding="0" cellspacing="0" border="0"
+                    style="width:794px; max-width:794px;">
+                    <tr>
+                        <td style="padding:0;">
+
+                            <!-- NEWSLETTER SHELL -->
+                            <table role="presentation" class="shell" width="100%" cellpadding="0" cellspacing="0"
+                                border="0" style="background:#ffffff; border-radius:12px; overflow:hidden;">
+
+                                <!-- ====== HEADER ====== -->
+                                <tr>
+                                    <td style="background:#ffffff; padding:16px 24px; border-bottom:1px solid #eeeeee;">
+                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                                            border="0">
+                                            <tr>
+                                                <td class="header-logo" style="vertical-align:middle;">
+                                                    <a href="https://www.newsband.in/" target="_blank"
+                                                        style="text-decoration:none; border:0;">
+                                                        <img src="https://raw.githubusercontent.com/Manas236/Newsband/main/newsband-logo-0022.png"
+                                                            width="200" alt="Newsband"
+                                                            style="width:200px; height:auto; display:block; border:0;">
+                                                    </a>
+                                                </td>
+                                                <td align="right" style="vertical-align:middle;">
+                                                    <table role="presentation" cellpadding="0" cellspacing="0"
+                                                        border="0">
+                                                        <tr>
+                                                            <td class="header-date"
+                                                                style="background:#f5f5f5; border-radius:6px; padding:6px 12px; text-align:right; font-family:'Segoe UI', Arial, sans-serif;">
+                                                                <div
+                                                                    style="font-size:11px; font-weight:600; color:#737373;">
+                                                                    Date: 03/04/2026</div>
+                                                                <div style="font-size:9px; color:#888888;">RNI:
+                                                                    MAHENG/2007/21778</div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+
+                                <!-- ====== SECTION HEADER ====== -->
+                                <tr>
+                                    <td class="section-pad" style="padding: 28px 24px 6px 24px; background:#ffffff;">
+                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                                            border="0">
+                                            <tr>
+                                                <td width="50%"
+                                                    style="border-top: 3px solid #c8781a; padding-top: 10px;">
+                                                    <span
+                                                        style="font-family: Georgia, 'Times New Roman', serif; font-size: 10px; font-weight: 700; letter-spacing: 4px; color: #c8781a; text-transform: uppercase;">Today's
+                                                        Edition</span>
+                                                </td>
+                                                <td width="50%" align="right"
+                                                    style="border-top: 3px solid #e8e8e8; padding-top: 10px;">
+                                                    <span
+                                                        style="font-family: Georgia, 'Times New Roman', serif; font-size: 10px; color: #aaaaaa; letter-spacing: 1px;">Navi
+                                                        Mumbai &amp; Thane</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+
+                                <!-- ====== CARD 1: Image Left — accent #c8781a ====== -->
+                                <tr>
+                                    <td class="card-pad" style="padding: 16px 24px 0 24px; background:#ffffff;">
+                                        <table role="presentation" class="card-table" width="100%" cellpadding="0"
+                                            cellspacing="0" border="0"
+                                            style="border: 1px solid #e4ddd4; border-left: 4px solid #c8781a; border-radius: 4px; background:#faf3ec;">
+                                            <tr>
+
+                                                <td class="stack card-img" width="300" valign="top"
+                                                    style="width:300px; font-size:0; line-height:0;">
+                                                    <!--Article URL-->
+                                                    <a href="https://www.newsband.in/" target="_blank"
+                                                        style="display:block; text-decoration:none; border:0;">
+                                                        <!-- Image URL-->
+                                                        <img src="https://www.newsband.in/uploads/blog_main_img/4fb561fdc143a21bd2902fdaed94718d_1.jpg"
+                                                            width="300" height="" alt=""
+                                                            style="display:block; width:300px; height:100%; min-height:180px; object-fit:cover; border:0;">
+                                                    </a>
+                                                </td>
+                                                <!-- Content -->
+                                                <td class="stack card-content" valign="top"
+                                                    style="padding: 18px 20px; background:#faf3ec;">
+                                                    <!--Same Article Link-->
+                                                    <a href="https://www.newsband.in/" target="_blank"
+                                                        style="text-decoration:none; color:inherit; display:block;">
+                                                        <!--Category-->
+                                                        <div
+                                                            style="font-family: Georgia, 'Times New Roman', serif; font-size: 9px; font-weight: 700; letter-spacing: 3.5px; color: #c8781a; text-transform: uppercase; margin-bottom: 7px;">
+                                                            Infrastructure</div>
+                                                        <!--Headline-->
+                                                        <div class="card-headline"
+                                                            style="font-family: Georgia, 'Times New Roman', serif; font-size: 20px; color: #1a1a1a; line-height: 1.3; margin-bottom: 10px; font-weight: 400;">
+                                                            Navi Mumbai Metro Line 1 Hits Record Weekly Ridership</div>
+                                                        <!--Description-->
+                                                        <div
+                                                            style="font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #666666; line-height: 1.7;">
+                                                            NMMC confirms over 1.2 lakh passengers used the
+                                                            Belapur&ndash;Pendhar corridor in a single week &mdash; a
+                                                            milestone that signals a major shift in how Navi Mumbai
+                                                            commutes.</div>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+
+                                <!-- ====== CARD 2: Image Right — accent #1c4f7c ====== -->
+                                <tr>
+                                    <td class="card-pad" style="padding: 14px 24px 0 24px; background:#ffffff;">
+                                        <table role="presentation" class="card-table" width="100%" cellpadding="0"
+                                            cellspacing="0" border="0"
+                                            style="border: 1px solid #e4ddd4; border-right: 4px solid #1c4f7c; border-radius: 4px; background:#eff3f7;">
+                                            <tr>
+                                                <!-- Content -->
+                                                <td class="stack card-content" valign="top"
+                                                    style="padding: 18px 20px; background:#eff3f7;">
+                                                    <!--Article Link-->
+                                                    <a href="https://www.newsband.in/" target="_blank"
+                                                        style="text-decoration:none; color:inherit; display:block;">
+                                                        <!--Category-->
+                                                        <div
+                                                            style="font-family: Georgia, 'Times New Roman', serif; font-size: 9px; font-weight: 700; letter-spacing: 3.5px; color: #1c4f7c; text-transform: uppercase; margin-bottom: 7px;">
+                                                            Civic</div>
+                                                        <!--Headline-->
+                                                        <div class="card-headline"
+                                                            style="font-family: Georgia, 'Times New Roman', serif; font-size: 20px; color: #1a1a1a; line-height: 1.3; margin-bottom: 10px; font-weight: 400;">
+                                                            Thane Creek Flamingo Sanctuary Gets Permanent Buffer Zone
+                                                            Status</div>
+                                                        <!--Description-->
+                                                        <div
+                                                            style="font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #666666; line-height: 1.7;">
+                                                            The Maharashtra government's gazette notification now
+                                                            formally protects a 100-metre belt around the sanctuary,
+                                                            shielding thousands of flamingos from encroachment and
+                                                            construction dust.</div>
+                                                    </a>
+                                                </td>
+                                                <!-- Image -->
+                                                <td class="stack card-img" width="300" valign="top"
+                                                    style="width:300px; font-size:0; line-height:0;">
+                                                    <!--Same Article Link-->
+                                                    <a href="https://www.newsband.in/" target="_blank"
+                                                        style="display:block; text-decoration:none; border:0;">
+                                                        <!--Image URL-->
+                                                        <img src="https://www.newsband.in/uploads/blog_main_img/4fb561fdc143a21bd2902fdaed94718d_1.jpg"
+                                                            width="300" alt=""
+                                                            style="display:block; width:300px; height:100%; min-height:180px; object-fit:cover; border:0;">
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+
+                                <!-- ====== CARD 3: Image Left — accent #2a7a5c ====== -->
+                                <tr>
+                                    <td class="card-pad" style="padding: 14px 24px 0 24px; background:#ffffff;">
+                                        <table role="presentation" class="card-table" width="100%" cellpadding="0"
+                                            cellspacing="0" border="0"
+                                            style="border: 1px solid #e4ddd4; border-left: 4px solid #2a7a5c; border-radius: 4px; background:#eff5f2;">
+                                            <tr>
+                                                <!-- Image -->
+                                                <td class="stack card-img" width="300" valign="top"
+                                                    style="width:300px; font-size:0; line-height:0;">
+
+                                                    <!--Article Link-->
+                                                    <a href="https://www.newsband.in/" target="_blank"
+                                                        style="display:block; text-decoration:none; border:0;">
+                                                        <!--Image URL-->
+                                                        <img src="https://www.newsband.in/uploads/blog_main_img/4fb561fdc143a21bd2902fdaed94718d_1.jpg"
+                                                            width="300" alt=""
+                                                            style="display:block; width:300px; height:100%; min-height:180px; object-fit:cover; border:0;">
+                                                    </a>
+                                                </td>
+                                                <!-- Content -->
+                                                <td class="stack card-content" valign="top"
+                                                    style="padding: 18px 20px; background:#eff5f2;">
+                                                    <!--Same Article Link-->
+                                                    <a href="https://www.newsband.in/" target="_blank"
+                                                        style="text-decoration:none; color:inherit; display:block;">
+                                                        <!--Category-->
+                                                        <div
+                                                            style="font-family: Georgia, 'Times New Roman', serif; font-size: 9px; font-weight: 700; letter-spacing: 3.5px; color: #2a7a5c; text-transform: uppercase; margin-bottom: 7px;">
+                                                            Education</div>
+                                                        <!--Headline-->
+                                                        <div class="card-headline"
+                                                            style="font-family: Georgia, 'Times New Roman', serif; font-size: 20px; color: #1a1a1a; line-height: 1.3; margin-bottom: 10px; font-weight: 400;">
+                                                            Kharghar Schools Partner with IIT Bombay for STEM Labs</div>
+                                                        <!--Description-->
+                                                        <div
+                                                            style="font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #666666; line-height: 1.7;">
+                                                            Twelve municipal schools in Kharghar node will receive fully
+                                                            equipped science and robotics labs under a new MoU signed
+                                                            with IIT Bombay's outreach programme this month.</div>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+
+                                <!-- ====== CARD 4: Image Right — accent #8b2a6e ====== -->
+                                <tr>
+                                    <td class="card-pad-last" style="padding: 14px 24px 28px 24px; background:#ffffff;">
+                                        <table role="presentation" class="card-table" width="100%" cellpadding="0"
+                                            cellspacing="0" border="0"
+                                            style="border: 1px solid #e4ddd4; border-right: 4px solid #8b2a6e; border-radius: 4px; background:#f4ecf1;">
+                                            <tr>
+                                                <!-- Content -->
+                                                <td class="stack card-content" valign="top"
+                                                    style="padding: 18px 20px; background:#f4ecf1;">
+                                                    <!--Article Link-->
+                                                    <a href="https://www.newsband.in/" target="_blank"
+                                                        style="text-decoration:none; color:inherit; display:block;">
+                                                        <!--Category-->
+                                                        <div
+                                                            style="font-family: Georgia, 'Times New Roman', serif; font-size: 9px; font-weight: 700; letter-spacing: 3.5px; color: #8b2a6e; text-transform: uppercase; margin-bottom: 7px;">
+                                                            Culture</div>
+                                                        <!--Headline-->
+                                                        <div class="card-headline"
+                                                            style="font-family: Georgia, 'Times New Roman', serif; font-size: 20px; color: #1a1a1a; line-height: 1.3; margin-bottom: 10px; font-weight: 400;">
+                                                            Nerul's Annual Koli Festival Returns with Record 40,000
+                                                            Visitors</div>
+                                                        <!--Description-->
+                                                        <div
+                                                            style="font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #666666; line-height: 1.7;">
+                                                            The three-day celebration of the Koli fishing community drew
+                                                            its largest-ever crowd, with live folk music, traditional
+                                                            seafood stalls, and a boat parade lighting up Palm Beach
+                                                            waterfront.</div>
+                                                    </a>
+                                                </td>
+                                                <!-- Image -->
+                                                <td class="stack card-img" width="300" valign="top"
+                                                    style="width:300px; font-size:0; line-height:0;">
+                                                    <!--Same Article Link-->
+                                                    <a href="https://www.newsband.in/" target="_blank"
+                                                        style="display:block; text-decoration:none; border:0;">
+                                                        <!--Image Link-->
+                                                        <img src="https://www.newsband.in/uploads/blog_main_img/4fb561fdc143a21bd2902fdaed94718d_1.jpg"
+                                                            width="300" alt=""
+                                                            style="display:block; width:300px; height:100%; min-height:180px; object-fit:cover; border:0;">
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+
+                                <!-- ====== FOOTER ====== -->
+                                <tr>
+                                    <td style="padding:0;">
+                                        <table role="presentation" width="100%" border="0" cellpadding="0"
+                                            cellspacing="0">
+                                            <tr>
+                                                <td align="center"
+                                                    style="background-color: #0a0a0a; padding: 38px 24px 30px; text-align: center;">
+
+                                                    <!-- Social icons -->
+                                                    <table role="presentation" border="0" cellpadding="0"
+                                                        cellspacing="0" align="center"
+                                                        style="margin: 0 auto 16px auto;">
+                                                        <tr>
+                                                            <td style="padding: 0 5px;">
+                                                                <a href="https://www.instagram.com/newsbandofficial/"
+                                                                    target="_blank" style="text-decoration: none;">
+                                                                    <table role="presentation" border="0"
+                                                                        cellpadding="0" cellspacing="0">
+                                                                        <tr>
+                                                                            <td width="38" height="38" align="center"
+                                                                                valign="middle"
+                                                                                style="background-color: #ffffff; border-radius: 50%; text-align: center; vertical-align: middle;">
+                                                                                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/instagram.svg"
+                                                                                    width="17" height="17"
+                                                                                    alt="Instagram"
+                                                                                    style="display: block; margin: 0 auto; border:0;">
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </a>
+                                                            </td>
+                                                            <td style="padding: 0 5px;">
+                                                                <a href="https://www.facebook.com/newsband.in"
+                                                                    target="_blank" style="text-decoration: none;">
+                                                                    <table role="presentation" border="0"
+                                                                        cellpadding="0" cellspacing="0">
+                                                                        <tr>
+                                                                            <td width="38" height="38" align="center"
+                                                                                valign="middle"
+                                                                                style="background-color: #ffffff; border-radius: 50%; text-align: center; vertical-align: middle;">
+                                                                                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/facebook.svg"
+                                                                                    width="17" height="17"
+                                                                                    alt="Facebook"
+                                                                                    style="display: block; margin: 0 auto; border:0;">
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </a>
+                                                            </td>
+                                                            <td style="padding: 0 5px;">
+                                                                <a href="https://x.com/NewsbandTweets" target="_blank"
+                                                                    style="text-decoration: none;">
+                                                                    <table role="presentation" border="0"
+                                                                        cellpadding="0" cellspacing="0">
+                                                                        <tr>
+                                                                            <td width="38" height="38" align="center"
+                                                                                valign="middle"
+                                                                                style="background-color: #ffffff; border-radius: 50%; text-align: center; vertical-align: middle;">
+                                                                                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/x.svg"
+                                                                                    width="17" height="17" alt="X"
+                                                                                    style="display: block; margin: 0 auto; border:0;">
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </a>
+                                                            </td>
+                                                            <td style="padding: 0 5px;">
+                                                                <a href="https://www.youtube.com/@Newsband-"
+                                                                    target="_blank" style="text-decoration: none;">
+                                                                    <table role="presentation" border="0"
+                                                                        cellpadding="0" cellspacing="0">
+                                                                        <tr>
+                                                                            <td width="38" height="38" align="center"
+                                                                                valign="middle"
+                                                                                style="background-color: #ffffff; border-radius: 50%; text-align: center; vertical-align: middle;">
+                                                                                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/youtube.svg"
+                                                                                    width="17" height="17" alt="YouTube"
+                                                                                    style="display: block; margin: 0 auto; border:0;">
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </a>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+
+                                                    <!-- Links -->
+                                                    <table role="presentation" border="0" cellpadding="0"
+                                                        cellspacing="0" align="center"
+                                                        style="margin: 0 auto 14px auto;">
+                                                        <tr>
+                                                            <td align="center" valign="middle" style="padding: 0 14px;">
+                                                                <a href="https://www.newsband.in/" target="_blank"
+                                                                    style="font-family: Georgia, 'Times New Roman', serif; font-size: 11px; color: #bbbbbb; text-decoration: none;">Website</a>
+                                                            </td>
+                                                            <td align="center" valign="middle"
+                                                                style="color: #666666; font-size: 14px;">|</td>
+                                                            <td align="center" valign="middle" style="padding: 0 14px;">
+                                                                <a href="https://www.newsband.in/privacy-policy"
+                                                                    target="_blank"
+                                                                    style="font-family: Georgia, 'Times New Roman', serif; font-size: 11px; color: #bbbbbb; text-decoration: none;">Privacy
+                                                                    Policy</a>
+                                                            </td>
+                                                            <td align="center" valign="middle"
+                                                                style="color: #666666; font-size: 14px;">|</td>
+                                                            <td align="center" valign="middle" style="padding: 0 14px;">
+                                                                <a href="*|UNSUB|*" target="_blank"
+                                                                    style="font-family: Georgia, 'Times New Roman', serif; font-size: 11px; color: #bbbbbb; text-decoration: none;">Unsubscribe</a>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+
+                                                    <div
+                                                        style="font-family: 'Arial Narrow', Arial, sans-serif; font-size: 9px; letter-spacing: 2.5px; color: #999999;">
+                                                        All rights reserved</div>
+
+
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+
+                            </table>
+                            <!-- END SHELL -->
+
+                        </td>
+                    </tr>
+                </table>
+                <!-- END A4 WRAPPER -->
+
+            </td>
+        </tr>
+    </table>
+    <!-- END TINT WRAPPER -->
+
+</body>
+
+</html>
