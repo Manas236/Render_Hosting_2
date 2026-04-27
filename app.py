@@ -27,12 +27,19 @@ def create_app():
     spec.loader.exec_module(day8_module)
     day8_editor_bp = day8_module.day8_editor_bp
 
+    spec_day9 = importlib.util.spec_from_file_location("day9_editor", "editor(for Day9.html).py")
+    day9_module = importlib.util.module_from_spec(spec_day9)
+    sys.modules["day9_editor"] = day9_module
+    spec_day9.loader.exec_module(day9_module)
+    day9_editor_bp = day9_module.day9_editor_bp
+
     app.register_blueprint(login_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(codeview_bp)
     app.register_blueprint(editor_bp)
     app.register_blueprint(extractor_bp)
     app.register_blueprint(day8_editor_bp, url_prefix='/day8-editor')
+    app.register_blueprint(day9_editor_bp, url_prefix='/day9-editor')
 
     # ─────────────────────────────────────────────
     # Health Check (required by Render)

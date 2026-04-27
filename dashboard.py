@@ -85,6 +85,13 @@ DASHBOARD_HTML = """
           <div class="dash-btn-title">Day8 Editor</div>
           <div class="dash-btn-desc">Visual editor specifically for Day8.</div>
         </a>
+        <a href="{{ url_for('day9_editor.editor') }}" class="dash-btn">
+          <div class="dash-btn-photo-wrap">
+            <img src="/static_files/Day9.png" class="dash-btn-photo" alt="Day9 Editor" />
+          </div>
+          <div class="dash-btn-title">Day 9 Editor</div>
+          <div class="dash-btn-desc">Visual editor specifically for Day9.</div>
+        </a>
       </div>
     </div>
     <div class="footer-note">NEWSBAND JOURNALISM PLATFORM &nbsp;·&nbsp; CONFIDENTIAL</div>
