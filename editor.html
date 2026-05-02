@@ -811,7 +811,7 @@
         /* ── Load fields from server ─────────────────────────────────────────────── */
         async function loadFields() {
             try {
-                const res = await fetch('/day9-editor/api/fields');
+                const res = await fetch("{{ api_prefix|default('/day9-editor') }}/api/fields");
                 const data = await res.json();
                 populateForm(data);
                 await refreshPreview();
@@ -954,7 +954,7 @@
         async function sendUpdate(data) {
             data = data || getFormData();
             try {
-                const res = await fetch('/day9-editor/api/update', {
+                const res = await fetch("{{ api_prefix|default('/day9-editor') }}/api/update", {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data),
@@ -971,7 +971,7 @@
         }
 
         async function refreshPreview() {
-            const res = await fetch('/day9-editor/api/preview');
+            const res = await fetch("{{ api_prefix|default('/day9-editor') }}/api/preview");
             const html = await res.text();
             document.getElementById('previewFrame').srcdoc = html;
         }
@@ -980,14 +980,14 @@
         async function doReset() {
             if (!confirm('Reset to the original template? All unsaved changes will be lost.')) return;
             setStatus('saving', 'RESETTING…');
-            await fetch('/day9-editor/api/reset', { method: 'POST' });
+            await fetch("{{ api_prefix|default('/day9-editor') }}/api/reset", { method: 'POST' });
             await loadFields();
             setStatus('saved', 'RESET');
             setTimeout(() => setStatus('', 'READY'), 2000);
         }
 
         function doExport() {
-            window.location.href = '/day9-editor/api/export';
+            window.location.href = "{{ api_prefix|default('/day9-editor') }}/api/export";
         }
 
         /* ── JSON Import ─────────────────────────────────────────────────────────── */
@@ -1025,7 +1025,7 @@
             }
 
             try {
-                const res = await fetch('/day9-editor/api/import_json', {
+                const res = await fetch("{{ api_prefix|default('/day9-editor') }}/api/import_json", {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(parsed),

@@ -57,28 +57,23 @@ DASHBOARD_HTML = """
     <div class="card">
       <div class="card-headline">Dashboard</div>
       <div class="card-sub">Select a tool to proceed.</div>
-      <div class="rule-divider"><span></span><em>AVAILABLE TOOLS</em><span></span></div>
+      <div class="rule-divider"><span></span><em>NEWSLETTER EDITORS</em><span></span></div>
       <div class="dashboard-grid">
-        {% for tid, tcfg in templates.items() %}
-        <a href="{{ url_for('editor_bp.editor', tid=tid) }}" class="dash-btn">
+        <a href="{{ url_for('day11_editor.editor') }}" class="dash-btn">
           <div class="dash-btn-photo-wrap">
-            <img src="/static_files/{{ tcfg.image }}" class="dash-btn-photo" alt="{{ tcfg.name }}" />
+            <img src="/static_files/Day11.png" class="dash-btn-photo" alt="Day11 Editor" />
           </div>
-          <div class="dash-btn-title">{{ tcfg.name }}</div>
-          <div class="dash-btn-desc">Visual editor for {{ tcfg.file }}.</div>
+          <div class="dash-btn-title">Day 11 Editor</div>
+          <div class="dash-btn-desc">Visual editor specifically for Day11.</div>
         </a>
-        {% endfor %}
-        <a href="{{ url_for('codeview_bp.converter') }}" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
-          <span class="dash-btn-icon">💻</span>
-          <div class="dash-btn-title">Code Viewer</div>
-          <div class="dash-btn-desc">Upload and copy raw HTML code.</div>
+        <a href="{{ url_for('template1_editor.editor') }}" class="dash-btn">
+          <div class="dash-btn-photo-wrap">
+            <img src="/static_files/template1.png" class="dash-btn-photo" alt="Template1 Editor" />
+          </div>
+          <div class="dash-btn-title">Template 1 Editor</div>
+          <div class="dash-btn-desc">Visual editor for template1.html.</div>
         </a>
-        <a href="{{ url_for('extractor_bp.index') }}" target="_blank" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
-          <span class="dash-btn-icon">📰</span>
-          <div class="dash-btn-title">News Extractor Analyzer</div>
-          <div class="dash-btn-desc">Extract and analyze news content.</div>
-        </a>
-        <a href="{{ url_for('day8_editor.editor') }}" class="dash-btn">
+        <a href="{{ url_for('day8_v2_editor.editor') }}" class="dash-btn">
           <div class="dash-btn-photo-wrap">
             <img src="/static_files/Day8.png" class="dash-btn-photo" alt="Day8 Editor" />
           </div>
@@ -91,6 +86,25 @@ DASHBOARD_HTML = """
           </div>
           <div class="dash-btn-title">Day 9 Editor</div>
           <div class="dash-btn-desc">Visual editor specifically for Day9.</div>
+        </a>
+      </div>
+
+      <div class="rule-divider" style="margin-top: 36px;"><span></span><em>UTILITY TOOLS</em><span></span></div>
+      <div class="dashboard-grid">
+        <a href="{{ url_for('codeview_bp.converter') }}" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+          <span class="dash-btn-icon">💻</span>
+          <div class="dash-btn-title">Code Viewer</div>
+          <div class="dash-btn-desc">Upload and copy raw HTML code.</div>
+        </a>
+        <a href="{{ url_for('extractor_bp.index') }}" target="_blank" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+          <span class="dash-btn-icon">📰</span>
+          <div class="dash-btn-title">News Extractor Analyzer</div>
+          <div class="dash-btn-desc">Extract and analyze news content.</div>
+        </a>
+        <a href="{{ url_for('batch_extractor_bp.index') }}" target="_blank" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+          <span class="dash-btn-icon">⚡</span>
+          <div class="dash-btn-title">Batch Extractor</div>
+          <div class="dash-btn-desc">Process multiple articles in parallel.</div>
         </a>
       </div>
     </div>
@@ -106,6 +120,5 @@ def dashboard():
     """Dashboard page — routes to Editor or Converter."""
     return render_template_string(
         DASHBOARD_HTML, 
-        logo_url=config.LOGO_URL, 
-        templates=config.TEMPLATES_CONFIG
+        logo_url=config.LOGO_URL
     )
