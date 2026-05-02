@@ -99,20 +99,46 @@ function setAlignStatus(state, spacerPx) {
 function onPreviewLoad() { {% if has_alignment %}setAlignStatus('computing');{% endif %} pushAllStateToIframe(); {% if has_alignment %}setTimeout(() => post({ type: 'run_alignment' }), 400);{% endif %} }
 window.addEventListener('message', function(ev) { if (ev.data && ev.data.type === 'spacer_computed') { document.getElementById('logo_spacer_height').value = ev.data.value; setAlignStatus('aligned', ev.data.value); } });
 function triggerRealign() { {% if has_alignment %}setAlignStatus('computing'); setTimeout(() => post({ type: 'run_alignment' }), 250);{% endif %} }
-document.querySelectorAll('textarea[data-eid]').forEach(el => { el.addEventListener('input', () => { post({ type: 'update', id: el.dataset.eid, fieldType: 'text', value: el.value }); triggerRealign(); }); });
-document.querySelectorAll('input[data-eid][data-ftype="img"]').forEach(el => { el.addEventListener('input', () => { const base = el.dataset.base || '', full = base + el.value; post({ type: 'update', id: el.dataset.eid, fieldType: 'img', value: full }); const thumb = document.querySelector('img[data-thumb="' + el.dataset.eid + '"]'); if (thumb) thumb.src = full; triggerRealign(); }); });
-document.querySelectorAll('input[data-eid][data-ftype="bg-img"]').forEach(el => { el.addEventListener('input', () => { const base = el.dataset.base || '', full = base + el.value; post({ type: 'update', id: el.dataset.eid, fieldType: 'bg-img', value: full }); const thumb = document.querySelector('img[data-thumb="' + el.dataset.eid + '"]'); if (thumb) thumb.src = full; triggerRealign(); }); });
-document.querySelectorAll('input[data-eid][data-ftype="href"]').forEach(el => { el.addEventListener('input', () => { post({ type: 'update', id: el.dataset.eid, fieldType: 'href', value: el.value }); }); });
+
+let debounceTimer;
+function scheduleUpdate() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(sendUpdate, 550);
+}
+async function sendUpdate() {
+    saveState();
+    const fd = new FormData(document.getElementById('eform'));
+    try {
+        const res = await fetch('/editor/api/update/{{tid}}', { method: 'POST', body: fd });
+        const result = await res.json();
+        if (result.html) {
+            document.getElementById('pframe').srcdoc = result.html;
+            // The iframe reloads completely; re-run alignment if needed
+            {% if has_alignment %}
+            setTimeout(() => {
+                const fr = document.getElementById('pframe').contentWindow;
+                try { fr.postMessage({ type: 'run_alignment' }, '*'); } catch(e){}
+            }, 800);
+            {% endif %}
+        }
+    } catch(e) {}
+}
+
+document.querySelectorAll('textarea[data-eid]').forEach(el => { el.addEventListener('input', scheduleUpdate); });
+document.querySelectorAll('input[data-eid][data-ftype="img"]').forEach(el => { el.addEventListener('input', () => { const thumb = document.querySelector('img[data-thumb="' + el.dataset.eid + '"]'); if (thumb) thumb.src = (el.dataset.base || '') + el.value; scheduleUpdate(); }); });
+document.querySelectorAll('input[data-eid][data-ftype="bg-img"]').forEach(el => { el.addEventListener('input', () => { const thumb = document.querySelector('img[data-thumb="' + el.dataset.eid + '"]'); if (thumb) thumb.src = (el.dataset.base || '') + el.value; scheduleUpdate(); }); });
+document.querySelectorAll('input[data-eid][data-ftype="href"]').forEach(el => { el.addEventListener('input', scheduleUpdate); });
 document.addEventListener('click', e => {
   const sw = e.target.closest('.swatch'); if (!sw) return;
   const hex = sw.dataset.color, sid = sw.dataset.sid;
   sw.closest('.palette-grid').querySelectorAll('.swatch').forEach(s => s.classList.remove('swatch-active')); sw.classList.add('swatch-active');
   const txt = document.querySelector('input[data-hexfor="' + sid + '"]'); if (txt) txt.value = hex;
-  post({ type: 'style', styleId: sid, prop: sw.dataset.prop, ctype: sw.dataset.ctype, value: hex });
+  scheduleUpdate();
 });
-document.querySelectorAll('input[data-hexfor]').forEach(el => { el.addEventListener('input', () => { if (/^#[0-9a-fA-F]{6}$/.test(el.value)) { post({ type: 'style', styleId: el.dataset.hexfor, prop: el.dataset.prop, ctype: el.dataset.ctype, value: el.value }); } }); });
-document.querySelectorAll('input[type=number][data-sid]').forEach(el => { el.addEventListener('input', () => { post({ type: 'style', styleId: el.dataset.sid, prop: el.dataset.prop, value: el.value + 'px' }); triggerRealign(); }); });
-document.querySelectorAll('input[data-bgsid]').forEach(el => { el.addEventListener('input', () => { post({ type: 'style', styleId: el.dataset.bgsid, prop: 'background-image', value: "url('" + el.value + "')" }); }); });
+document.querySelectorAll('input[data-hexfor]').forEach(el => { el.addEventListener('input', () => { if (/^#[0-9a-fA-F]{6}$/.test(el.value)) { scheduleUpdate(); } }); });
+document.querySelectorAll('input[type=number][data-sid]').forEach(el => { el.addEventListener('input', scheduleUpdate); });
+document.querySelectorAll('input[data-bgsid]').forEach(el => { el.addEventListener('input', scheduleUpdate); });
+
 function submitForm(action) {
   saveState(); const form = document.getElementById('eform'); form.action = '/editor/' + action + '/{{tid}}';
   if (action === 'download') { const iframe = document.querySelector('iframe'), domField = document.getElementById('dom_html'); if (iframe && iframe.contentDocument && domField) domField.value = iframe.contentDocument.documentElement.outerHTML; }
@@ -123,13 +149,8 @@ function saveState() { const data = {}, fd = new FormData(document.getElementByI
 function restoreState() { const saved = localStorage.getItem('newsband_editor_{{tid}}'); if (!saved) return; try { const data = JSON.parse(saved); for (let k in data) { const el = document.querySelector('[name="' + k + '"]'); if (el && el.value !== data[k]) el.value = data[k]; } } catch(e) { } }
 document.getElementById('eform').addEventListener('input', saveState); window.addEventListener('DOMContentLoaded', restoreState);
 function pushAllStateToIframe() {
-  document.querySelectorAll('textarea[data-eid]').forEach(el => post({ type: 'update', id: el.dataset.eid, fieldType: 'text', value: el.value }));
-  document.querySelectorAll('input[data-eid][data-ftype="img"]').forEach(el => { const base = el.dataset.base || ''; post({ type: 'update', id: el.dataset.eid, fieldType: 'img', value: base + el.value }); const thumb = document.querySelector('img[data-thumb="' + el.dataset.eid + '"]'); if (thumb) thumb.src = base + el.value; });
-  document.querySelectorAll('input[data-eid][data-ftype="bg-img"]').forEach(el => { const base = el.dataset.base || ''; post({ type: 'update', id: el.dataset.eid, fieldType: 'bg-img', value: base + el.value }); const thumb = document.querySelector('img[data-thumb="' + el.dataset.eid + '"]'); if (thumb) thumb.src = base + el.value; });
-  document.querySelectorAll('input[data-eid][data-ftype="href"]').forEach(el => post({ type: 'update', id: el.dataset.eid, fieldType: 'href', value: el.value }));
-  document.querySelectorAll('input[data-hexfor]').forEach(el => post({ type: 'style', styleId: el.dataset.hexfor, prop: el.dataset.prop, ctype: el.dataset.ctype, value: el.value }));
-  document.querySelectorAll('input[type=number][data-sid]').forEach(el => post({ type: 'style', styleId: el.dataset.sid, prop: el.dataset.prop, value: el.value + 'px' }));
-  document.querySelectorAll('input[data-bgsid]').forEach(el => post({ type: 'style', styleId: el.dataset.bgsid, prop: 'background-image', value: "url('" + el.value + "')" }));
+    // Only used for initial load now. sendUpdate handles live previews
+    scheduleUpdate();
 }
 function manualSave() { saveState(); showToast('✔ Saved to your browser!'); }
 </script>
@@ -209,6 +230,24 @@ def preview(tid):
 @require_login
 def save(tid):
     return redirect(url_for('editor_bp.editor', tid=tid))
+
+@editor_bp.route("/editor/api/update/<tid>", methods=["POST"])
+@require_login
+def api_update(tid):
+    tcfg = config.TEMPLATES_CONFIG.get(tid)
+    if not tcfg: return jsonify({"error": "invalid"}), 400
+    html = helpers._process_form(request.form, tcfg["file"])
+    # If the template requires alignment, inject the script so it works in the live preview
+    if tcfg.get("has_alignment"):
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(html, "html.parser")
+        helpers.stamp_logo_spacer(soup)
+        script_tag = BeautifulSoup(helpers._ALIGNMENT_SCRIPT, "html.parser")
+        body = soup.find("body")
+        if body: body.append(script_tag)
+        html = str(soup)
+        
+    return jsonify({"success": True, "html": html})
 
 @editor_bp.route("/editor/download/<tid>", methods=["POST"])
 @require_login

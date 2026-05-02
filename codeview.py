@@ -61,7 +61,19 @@ CONVERTER_HTML = """
             <button type="submit" class="btn-primary">View Source Code →</button>
         </form>
         {% else %}
-        <div class="code-header"><span class="code-filename">{{ filename }}</span><button class="btn-copy" id="copyBtn" onclick="copyCode()"><span id="copyIcon">⎘</span><span id="copyLabel">Copy Code</span></button></div>
+        <div class="code-header">
+            <span class="code-filename">{{ filename }}</span>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn-copy" id="copyBtn" onclick="copyCode()"><span id="copyIcon">⎘</span><span id="copyLabel">Copy Code</span></button>
+                <form id="zipForm" method="POST" action="/download_zip" style="display: none;">
+                    <input type="hidden" name="code" id="zipCodeInput" />
+                    <input type="hidden" name="filename" value="{{ filename }}" />
+                </form>
+                <button class="btn-copy" onclick="document.getElementById('zipCodeInput').value=document.getElementById('codeContent').textContent; document.getElementById('zipForm').submit();">
+                    <span>📥</span><span>Download ZIP</span>
+                </button>
+            </div>
+        </div>
         <div class="code-block-wrapper"><pre id="codeContent">{{ code }}</pre></div>
         <a href="/converter" class="upload-another">← Upload another file</a>
         {% endif %}
@@ -102,3 +114,27 @@ def converter():
         except UnicodeDecodeError: return render_template_string(CONVERTER_HTML, error="Could not read the file. Make sure it is a valid UTF-8 HTML file.", code=None)
         return render_template_string(CONVERTER_HTML, code=code_text, filename=file.filename, error=None)
     return render_template_string(CONVERTER_HTML, code=None, error=None)
+
+@codeview_bp.route("/download_zip", methods=["POST"])
+@require_login
+def download_zip():
+    import io
+    import zipfile
+    from flask import send_file
+    
+    code = request.form.get("code", "")
+    filename = request.form.get("filename", "code.html")
+    
+    memory_file = io.BytesIO()
+    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+        zip_filename = filename if filename.endswith('.html') else filename + '.html'
+        zf.writestr(zip_filename, code.encode('utf-8'))
+    memory_file.seek(0)
+    
+    download_name = filename.rsplit('.', 1)[0] + '.zip' if '.' in filename else filename + '.zip'
+    return send_file(
+        memory_file,
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name=download_name
+    )
