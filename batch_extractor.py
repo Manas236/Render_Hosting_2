@@ -488,7 +488,7 @@ HTML_TEMPLATE = """
         });
 
         try {
-            const response = await fetch('/api/batch', {
+            const response = await fetch('{{ url_for("batch_extractor_bp.api_batch") }}', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ urls }),
@@ -549,7 +549,7 @@ HTML_TEMPLATE = """
         sendStatus.textContent = 'Sending to template app...';
 
         try {
-            const resp = await fetch('/api/send', {
+            const resp = await fetch('{{ url_for("batch_extractor_bp.api_send") }}', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: payload,
@@ -612,15 +612,31 @@ def api_batch():
 def api_send():
     """Proxy: forward stories JSON to the template app's /api/import_json."""
     payload = flask_request.json or {}
-    target = f"{TEMPLATE_APP_URL}/api/import_json"
-    logger.info(f"[*] Forwarding to {target}")
-    try:
-        resp = requests.post(target, json=payload, timeout=15)
-        resp.raise_for_status()
-        return jsonify({"success": True, "response": resp.json()})
-    except Exception as e:
-        logger.error(f"[X] Forward failed: {e}")
-        return jsonify({"error": str(e)}), 502
+    endpoints = [
+        f"{TEMPLATE_APP_URL}/day8-editor/api/import_json",
+        f"{TEMPLATE_APP_URL}/day9-editor/api/import_json",
+        f"{TEMPLATE_APP_URL}/day6temp-editor/api/import_json",
+        f"{TEMPLATE_APP_URL}/template1-editor/api/import_json",
+        f"{TEMPLATE_APP_URL}/day11-editor/api/import_json",
+    ]
+    
+    success_count = 0
+    errors = []
+    
+    for target in endpoints:
+        logger.info(f"[*] Forwarding to {target}")
+        try:
+            resp = requests.post(target, json=payload, timeout=15)
+            resp.raise_for_status()
+            success_count += 1
+        except Exception as e:
+            logger.error(f"[X] Forward failed to {target}: {e}")
+            errors.append(f"{target}: {str(e)}")
+            
+    if success_count > 0:
+        return jsonify({"success": True, "message": f"Sent to {success_count} editors", "errors": errors})
+    else:
+        return jsonify({"error": "Failed to send to any editors", "details": errors}), 502
 
 
 if __name__ == "__main__":

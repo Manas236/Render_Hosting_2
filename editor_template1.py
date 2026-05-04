@@ -48,8 +48,6 @@ def _find_cards(soup):
             continue
         if href == "*|UNSUB|*":
             continue
-        if "newsband.in" in href and "uploads" not in href:
-            continue
         # Must contain a table (card structure)
         if a.find("table"):
             cards.append(a)
