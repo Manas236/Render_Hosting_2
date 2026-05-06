@@ -106,6 +106,11 @@ DASHBOARD_HTML = """
           <div class="dash-btn-title">Batch Extractor</div>
           <div class="dash-btn-desc">Process multiple articles in parallel.</div>
         </a>
+        <a href="{{ url_for('upload_image_bp.index') }}" target="_blank" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+          <span class="dash-btn-icon">🖼️</span>
+          <div class="dash-btn-title">Git Image Pusher</div>
+          <div class="dash-btn-desc">Upload and push images to GitHub.</div>
+        </a>
       </div>
     </div>
     <div class="footer-note">NEWSBAND JOURNALISM PLATFORM &nbsp;·&nbsp; CONFIDENTIAL</div>

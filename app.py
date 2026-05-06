@@ -19,7 +19,7 @@ def create_app():
     from codeview import codeview_bp
     from extractor import extractor_bp
     from batch_extractor import batch_extractor_bp
-
+    from upload_image import upload_image_bp
     # ── Day 8 Editor (v2 — BS4-based) ──
     import importlib.util
     import sys
@@ -59,7 +59,7 @@ def create_app():
     app.register_blueprint(template1_editor_bp, url_prefix='/template1-editor')
     app.register_blueprint(day11_editor_bp, url_prefix='/day11-editor')
     app.register_blueprint(batch_extractor_bp, url_prefix='/batch-extractor')
-
+    app.register_blueprint(upload_image_bp, url_prefix='/upload-image')
     # ─────────────────────────────────────────────
     # Health Check (required by Render)
     # ─────────────────────────────────────────────
