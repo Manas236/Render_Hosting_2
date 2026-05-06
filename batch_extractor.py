@@ -610,25 +610,31 @@ def api_batch():
 
 @batch_extractor_bp.route("/api/send", methods=["POST"])
 def api_send():
-    """Proxy: forward stories JSON to the template app's /api/import_json."""
+    """Proxy: forward stories JSON to the template app's /api/import_json internally."""
     payload = flask_request.json or {}
     endpoints = [
-        f"{TEMPLATE_APP_URL}/day8-editor/api/import_json",
-        f"{TEMPLATE_APP_URL}/day9-editor/api/import_json",
-        f"{TEMPLATE_APP_URL}/day6temp-editor/api/import_json",
-        f"{TEMPLATE_APP_URL}/template1-editor/api/import_json",
-        f"{TEMPLATE_APP_URL}/day11-editor/api/import_json",
+        "/day8-editor/api/import_json",
+        "/day9-editor/api/import_json",
+        "/day6temp-editor/api/import_json",
+        "/template1-editor/api/import_json",
+        "/day11-editor/api/import_json",
     ]
     
     success_count = 0
     errors = []
     
+    from flask import current_app
+    client = current_app.test_client()
+    
     for target in endpoints:
-        logger.info(f"[*] Forwarding to {target}")
+        logger.info(f"[*] Forwarding to {target} internally")
         try:
-            resp = requests.post(target, json=payload, timeout=15)
-            resp.raise_for_status()
-            success_count += 1
+            resp = client.post(target, json=payload)
+            if resp.status_code == 200:
+                success_count += 1
+            else:
+                logger.error(f"[X] Forward failed to {target}: returned {resp.status_code}")
+                errors.append(f"{target}: returned {resp.status_code}")
         except Exception as e:
             logger.error(f"[X] Forward failed to {target}: {e}")
             errors.append(f"{target}: {str(e)}")
