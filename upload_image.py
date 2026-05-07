@@ -564,7 +564,7 @@ def push():
 
     commands = [
         ('git add .',                     'git add .'),
-        (f'git commit -m "{commit_msg}"', f'git commit -m "{commit_msg}"'),
+        (f'git commit -m "{commit_msg}"', f'git -c user.name="Newsband Image Pusher" -c user.email="bot@newsband.app" commit -m "{commit_msg}"'),
         ('git push origin main',          push_cmd),
     ]
 
