@@ -552,20 +552,15 @@ def push():
     if not commit_msg:
         commit_msg = get_next_commit_label()
 
-    push_cmd = 'git push origin main'
-    if GITHUB_TOKEN:
-        remote_out, _ = run_cmd("git config --get remote.origin.url")
-        remote_url = remote_out.strip()
-        if remote_url.startswith("https://"):
-            if "@" in remote_url:
-                remote_url = "https://" + remote_url.split("@", 1)[1]
-            auth_url = remote_url.replace("https://", f"https://{GITHUB_TOKEN}@")
-            push_cmd = f'git push {auth_url} main'
+    # Render environments often lack the 'origin' remote and run in a detached HEAD state.
+    # We construct the URL directly and sync via rebase before pushing HEAD to main.
+    auth_url = f"https://{GITHUB_TOKEN}@github.com/Manas236/Render_Hosting_2.git" if GITHUB_TOKEN else "https://github.com/Manas236/Render_Hosting_2.git"
 
     commands = [
         ('git add .',                     'git add .'),
-        (f'git commit -m "{commit_msg}"', f'git -c user.name="Newsband Image Pusher" -c user.email="bot@newsband.app" commit -m "{commit_msg}"'),
-        ('git push origin main',          push_cmd),
+        (f'git commit -m "{commit_msg}"', f'git -c user.name="Newsband Image Pusher" -c user.email="bot@newsband.app" commit --allow-empty -m "{commit_msg}"'),
+        ('git pull (sync with remote)',   f'git pull --rebase {auth_url} main'),
+        ('git push to repository',        f'git push {auth_url} HEAD:main'),
     ]
 
     success = True
