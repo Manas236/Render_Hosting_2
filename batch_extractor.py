@@ -494,7 +494,13 @@ HTML_TEMPLATE = """
                 body: JSON.stringify({ urls }),
                 signal: AbortSignal.timeout(120000)
             });
-            const data = await response.json();
+            const text = await response.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (err) {
+                throw new Error(`Server Error (${response.status}): ${text.substring(0, 60)}...`);
+            }
 
             if (!response.ok) {
                 alert('Error: ' + (data.error || 'Unknown error'));
@@ -555,7 +561,13 @@ HTML_TEMPLATE = """
                 body: payload,
                 signal: AbortSignal.timeout(20000)
             });
-            const result = await resp.json();
+            const text = await resp.text();
+            let result;
+            try {
+                result = JSON.parse(text);
+            } catch (err) {
+                throw new Error(`Server Error (${resp.status}): ${text.substring(0, 60)}...`);
+            }
             if (resp.ok && result.success) {
                 sendStatus.style.background = '#00c800';
                 sendStatus.style.color = '#fff';
