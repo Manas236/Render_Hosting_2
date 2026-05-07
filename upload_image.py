@@ -8,7 +8,9 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 upload_image_bp = Blueprint('upload_image_bp', __name__)
 
-REPO_PATH = r"C:\Users\Admin\Desktop\GIT _Images"
+# Save images locally relative to the app so they can be pushed to the same repository
+REPO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploaded_images")
+os.makedirs(REPO_PATH, exist_ok=True)
 
 HTML = """
 <!DOCTYPE html>
@@ -580,7 +582,7 @@ def push():
     # Build raw GitHub URL (URL-encode spaces just in case)
     encoded_filename = image.filename.replace(' ', '%20')
     raw_url = (
-        f"https://raw.githubusercontent.com/Manas236/Newsband/main/{encoded_filename}"
+        f"https://raw.githubusercontent.com/Manas236/Render_Hosting_2/main/uploaded_images/{encoded_filename}"
         if success else None
     )
 
