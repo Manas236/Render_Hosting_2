@@ -458,8 +458,14 @@ HTML = """
     formData.append('commit_msg', commitMsg);
 
     try {
-      const res  = await fetch('/push', { method: 'POST', body: formData });
-      const data = await res.json();
+      const res  = await fetch('{{ url_for("upload_image_bp.push") }}', { method: 'POST', body: formData });
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (err) {
+        throw new Error(`Server error (${res.status}): ${text.substring(0, 60)}...`);
+      }
 
       out.textContent = '';
       for (const step of data.steps) {
