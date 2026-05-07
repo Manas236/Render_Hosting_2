@@ -1,6 +1,10 @@
 from flask import Blueprint, request, jsonify, render_template_string
 import subprocess
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 upload_image_bp = Blueprint('upload_image_bp', __name__)
 
@@ -540,15 +544,27 @@ def push():
     if not commit_msg:
         commit_msg = get_next_commit_label()
 
+    push_cmd = 'git push origin main'
+    if GITHUB_TOKEN:
+        remote_out, _ = run_cmd("git config --get remote.origin.url")
+        remote_url = remote_out.strip()
+        if remote_url.startswith("https://"):
+            if "@" in remote_url:
+                remote_url = "https://" + remote_url.split("@", 1)[1]
+            auth_url = remote_url.replace("https://", f"https://{GITHUB_TOKEN}@")
+            push_cmd = f'git push {auth_url} main'
+
     commands = [
         ('git add .',                     'git add .'),
         (f'git commit -m "{commit_msg}"', f'git commit -m "{commit_msg}"'),
-        ('git push origin main',          'git push origin main'),
+        ('git push origin main',          push_cmd),
     ]
 
     success = True
     for label, cmd in commands:
         output, code = run_cmd(cmd)
+        if GITHUB_TOKEN:
+            output = output.replace(GITHUB_TOKEN, "***")
         ok = (code == 0)
         steps.append({'icon': '✅' if ok else '❌', 'name': label, 'output': output})
         if not ok:
