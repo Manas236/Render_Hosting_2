@@ -1,11 +1,13 @@
 """
-Batch Extractor — processes up to 5 article URLs in parallel, returns structured JSON stories.
+Batch Extractor — processes up to 5 article URLs with streaming SSE responses.
 """
 
 import sys
 import os
+import json
 import logging
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
@@ -53,14 +55,20 @@ HEADERS = {
     "Accept-Language": "en-US,en;q=0.9",
 }
 
-API_KEYS = [
-    os.getenv("GEMINI_API_KEY_1"),
-    os.getenv("GEMINI_API_KEY_2"),
-    os.getenv("GEMINI_API_KEY_3"),
-    os.getenv("GEMINI_API_KEY_4"),
-    os.getenv("GEMINI_API_KEY_5"),
-]
-API_KEYS = [k.strip() for k in API_KEYS if k and k.strip()]
+# ── Dynamic key discovery: finds GEMINI_API_KEY_1 … GEMINI_API_KEY_N ──────────
+def _discover_api_keys() -> list[str]:
+    """Scan env vars for GEMINI_API_KEY_<n> and return them sorted by n."""
+    import re as _re
+    found = {}
+    for name, val in os.environ.items():
+        m = _re.fullmatch(r'GEMINI_API_KEY_(\d+)', name)
+        if m and val and val.strip():
+            found[int(m.group(1))] = val.strip()
+    keys = [found[k] for k in sorted(found)]
+    logger.info(f"[*] Discovered {len(keys)} Gemini API key(s)")
+    return keys
+
+API_KEYS = _discover_api_keys()
 
 TEMPLATE_APP_URL = os.getenv("TEMPLATE_APP_URL", "http://localhost:5000")
 
@@ -84,7 +92,8 @@ def _next_key() -> str:
 
 
 def _call_gemini(prompt: str) -> str | None:
-    """Try all keys/models with thread-safe rotation. Returns text or None on exhaustion."""
+    """Try all keys/models with thread-safe rotation. Returns text or None on exhaustion.
+    Reduced retries for Render's constrained environment."""
     if not API_KEYS:
         return None
     for _ in range(len(API_KEYS)):
@@ -92,19 +101,17 @@ def _call_gemini(prompt: str) -> str | None:
         masked = f"{api_key[:6]}...{api_key[-4:]}" if len(api_key) > 10 else "***"
         client = genai.Client(api_key=api_key)
         for model in GEMINI_MODELS:
-            for retry in range(3):
-                try:
-                    response = client.models.generate_content(model=model, contents=prompt)
-                    if response and response.text:
-                        return response.text.strip()
+            try:
+                response = client.models.generate_content(model=model, contents=prompt)
+                if response and response.text:
+                    return response.text.strip()
+            except Exception as e:
+                err = str(e)
+                if "429" in err or "exhausted" in err.lower() or "quota" in err.lower():
+                    logger.warning(f"[!] Rate limited {model} key {masked}: {err[:100]}")
+                else:
+                    logger.error(f"[!] {model} failed: {err[:100]}")
                     break
-                except Exception as e:
-                    err = str(e)
-                    if "429" in err or "exhausted" in err.lower() or "quota" in err.lower():
-                        logger.warning(f"[!] Rate limited {model} key {masked} retry {retry}: {err[:100]}")
-                    else:
-                        logger.error(f"[!] {model} failed: {err[:100]}")
-                        break
     return None
 
 
@@ -488,39 +495,54 @@ HTML_TEMPLATE = """
         });
 
         try {
-            const response = await fetch('{{ url_for("batch_extractor_bp.api_batch") }}', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ urls }),
-                signal: AbortSignal.timeout(120000)
-            });
-            const text = await response.text();
-            let data;
-            try {
-                data = JSON.parse(text);
-            } catch (err) {
-                throw new Error(`Server Error (${response.status}): ${text.substring(0, 60)}...`);
-            }
+            // Build SSE URL with query params
+            const params = new URLSearchParams();
+            urls.forEach(u => params.append('url', u));
+            const sseUrl = '{{ url_for("batch_extractor_bp.api_batch_stream") }}?' + params.toString();
 
-            if (!response.ok) {
-                alert('Error: ' + (data.error || 'Unknown error'));
-                return;
-            }
-
-            // Map results back to input positions
-            const urlToStory = {};
-            (data.stories || []).forEach(s => { urlToStory[s.link] = s; });
-
+            const allStories = [];
+            // Map url→input index for dot updates
+            const urlToIdx = {};
             Array.from(fields).forEach((f, i) => {
-                const url = f.value.trim();
-                if (!url) return;
-                const story = urlToStory[url];
-                if (!story) return;
-                setDot(dots[i], story.error ? 'failed' : 'success');
+                const u = f.value.trim();
+                if (u) urlToIdx[u] = i;
             });
 
-            jsonOutput.textContent = JSON.stringify(data, null, 2);
-            outputSection.style.display = 'block';
+            await new Promise((resolve, reject) => {
+                const es = new EventSource(sseUrl);
+
+                es.addEventListener('result', (ev) => {
+                    const story = JSON.parse(ev.data);
+                    allStories.push(story);
+                    const idx = urlToIdx[story.link];
+                    if (idx !== undefined) {
+                        setDot(dots[idx], story.error ? 'failed' : 'success');
+                    }
+                    // Live-update the JSON output
+                    jsonOutput.textContent = JSON.stringify({ stories: allStories }, null, 2);
+                    outputSection.style.display = 'block';
+                });
+
+                es.addEventListener('done', () => {
+                    es.close();
+                    resolve();
+                });
+
+                es.addEventListener('error_msg', (ev) => {
+                    es.close();
+                    reject(new Error(ev.data));
+                });
+
+                es.onerror = () => {
+                    es.close();
+                    if (allStories.length === 0) {
+                        reject(new Error('Connection lost before any results'));
+                    } else {
+                        resolve(); // partial results OK
+                    }
+                };
+            });
+
         } catch (err) {
             alert('Request failed: ' + err.message);
             getDots().forEach(d => { if (d.classList.contains('processing')) setDot(d, 'failed'); });
@@ -598,6 +620,7 @@ def index():
 
 @batch_extractor_bp.route("/api/batch", methods=["POST"])
 def api_batch():
+    """Legacy JSON endpoint — kept for backward compat but may timeout on Render."""
     data = flask_request.json or {}
     urls = [u.strip() for u in data.get("urls", []) if u and u.strip()]
     if not urls:
@@ -606,7 +629,7 @@ def api_batch():
     logger.info(f"[*] Batch of {len(urls)} URLs received")
     stories = [None] * len(urls)
 
-    with ThreadPoolExecutor(max_workers=5) as executor:
+    with ThreadPoolExecutor(max_workers=2) as executor:
         future_to_idx = {executor.submit(process_url, url): i for i, url in enumerate(urls)}
         for future in as_completed(future_to_idx):
             idx = future_to_idx[future]
@@ -620,6 +643,70 @@ def api_batch():
     return jsonify({"stories": stories})
 
 
+@batch_extractor_bp.route("/api/batch-stream")
+def api_batch_stream():
+    """SSE streaming endpoint — streams each result as it completes.
+    Sends keepalive comments every 5 s so Render never sees 30 s of silence."""
+    from flask import Response, stream_with_context
+    import queue
+
+    urls = [u.strip() for u in flask_request.args.getlist("url") if u and u.strip()]
+    if not urls:
+        def error_stream():
+            yield 'event: error_msg\ndata: No URLs provided\n\n'
+        return Response(error_stream(), mimetype='text/event-stream')
+
+    logger.info(f"[*] SSE Batch of {len(urls)} URLs received")
+
+    def generate():
+        yield ': keepalive\n\n'
+
+        result_q = queue.Queue()
+
+        def _worker(idx, url):
+            try:
+                story = process_url(url)
+            except Exception as e:
+                story = {"link": url, "error": str(e)}
+            result_q.put((idx, story))
+
+        # Launch each URL in its own thread
+        for i, url in enumerate(urls):
+            t = threading.Thread(target=_worker, args=(i, url), daemon=True)
+            t.start()
+
+        # Emit results strictly in input order (URL 1 → story 0, URL 2 → story 1, …)
+        buffer = {}          # idx → story, for results that arrived early
+        next_to_emit = 0     # the index we're waiting to send next
+        total = len(urls)
+
+        while next_to_emit < total:
+            try:
+                idx, story = result_q.get(timeout=5)
+                buffer[idx] = story
+
+                # Flush as many in-order results as possible
+                while next_to_emit in buffer:
+                    s = buffer.pop(next_to_emit)
+                    yield f'event: result\ndata: {json.dumps(s)}\n\n'
+                    next_to_emit += 1
+            except queue.Empty:
+                # No result yet — keepalive to prevent Render 30 s timeout
+                yield ': keepalive\n\n'
+
+        yield 'event: done\ndata: complete\n\n'
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'X-Accel-Buffering': 'no',
+            'Connection': 'keep-alive',
+        }
+    )
+
+
 @batch_extractor_bp.route("/api/send", methods=["POST"])
 def api_send():
     """Proxy: forward stories JSON to the template app's /api/import_json internally."""
@@ -630,6 +717,7 @@ def api_send():
         "/day6temp-editor/api/import_json",
         "/template1-editor/api/import_json",
         "/day11-editor/api/import_json",
+        "/day12-editor/api/import_json",
     ]
     
     success_count = 0
