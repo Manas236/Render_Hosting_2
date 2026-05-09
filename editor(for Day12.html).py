@@ -1,5 +1,5 @@
 """
-Newsband Newsletter Editor — Flask Backend
+Newsband Newsletter Editor — Day12 Flask Backend
 Uses BeautifulSoup4 for controlled, field-level HTML editing.
 Footer, layout structure, CSS, and logo are strictly locked.
 """
@@ -9,25 +9,14 @@ import re
 from flask import Blueprint, request, jsonify, render_template, send_file, Response
 from bs4 import BeautifulSoup, NavigableString
 
-day9_editor_bp = Blueprint('day9_editor', __name__)
+day12_editor_bp = Blueprint('day12_editor', __name__)
 
 # ── Load base template once at startup ────────────────────────────────────────
-with open("Day9.html", "r", encoding="utf-8") as f:
+with open("Day12.html", "r", encoding="utf-8") as f:
     BASE_HTML = f.read()
-    print(f"DEBUG: BASE_HTML length: {len(BASE_HTML)}")
-    print(f"DEBUG: BASE_HTML snippet: {BASE_HTML[1500:1700]}") # Looking for header area
+    print(f"DEBUG [Day12]: BASE_HTML length: {len(BASE_HTML)}")
 
 _current_html = BASE_HTML   # mutable working copy
-
-# Auto-apply tomorrow's date on startup so it's always fresh
-def _auto_apply_date():
-    global _current_html
-    from datetime import datetime, timedelta
-    dt = datetime.now() + timedelta(days=1)
-    date_str = dt.strftime("%d/%m/%Y")
-    _current_html = update_html(_current_html, {"date": date_str})
-
-# Deferred call — update_html is defined below, so we call at module tail
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -39,58 +28,94 @@ def _set_text(tag, text: str):
 
 
 def _find_header_date(soup):
-    hdr = soup.find(id="header")
-    if not hdr:
-        return None
-    return hdr.find("div", style=lambda s: s and "color:#737373" in s)
+    """Find the date div inside the header (font-weight:600; color:#737373)."""
+    for div in soup.find_all("div"):
+        style = div.get("style", "")
+        if "color:#737373" in style and "font-weight:600" in style:
+            text = div.get_text()
+            if "Date:" in text:
+                return div
+    return None
 
 
 def _find_header_rni(soup):
-    hdr = soup.find(id="header")
-    if not hdr:
-        return None
-    return hdr.find("div", style=lambda s: s and "color:#888888" in s)
+    """Find the RNI div inside the header (color:#888888)."""
+    for div in soup.find_all("div"):
+        style = div.get("style", "")
+        if "color:#888888" in style and "font-size:9px" in style:
+            text = div.get_text()
+            if "RNI:" in text:
+                return div
+    return None
 
 
-def _find_cards(soup):
-    return soup.find_all("a", class_="card-link")
+def _find_articles(soup):
+    """
+    Return a list of article containers. Day12 has 5 articles:
+      [0] Featured article   — direct <a> child wrapping a full table
+      [1] Article 1           — horizontal card (image left, text right)
+      [2] Article 2           — horizontal card
+      [3] Left grid card      — vertical card in two-column grid
+      [4] Right grid card     — vertical card in two-column grid
+    Each article is wrapped in an <a> tag with style containing
+    "text-decoration:none" and "display:block".
+    """
+    articles = []
+    for a_tag in soup.find_all("a"):
+        style = a_tag.get("style", "")
+        if "text-decoration:none" in style and "display:block" in style:
+            # Skip footer links (social icons, website, etc.)
+            parent_td = a_tag.find_parent("td")
+            if parent_td:
+                parent_style = parent_td.get("style", "")
+                if "background-color:#0a0a0a" in parent_style:
+                    continue
+            articles.append(a_tag)
+    return articles
 
 
-def _find_category_td(card):
-    return card.find(
-        "td",
-        style=lambda s: s and "color:#b8532d" in s and "letter-spacing:1.8px" in s,
-    )
+def _find_category(article_a):
+    """Find category <p> tag. Category paragraphs have letter-spacing:1.5px and text-transform:uppercase."""
+    for p in article_a.find_all("p"):
+        style = p.get("style", "")
+        if "letter-spacing:1.5px" in style and "text-transform:uppercase" in style:
+            return p
+    return None
 
 
-def _find_headline_td(card):
-    return card.find("td", class_="title-text")
+def _find_headline(article_a):
+    """Find headline tag — could be h1, h2, or h3."""
+    for tag_name in ["h1", "h2", "h3"]:
+        tag = article_a.find(tag_name)
+        if tag:
+            return tag
+    return None
 
 
-def _find_summary_td(card):
-    return card.find(
-        "td",
-        style=lambda s: s and "color:#6b6357" in s and "padding-bottom:10px" in s,
-    )
+def _find_summary(article_a):
+    """Find the summary paragraph — text-align:justify, color:#555555."""
+    for p in article_a.find_all("p"):
+        style = p.get("style", "")
+        if "text-align:justify" in style and "color:#555555" in style:
+            return p
+    return None
 
 
-def _find_image_td(card):
-    return card.find("td", style=lambda s: s and "background-image" in s)
-
-
-def _find_image_img(card):
-    return card.find(
-        "img", style=lambda s: s and "border-radius:24px" in s
-    )
+def _find_image(article_a):
+    """Find the main <img> tag in the article (not button icons)."""
+    for img in article_a.find_all("img"):
+        style = img.get("style", "")
+        if "border-radius" in style and "width:100%" in style:
+            return img
+    return None
 
 
 # ── Parse: extract current editable fields ────────────────────────────────────
 
 def get_tomorrow_date_str() -> str:
-    """Return tomorrow's date as DD/MM/YYYY to match Day9.html format."""
     from datetime import datetime, timedelta
     dt = datetime.now() + timedelta(days=1)
-    return dt.strftime("%d/%m/%Y")
+    return dt.strftime("%B %d, %Y").replace(" 0", " ")
 
 def parse_fields(html: str) -> dict:
     soup = BeautifulSoup(html, "html.parser")
@@ -108,26 +133,27 @@ def parse_fields(html: str) -> dict:
 
     # Stories
     stories = []
-    for i, card in enumerate(_find_cards(soup)):
+    articles = _find_articles(soup)
+    for i, article in enumerate(articles):
         story = {"index": i}
 
-        story["link"] = card.get("href", "")
+        story["link"] = article.get("href", "")
 
-        cat_td = _find_category_td(card)
-        if cat_td:
-            story["category"] = cat_td.get_text().replace("•", "").strip()
+        cat = _find_category(article)
+        if cat:
+            story["category"] = cat.get_text().strip()
 
-        hl_td = _find_headline_td(card)
-        if hl_td:
-            story["headline"] = hl_td.get_text().strip()
+        hl = _find_headline(article)
+        if hl:
+            story["headline"] = hl.get_text().strip()
 
-        sum_td = _find_summary_td(card)
-        if sum_td:
-            story["summary"] = sum_td.get_text().strip()
+        summ = _find_summary(article)
+        if summ:
+            story["summary"] = summ.get_text().strip()
 
-        img_tag = _find_image_img(card)
-        if img_tag:
-            story["image"] = img_tag.get("src", "")
+        img = _find_image(article)
+        if img:
+            story["image"] = img.get("src", "")
 
         stories.append(story)
 
@@ -141,7 +167,6 @@ def update_html(html: str, data: dict) -> str:
     soup = BeautifulSoup(html, "html.parser")
 
     # ── PROTECTED: footer is never touched ────────────────────────────────────
-    # (We only operate on elements we explicitly target above)
 
     # Header — Date
     date_val = (data.get("date") or "").strip()
@@ -149,22 +174,6 @@ def update_html(html: str, data: dict) -> str:
         date_div = _find_header_date(soup)
         if date_div:
             _set_text(date_div, f"Date: {date_val}")
-
-        # Also update the outro date stamp (NEWSBAND · DD · MM · YYYY)
-        # BS4 decodes &middot; to the actual · character (\u00b7)
-        for td in soup.find_all("td"):
-            txt = td.string
-            if txt and "NEWSBAND" in txt and ("\u00b7" in txt or "·" in txt):
-                parts = date_val.split("/")
-                if len(parts) == 3:
-                    try:
-                        _set_text(
-                            td,
-                            f"NEWSBAND \u00b7 {parts[0]} \u00b7 {parts[1]} \u00b7 {parts[2]}",
-                        )
-                    except Exception:
-                        pass
-                break
 
     # Header — RNI
     rni_val = (data.get("rni") or "").strip()
@@ -174,73 +183,63 @@ def update_html(html: str, data: dict) -> str:
             _set_text(rni_div, f"RNI: {rni_val}")
 
     # Stories
-    cards = _find_cards(soup)
+    articles = _find_articles(soup)
     for story_data in data.get("stories", []):
         idx = story_data.get("index", 0)
-        if idx >= len(cards):
+        if idx >= len(articles):
             continue
-        card = cards[idx]
+        article = articles[idx]
 
         # Link (href on the <a> tag)
         link = (story_data.get("link") or "").strip()
         if link:
-            card["href"] = link
+            article["href"] = link
 
         # Category
         cat = (story_data.get("category") or "").strip()
         if cat:
-            cat_td = _find_category_td(card)
-            if cat_td:
-                _set_text(cat_td, f"\u2022 {cat.upper()}")
+            cat_tag = _find_category(article)
+            if cat_tag:
+                _set_text(cat_tag, cat.upper())
 
         # Headline
         hl = (story_data.get("headline") or "").strip()
         if hl:
-            hl_td = _find_headline_td(card)
-            if hl_td:
-                _set_text(hl_td, hl)
+            hl_tag = _find_headline(article)
+            if hl_tag:
+                _set_text(hl_tag, hl)
 
         # Summary
         summ = (story_data.get("summary") or "").strip()
         if summ:
-            sum_td = _find_summary_td(card)
-            if sum_td:
-                _set_text(sum_td, summ)
+            sum_tag = _find_summary(article)
+            if sum_tag:
+                _set_text(sum_tag, summ)
 
-        # Image URL — update both background-image style and img src
+        # Image URL — update img src
         img_url = (story_data.get("image") or "").strip()
         if img_url:
-            # Validate: must look like a URL
             if img_url.startswith(("http://", "https://")):
-                img_tag = _find_image_img(card)
+                img_tag = _find_image(article)
                 if img_tag:
                     img_tag["src"] = img_url
-
-                bg_td = _find_image_td(card)
-                if bg_td:
-                    new_style = re.sub(
-                        r"background-image:url\('[^']*'\)",
-                        f"background-image:url('{img_url}')",
-                        bg_td["style"],
-                    )
-                    bg_td["style"] = new_style
 
     return str(soup)
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 
-@day9_editor_bp.route("/")
+@day12_editor_bp.route("/")
 def editor():
-    return render_template("editor.html")
+    return render_template("editor_day12.html", api_prefix="/day12-editor")
 
 
-@day9_editor_bp.route("/api/fields")
+@day12_editor_bp.route("/api/fields")
 def api_fields():
     return jsonify(parse_fields(_current_html))
 
 
-@day9_editor_bp.route("/api/update", methods=["POST"])
+@day12_editor_bp.route("/api/update", methods=["POST"])
 def api_update():
     global _current_html
     data = request.get_json(silent=True)
@@ -250,30 +249,30 @@ def api_update():
     return jsonify({"success": True, "html": _current_html})
 
 
-@day9_editor_bp.route("/api/preview")
+@day12_editor_bp.route("/api/preview")
 def api_preview():
     return Response(_current_html, mimetype="text/html; charset=utf-8")
 
 
-@day9_editor_bp.route("/api/export")
+@day12_editor_bp.route("/api/export")
 def api_export():
     buf = io.BytesIO(_current_html.encode("utf-8"))
     return send_file(
         buf,
         as_attachment=True,
-        download_name="newsband_newsletter.html",
+        download_name="newsband_day12_newsletter.html",
         mimetype="text/html",
     )
 
 
-@day9_editor_bp.route("/api/reset", methods=["POST"])
+@day12_editor_bp.route("/api/reset", methods=["POST"])
 def api_reset():
     global _current_html
     _current_html = BASE_HTML
     return jsonify({"success": True})
 
 
-@day9_editor_bp.route("/api/import_json", methods=["POST"])
+@day12_editor_bp.route("/api/import_json", methods=["POST"])
 def api_import_json():
     """
     Accept a JSON body matching the stories schema and apply it.
@@ -295,12 +294,8 @@ def api_import_json():
     return jsonify({"success": True, "html": _current_html, "fields": parse_fields(_current_html)})
 
 
-# ── Auto-apply tomorrow's date at startup ─────────────────────────────────────
-_auto_apply_date()
-
-
 if __name__ == "__main__":
     from flask import Flask
     test_app = Flask(__name__, template_folder=".")
-    test_app.register_blueprint(day9_editor_bp)
+    test_app.register_blueprint(day12_editor_bp)
     test_app.run(debug=True, host="0.0.0.0", port=5000)

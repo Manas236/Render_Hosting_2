@@ -1,4 +1,5 @@
-from flask import Blueprint, request, redirect, url_for, Response, render_template_string
+import logging
+from flask import Blueprint, request, redirect, url_for, Response, render_template_string, jsonify
 from bs4 import BeautifulSoup, Comment
 from collections import defaultdict
 import config
