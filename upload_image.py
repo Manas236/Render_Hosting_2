@@ -559,7 +559,7 @@ def push():
     commands = [
         ('git add .',                     'git add .'),
         (f'git commit -m "{commit_msg}"', f'git -c user.name="Newsband Image Pusher" -c user.email="bot@newsband.app" commit --allow-empty -m "{commit_msg}"'),
-        ('git pull (sync with remote)',   f'git pull --rebase {auth_url} main'),
+        ('git pull (sync with remote)',   f'git -c user.name="Newsband Image Pusher" -c user.email="bot@newsband.app" pull --rebase {auth_url} main'),
         ('git push to repository',        f'git push {auth_url} HEAD:main'),
     ]
 
