@@ -1,0 +1,587 @@
+"""
+Newsband Newsletter Editor — Day15 Flask Backend
+Uses BeautifulSoup4 for controlled, field-level HTML editing.
+Footer, layout structure, CSS, and logo are strictly locked.
+"""
+
+import io
+import re
+from flask import Blueprint, request, jsonify, render_template, send_file, Response
+from bs4 import BeautifulSoup, NavigableString
+
+day15_editor_bp = Blueprint('day15_editor', __name__)
+
+# ── Load base template once at startup ────────────────────────────────────────
+with open("Day15.html", "r", encoding="utf-8") as f:
+    BASE_HTML = f.read()
+    print(f"DEBUG [Day15]: BASE_HTML length: {len(BASE_HTML)}")
+
+_current_html = BASE_HTML   # mutable working copy
+
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+def _set_text(tag, text: str):
+    """Safely replace all children of a tag with a single plain-text node."""
+    tag.clear()
+    tag.append(NavigableString(text))
+
+
+def _find_header_date(soup):
+    """Find the date div inside the header (font-weight:600; color:#737373)."""
+    for div in soup.find_all("div"):
+        style = div.get("style", "")
+        if "color:#737373" in style and "font-weight:600" in style:
+            text = div.get_text()
+            if "Date:" in text:
+                return div
+    return None
+
+
+def _find_header_rni(soup):
+    """Find the RNI div inside the header (color:#888888)."""
+    for div in soup.find_all("div"):
+        style = div.get("style", "")
+        if "color:#888888" in style and "font-size:9px" in style:
+            text = div.get_text()
+            if "RNI:" in text:
+                return div
+    return None
+
+
+def _find_masthead_text(soup):
+    """Find the masthead strip text (e.g. 'Today's Top Stories')."""
+    for td in soup.find_all("td"):
+        style = td.get("style", "")
+        if "letter-spacing:4px" in style and "color:#8b2a1f" in style and "text-transform:uppercase" in style:
+            return td
+    return None
+
+
+# ── Story finders ─────────────────────────────────────────────────────────────
+
+def _find_feature_story(soup):
+    """
+    Find the feature (hero) story section.
+    It's the full-bleed section with a hero image and large headline.
+    Returns dict with tag references.
+    """
+    result = {}
+
+    # Hero image — the large full-width image (width:100%; max-width:754px)
+    for img in soup.find_all("img"):
+        style = img.get("style", "")
+        if "max-width:754px" in style and "width:100%" in style:
+            result["image"] = img
+            break
+
+    # Category tag — inside the feature section, small text with background:#8b2a1f
+    # The feature section has the category label with padding:5px 10px
+    for td in soup.find_all("td"):
+        style = td.get("style", "")
+        if "background:#8b2a1f" in style and "padding:5px 10px" in style:
+            result["category"] = td
+            break
+
+    # "Top Story" label next to category
+    for td in soup.find_all("td"):
+        style = td.get("style", "")
+        if "color:#6b6b6b" in style and "letter-spacing:2.5px" in style:
+            text = td.get_text().strip()
+            if "Top Story" in text:
+                result["top_story_label"] = td
+                break
+
+    # Headline — large Georgia font, 40px
+    for td in soup.find_all("td"):
+        style = td.get("style", "")
+        if "font-size:40px" in style and "font-weight:700" in style:
+            result["headline"] = td
+            break
+
+    # Summary — 17px Georgia, text-align:justify
+    for td in soup.find_all("td"):
+        style = td.get("style", "")
+        if "font-size:17px" in style and "line-height:1.6" in style and "text-align:justify" in style:
+            result["summary"] = td
+            break
+
+    # Link — "Read Full Story →"
+    for a in soup.find_all("a"):
+        text = a.get_text().strip()
+        if "Read Full Story" in text:
+            result["link"] = a
+            break
+
+    return result
+
+
+def _find_twin_stories(soup):
+    """
+    Find the two twin medium stories (side-by-side columns).
+    Returns list of 2 dicts with tag references.
+    """
+    stories = []
+
+    # Find images with max-width:320px (twin story images)
+    twin_images = []
+    for img in soup.find_all("img"):
+        style = img.get("style", "")
+        if "max-width:320px" in style and "width:100%" in style:
+            twin_images.append(img)
+
+    # Find 23px headlines (twin story headlines)
+    twin_headlines = []
+    for td in soup.find_all("td"):
+        style = td.get("style", "")
+        if "font-size:23px" in style and "font-weight:700" in style:
+            twin_headlines.append(td)
+
+    # Find twin categories — spans with background:#8b2a1f and padding:4px 9px
+    twin_cats = []
+    for span in soup.find_all("span"):
+        style = span.get("style", "")
+        if "background:#8b2a1f" in style and "padding:4px 9px" in style:
+            twin_cats.append(span)
+
+    # Find twin summaries — 14px, line-height:1.55, text-align:justify, color:#3a3a3a
+    twin_summaries = []
+    for td in soup.find_all("td"):
+        style = td.get("style", "")
+        if "font-size:14px" in style and "line-height:1.55" in style and "color:#3a3a3a" in style and "text-align:justify" in style:
+            twin_summaries.append(td)
+
+    # Find "Read →" links
+    read_links = []
+    for a in soup.find_all("a"):
+        text = a.get_text().strip()
+        if text.startswith("Read") and "→" in text and "Full" not in text:
+            read_links.append(a)
+
+    # Build stories from matched elements
+    for i in range(min(2, len(twin_headlines))):
+        story = {"index": i}
+        if i < len(twin_images):
+            story["image"] = twin_images[i]
+        if i < len(twin_cats):
+            story["category"] = twin_cats[i]
+        if i < len(twin_headlines):
+            story["headline"] = twin_headlines[i]
+        if i < len(twin_summaries):
+            story["summary"] = twin_summaries[i]
+        if i < len(read_links):
+            story["link"] = read_links[i]
+        stories.append(story)
+
+    return stories
+
+
+def _find_compact_stories(soup):
+    """
+    Find the 2 compact stories (image+text side-by-side).
+    These have 21px headlines and max-width:240px images.
+    Returns list of 2 dicts with tag references.
+    """
+    stories = []
+
+    # Find images with max-width:240px (compact story images)
+    compact_images = []
+    for img in soup.find_all("img"):
+        style = img.get("style", "")
+        if "max-width:240px" in style and "width:100%" in style:
+            compact_images.append(img)
+
+    # Find 21px headlines
+    compact_headlines = []
+    for td in soup.find_all("td"):
+        style = td.get("style", "")
+        if "font-size:21px" in style and "font-weight:700" in style:
+            compact_headlines.append(td)
+
+    # Categories in compact — same span pattern but after the twin stories
+    # We'll find them by looking at spans with background:#8b2a1f after the twin section
+    all_cat_spans = []
+    for span in soup.find_all("span"):
+        style = span.get("style", "")
+        if "background:#8b2a1f" in style and "padding:4px 9px" in style:
+            all_cat_spans.append(span)
+    # First 2 are twin stories, next 2 are compact stories
+    compact_cats = all_cat_spans[2:4] if len(all_cat_spans) >= 4 else []
+
+    # Compact summaries — same style as twin but after the twin section
+    all_summaries = []
+    for td in soup.find_all("td"):
+        style = td.get("style", "")
+        if "font-size:14px" in style and "line-height:1.55" in style and "color:#3a3a3a" in style and "text-align:justify" in style:
+            all_summaries.append(td)
+    compact_summaries = all_summaries[2:4] if len(all_summaries) >= 4 else []
+
+    # Links — "Read →" after the first 2
+    all_read_links = []
+    for a in soup.find_all("a"):
+        text = a.get_text().strip()
+        if text.startswith("Read") and "→" in text and "Full" not in text:
+            all_read_links.append(a)
+    compact_links = all_read_links[2:4] if len(all_read_links) >= 4 else []
+
+    for i in range(min(2, len(compact_headlines))):
+        story = {"index": i}
+        if i < len(compact_images):
+            story["image"] = compact_images[i]
+        if i < len(compact_cats):
+            story["category"] = compact_cats[i]
+        if i < len(compact_headlines):
+            story["headline"] = compact_headlines[i]
+        if i < len(compact_summaries):
+            story["summary"] = compact_summaries[i]
+        if i < len(compact_links):
+            story["link"] = compact_links[i]
+        stories.append(story)
+
+    return stories
+
+
+def _find_market_data(soup):
+    """
+    Find the markets ticker data.
+    Returns list of 4 dicts (Sensex, Nifty, USD/INR, Gold).
+    """
+    markets = []
+    # The dark section has background:#0f0f0f
+    dark_section = None
+    for td in soup.find_all("td"):
+        style = td.get("style", "")
+        if "background:#0f0f0f" in style:
+            dark_section = td
+            break
+
+    if not dark_section:
+        return markets
+
+    # Find all market stat cells (4 tds with valign="top" and width="25%")
+    stat_cells = []
+    for td in dark_section.find_all("td"):
+        width = td.get("width", "")
+        valign = td.get("valign", "")
+        if width == "25%" and valign == "top":
+            stat_cells.append(td)
+
+    for cell in stat_cells:
+        divs = cell.find_all("div")
+        if len(divs) >= 3:
+            market = {
+                "label": divs[0].get_text().strip(),
+                "value": divs[1].get_text().strip(),
+                "change": divs[2].get_text().strip(),
+            }
+            # Check if change is positive or negative
+            style = divs[2].get("style", "")
+            market["positive"] = "color:#4caf7a" in style
+            markets.append(market)
+
+    return markets
+
+
+# ── Parse: extract current editable fields ────────────────────────────────────
+
+def get_tomorrow_date_str() -> str:
+    from datetime import datetime, timedelta
+    dt = datetime.now() + timedelta(days=1)
+    return dt.strftime("%d/%m/%Y")
+
+def parse_fields(html: str) -> dict:
+    soup = BeautifulSoup(html, "html.parser")
+    result = {}
+
+    # Header — Date
+    date_div = _find_header_date(soup)
+    if date_div:
+        result["date"] = get_tomorrow_date_str()
+
+    # Header — RNI
+    rni_div = _find_header_rni(soup)
+    if rni_div:
+        result["rni"] = rni_div.get_text().replace("RNI:", "").strip()
+
+    # Masthead text
+    mast = _find_masthead_text(soup)
+    if mast:
+        result["masthead"] = mast.get_text().strip()
+
+    # Stories — build a unified list
+    stories = []
+
+    # Story 0: Feature
+    feature = _find_feature_story(soup)
+    s0 = {"index": 0, "type": "feature"}
+    if "category" in feature:
+        s0["category"] = feature["category"].get_text().strip()
+    if "headline" in feature:
+        s0["headline"] = feature["headline"].get_text().strip()
+    if "summary" in feature:
+        s0["summary"] = feature["summary"].get_text().strip()
+    if "image" in feature:
+        s0["image"] = feature["image"].get("src", "")
+    if "link" in feature:
+        s0["link"] = feature["link"].get("href", "")
+    stories.append(s0)
+
+    # Stories 1-2: Twin medium
+    twins = _find_twin_stories(soup)
+    for i, tw in enumerate(twins):
+        s = {"index": i + 1, "type": "medium"}
+        if "category" in tw:
+            s["category"] = tw["category"].get_text().strip()
+        if "headline" in tw:
+            s["headline"] = tw["headline"].get_text().strip()
+        if "summary" in tw:
+            s["summary"] = tw["summary"].get_text().strip()
+        if "image" in tw:
+            s["image"] = tw["image"].get("src", "")
+        if "link" in tw:
+            s["link"] = tw["link"].get("href", "")
+        stories.append(s)
+
+    # Stories 3-4: Compact
+    compacts = _find_compact_stories(soup)
+    for i, c in enumerate(compacts):
+        s = {"index": i + 3, "type": "compact"}
+        if "category" in c:
+            s["category"] = c["category"].get_text().strip()
+        if "headline" in c:
+            s["headline"] = c["headline"].get_text().strip()
+        if "summary" in c:
+            s["summary"] = c["summary"].get_text().strip()
+        if "image" in c:
+            s["image"] = c["image"].get("src", "")
+        if "link" in c:
+            s["link"] = c["link"].get("href", "")
+        stories.append(s)
+
+    result["stories"] = stories
+
+    # Markets
+    result["markets"] = _find_market_data(soup)
+
+    return result
+
+
+# ── Update: apply user edits via BeautifulSoup ────────────────────────────────
+
+def update_html(html: str, data: dict) -> str:
+    soup = BeautifulSoup(html, "html.parser")
+
+    # ── PROTECTED: footer is never touched ────────────────────────────────────
+
+    # Header — Date
+    date_val = (data.get("date") or "").strip()
+    if date_val:
+        date_div = _find_header_date(soup)
+        if date_div:
+            _set_text(date_div, f"Date: {date_val}")
+
+    # Header — RNI
+    rni_val = (data.get("rni") or "").strip()
+    if rni_val:
+        rni_div = _find_header_rni(soup)
+        if rni_div:
+            _set_text(rni_div, f"RNI: {rni_val}")
+
+    # Masthead text
+    mast_val = (data.get("masthead") or "").strip()
+    if mast_val:
+        mast = _find_masthead_text(soup)
+        if mast:
+            # Preserve surrounding whitespace
+            _set_text(mast, mast_val)
+
+    # Stories
+    all_stories = data.get("stories", [])
+    for story_data in all_stories:
+        idx = story_data.get("index", -1)
+
+        if idx == 0:
+            # Feature story
+            feature = _find_feature_story(soup)
+            cat = (story_data.get("category") or "").strip()
+            if cat and "category" in feature:
+                _set_text(feature["category"], cat)
+
+            hl = (story_data.get("headline") or "").strip()
+            if hl and "headline" in feature:
+                _set_text(feature["headline"], hl)
+
+            summ = (story_data.get("summary") or "").strip()
+            if summ and "summary" in feature:
+                _set_text(feature["summary"], summ)
+
+            img_url = (story_data.get("image") or "").strip()
+            if img_url and img_url.startswith(("http://", "https://")) and "image" in feature:
+                feature["image"]["src"] = img_url
+
+            link = (story_data.get("link") or "").strip()
+            if link and "link" in feature:
+                feature["link"]["href"] = link
+
+        elif idx in (1, 2):
+            # Twin stories
+            twins = _find_twin_stories(soup)
+            tw_idx = idx - 1
+            if tw_idx < len(twins):
+                tw = twins[tw_idx]
+                cat = (story_data.get("category") or "").strip()
+                if cat and "category" in tw:
+                    _set_text(tw["category"], cat)
+
+                hl = (story_data.get("headline") or "").strip()
+                if hl and "headline" in tw:
+                    _set_text(tw["headline"], hl)
+
+                summ = (story_data.get("summary") or "").strip()
+                if summ and "summary" in tw:
+                    _set_text(tw["summary"], summ)
+
+                img_url = (story_data.get("image") or "").strip()
+                if img_url and img_url.startswith(("http://", "https://")) and "image" in tw:
+                    tw["image"]["src"] = img_url
+
+                link = (story_data.get("link") or "").strip()
+                if link and "link" in tw:
+                    tw["link"]["href"] = link
+
+        elif idx in (3, 4):
+            # Compact stories
+            compacts = _find_compact_stories(soup)
+            c_idx = idx - 3
+            if c_idx < len(compacts):
+                c = compacts[c_idx]
+                cat = (story_data.get("category") or "").strip()
+                if cat and "category" in c:
+                    _set_text(c["category"], cat)
+
+                hl = (story_data.get("headline") or "").strip()
+                if hl and "headline" in c:
+                    _set_text(c["headline"], hl)
+
+                summ = (story_data.get("summary") or "").strip()
+                if summ and "summary" in c:
+                    _set_text(c["summary"], summ)
+
+                img_url = (story_data.get("image") or "").strip()
+                if img_url and img_url.startswith(("http://", "https://")) and "image" in c:
+                    c["image"]["src"] = img_url
+
+                link = (story_data.get("link") or "").strip()
+                if link and "link" in c:
+                    c["link"]["href"] = link
+
+    # Markets
+    markets_data = data.get("markets", [])
+    if markets_data:
+        # Find market cells
+        dark_section = None
+        for td in soup.find_all("td"):
+            style = td.get("style", "")
+            if "background:#0f0f0f" in style:
+                dark_section = td
+                break
+
+        if dark_section:
+            stat_cells = []
+            for td in dark_section.find_all("td"):
+                width = td.get("width", "")
+                valign = td.get("valign", "")
+                if width == "25%" and valign == "top":
+                    stat_cells.append(td)
+
+            for i, mkt in enumerate(markets_data):
+                if i >= len(stat_cells):
+                    break
+                cell = stat_cells[i]
+                divs = cell.find_all("div")
+                if len(divs) >= 3:
+                    label = (mkt.get("label") or "").strip()
+                    if label:
+                        _set_text(divs[0], label)
+                    value = (mkt.get("value") or "").strip()
+                    if value:
+                        _set_text(divs[1], value)
+                    change = (mkt.get("change") or "").strip()
+                    if change:
+                        _set_text(divs[2], change)
+
+    return str(soup)
+
+
+# ── Routes ────────────────────────────────────────────────────────────────────
+
+@day15_editor_bp.route("/")
+def editor():
+    return render_template("editor_day15.html", api_prefix="/day15-editor")
+
+
+@day15_editor_bp.route("/api/fields")
+def api_fields():
+    return jsonify(parse_fields(_current_html))
+
+
+@day15_editor_bp.route("/api/update", methods=["POST"])
+def api_update():
+    global _current_html
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"error": "Invalid JSON body"}), 400
+    _current_html = update_html(_current_html, data)
+    return jsonify({"success": True, "html": _current_html})
+
+
+@day15_editor_bp.route("/api/preview")
+def api_preview():
+    return Response(_current_html, mimetype="text/html; charset=utf-8")
+
+
+@day15_editor_bp.route("/api/export")
+def api_export():
+    buf = io.BytesIO(_current_html.encode("utf-8"))
+    return send_file(
+        buf,
+        as_attachment=True,
+        download_name="newsband_day15_newsletter.html",
+        mimetype="text/html",
+    )
+
+
+@day15_editor_bp.route("/api/reset", methods=["POST"])
+def api_reset():
+    global _current_html
+    _current_html = BASE_HTML
+    return jsonify({"success": True})
+
+
+@day15_editor_bp.route("/api/import_json", methods=["POST"])
+def api_import_json():
+    """
+    Accept a JSON body matching the stories schema and apply it.
+    Schema:
+      { "date": "DD/MM/YYYY", "rni": "...", "stories": [ { "category", "headline", "summary", "image", "link" }, ... ] }
+    Stories are matched by array position (0-indexed).
+    """
+    global _current_html
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"error": "Invalid JSON"}), 400
+
+    # Re-index stories if they don't have an explicit index
+    stories = data.get("stories", [])
+    for i, s in enumerate(stories):
+        s.setdefault("index", i)
+
+    _current_html = update_html(_current_html, data)
+    return jsonify({"success": True, "html": _current_html, "fields": parse_fields(_current_html)})
+
+
+if __name__ == "__main__":
+    from flask import Flask
+    test_app = Flask(__name__, template_folder=".")
+    test_app.register_blueprint(day15_editor_bp)
+    test_app.run(debug=True, host="0.0.0.0", port=5000)

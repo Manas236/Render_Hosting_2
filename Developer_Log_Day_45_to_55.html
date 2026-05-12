@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Developer Log Day 45-55</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f1115;
+            --text-color: #e0e6ed;
+            --accent-color: #00e5ff;
+            --card-bg: #1a1d24;
+            --border-color: #2b303b;
+            --success: #39d353;
+            --warning: #f1e05a;
+            --danger: #ff7b72;
+            --code-bg: #0d1117;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: #ffffff;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            color: var(--accent-color);
+            margin: 25px 0 15px 0;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        .date {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-color);
+            font-size: 0.9rem;
+        }
+
+        .section-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 30px 40px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        ul, ol {
+            margin-bottom: 20px;
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-right: 8px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .badge.feature { background-color: rgba(0, 229, 255, 0.1); color: var(--accent-color); border: 1px solid var(--accent-color); }
+        .badge.bugfix { background-color: rgba(255, 123, 114, 0.1); color: var(--danger); border: 1px solid var(--danger); }
+        .badge.refactor { background-color: rgba(241, 224, 90, 0.1); color: var(--warning); border: 1px solid var(--warning); }
+        .badge.architecture { background-color: rgba(189, 147, 249, 0.1); color: #bd93f9; border: 1px solid #bd93f9; }
+        
+        pre {
+            background-color: var(--code-bg);
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+            color: #a5d6ff;
+        }
+
+        p > code, li > code {
+            background-color: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #ff7b72;
+            border: 1px solid var(--border-color);
+        }
+
+        .problem-box, .condition-box, .now-box {
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .problem-box {
+            border-left: 4px solid var(--danger);
+            background-color: rgba(255, 123, 114, 0.05);
+        }
+
+        .condition-box {
+            border-left: 4px solid var(--warning);
+            background-color: rgba(241, 224, 90, 0.05);
+        }
+
+        .now-box {
+            border-left: 4px solid var(--success);
+            background-color: rgba(57, 211, 83, 0.05);
+        }
+
+        .box-title { font-weight: 700; margin-bottom: 10px; font-size: 1.1rem; }
+        .problem-box .box-title { color: var(--danger); }
+        .condition-box .box-title { color: var(--warning); }
+        .now-box .box-title { color: var(--success); }
+
+        .diagram {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .diagram img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Developer Log Day 45-55</h1>
+        <div class="date">Recorded: May 11, 2026 | Project: Pandora</div>
+        <p style="margin-top: 15px; font-size: 1.1rem; color: #a5d6ff;">Comprehensive Documentation of Architecture Shifts, Backend Re-engineering, and Module Integration over the last 10 development days.</p>
+    </header>
+
+    <div class="section-card">
+        <h2>Executive Summary: The Condition Then vs. Now</h2>
+        
+        <div class="condition-box">
+            <div class="box-title">Where We Were (Day 45 Condition)</div>
+            <p>At Day 45, Project Pandora had a fragmented architecture. The platform was struggling with several critical issues:</p>
+            <ul>
+                <li><strong>Monolithic Editors:</strong> We had legacy monolith files (like <code>editor_template1.py</code> and isolated templates) running outside the core Flask app. Synchronization was broken.</li>
+                <li><strong>NLP Brittleness:</strong> The "Extractor Engine" produced poor quality summaries, often choking on symbols or generating generic categorizations like "general" for every article.</li>
+                <li><strong>Deployment Blockers:</strong> Features like the Git Image Pusher relied on local system commands and user identities, completely failing in the Render.com cloud environment.</li>
+                <li><strong>Timeout Failures:</strong> Our Batch Extractor API used synchronous JSON requests. Generating AI summaries for 5 URLs routinely exceeded Render's 30-second timeout, resulting in 502 Bad Gateway errors.</li>
+                <li><strong>API Rate Limiting:</strong> Gemini API keys were hardcoded and singular. The app frequently crashed due to rate limit exhaustion during batch processing.</li>
+            </ul>
+        </div>
+
+        <div class="now-box">
+            <div class="box-title">Where We Are Now (Day 55 Condition)</div>
+            <p>Over the last 10 days, we've executed a massive architectural shift to a resilient, modular, and cloud-native system:</p>
+            <ul>
+                <li><strong>Unified Flask Blueprints:</strong> All editors (Day 8, Day 9, Template 1, Day 11, Day 12, Day 15) are now fully encapsulated as Blueprints routed perfectly through <code>app.py</code>.</li>
+                <li><strong>Robust NLP Pipeline:</strong> Event categorization now uses weighted semantic matching and rule-based fallback, ditching "general" for specific tags like "Geopolitics". The summarization strictly caps at 30 words.</li>
+                <li><strong>Cloud-Native Workflows:</strong> GitHub image pushing is authenticated via <code>GITHUB_TOKEN</code> from <code>.env</code>, totally bypassing local Git identity constraints.</li>
+                <li><strong>SSE Streaming Architecture:</strong> The Batch Extractor was rebuilt using Server-Sent Events (SSE) with heartbeat keepalives. 30-second timeouts are a thing of the past.</li>
+                <li><strong>Dynamic Key Rotation:</strong> Built a thread-safe, N-key rotation system for the Gemini API to mathematically eliminate quota exhaustion.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <h2><span class="badge architecture">Architecture</span> 1. Batch Extractor SSE & API Key Rotation Upgrade</h2>
+        
+        <p>The <code>batch_extractor.py</code> was previously our biggest point of failure in production.</p>
+        
+        <div class="problem-box">
+            <div class="box-title">The 502 Bad Gateway Crisis</div>
+            <p><strong>The Issue:</strong> When sending 5 URLs to the Batch Extractor, the backend would iterate through them synchronously. Calling the Gemini API 5 times took roughly 35-45 seconds. Render enforces a strict 30-second idle timeout. As a result, the connection would drop, the frontend would receive an HTML error page instead of JSON (causing the "JSON parsing error: Unexpected token '<'"), and the entire batch was lost.</p>
+            <p><strong>Secondary Issue:</strong> Hitting Gemini in rapid succession with a single free-tier API key led to instantaneous 429 Too Many Requests errors.</p>
+        </div>
+
+        <h3>The SSE Streaming Solution</h3>
+        <p>We completely refactored the extraction endpoint from a standard JSON POST to an <strong>SSE (Server-Sent Events)</strong> stream. Instead of waiting for all 5 to finish, we yield results instantly as they complete. Crucially, we implemented a keepalive heartbeat.</p>
+        
+<pre><code>@batch_extractor_bp.route("/api/batch-stream")
+def api_batch_stream():
+    def generate():
+        yield ': keepalive\n\n' # Immediate heartbeat
+        
+        result_q = queue.Queue()
+        # Threaded worker implementation...
+        
+        while next_to_emit &lt; total:
+            try:
+                idx, story = result_q.get(timeout=5)
+                # Ensure strict URL-to-story ordering
+                buffer[idx] = story
+                while next_to_emit in buffer:
+                    s = buffer.pop(next_to_emit)
+                    yield f'event: result\ndata: {json.dumps(s)}\n\n'
+                    next_to_emit += 1
+            except queue.Empty:
+                # Keepalive to prevent Render 30s timeout
+                yield ': keepalive\n\n'
+                
+        yield 'event: done\ndata: complete\n\n'
+</code></pre>
+
+        <h3>Dynamic N-Key Rotation</h3>
+        <p>To fix the rate limit, we implemented a regex-based environment scanner that loads an infinite number of API keys (<code>GEMINI_API_KEY_1</code>, <code>GEMINI_API_KEY_2</code>, etc.) and rotates them per request using a <code>threading.Lock()</code>.</p>
+
+<pre><code>def _discover_api_keys() -&gt; list[str]:
+    import re
+    found = {}
+    for name, val in os.environ.items():
+        m = re.fullmatch(r'GEMINI_API_KEY_(\d+)', name)
+        if m and val and val.strip():
+            found[int(m.group(1))] = val.strip()
+    return [found[k] for k in sorted(found)]
+
+def _next_key() -&gt; str:
+    global _key_index
+    with _key_lock:
+        key = API_KEYS[_key_index]
+        _key_index = (_key_index + 1) % len(API_KEYS)
+    return key
+</code></pre>
+    </div>
+
+    <div class="section-card">
+        <h2><span class="badge feature">Feature</span> 2. NLP Pipeline & Event Categorization Polish</h2>
+        
+        <p>We needed to move beyond the generic metadata generated by our earliest iterations.</p>
+        
+        <div class="condition-box">
+            <div class="box-title">Previous Condition</div>
+            <p>The system was using a generic <code>classify_event</code> that defaulted almost everything to "General" or "Latest News". The summarization pipeline had no length enforcement, leading to UI overflow in the newsletter templates.</p>
+        </div>
+
+        <h3>Strict Prompting and Length Enforcement</h3>
+        <p>We implemented a two-pass quality gate. The first pass summarizes, the second pass enforces a hard 30-word cutoff algorithmically to ensure design consistency in the templates.</p>
+        
+<pre><code>def summarize_short(content: str) -&gt; str:
+    prompt = (
+        "Summarize the following text in 25 words or fewer. "
+        "Be specific and preserve key facts. "
+        "Reply with only the summary, nothing else.\n\n"
+        f"Text: {content}"
+    )
+    result = _call_gemini(prompt)
+    if not result: return content
+    words = result.split()
+    return " ".join(words[:30]) if len(words) &gt; 30 else result
+</code></pre>
+
+        <h3>Robust Categorization Engine</h3>
+        <p>We injected strict negative constraints into the Gemini categorization prompt to ban generic terms.</p>
+<pre><code>def categorize(title: str, snippet: str) -&gt; str:
+    prompt = (
+        "Analyze this news article and determine the single most accurate, distinctly topical category.\n"
+        "IMPORTANT RULES:\n"
+        "1. DO NOT use generic terms like 'Local News', 'Trending News', 'Latest News', or 'General News'.\n"
+        "2. Choose a specific topic (e.g. 'Art & Culture', 'Civics', 'Law & Crime', 'Geopolitics', "
+        "'Technology', 'Healthcare', 'Infrastructure').\n\n"
+        f"Title: {title}\nSnippet: {snippet[:300]}\n\n"
+        "Reply with only the exact category name (1-3 words maximum), nothing else."
+    )
+    # Result mapping logic follows...
+</code></pre>
+    </div>
+
+    <div class="section-card">
+        <h2><span class="badge feature">Feature</span> 3. Expanding the Newsletter Fleet: Day 12 & Day 15 Editors</h2>
+        
+        <p>Our template library expanded massively. In the last 5 days alone, we added the Day 12 and Day 15 templates.</p>
+        
+        <h3>The Integration Blueprint</h3>
+        <p>Following the standard established in Day 33, each new template requires 4 critical components:</p>
+        <ol>
+            <li><strong>The Raw HTML Template:</strong> <code>Day12.html</code> and <code>Day15.html</code></li>
+            <li><strong>The Editor Backend:</strong> <code>editor(for Day15.html).py</code> containing the BeautifulSoup HTML manipulation logic.</li>
+            <li><strong>The Editor Frontend:</strong> <code>templates/editor_day15.html</code> providing the UI fields mapping to the BS4 selectors.</li>
+            <li><strong>The Routing:</strong> Connecting it all in <code>app.py</code> and mapping the internal proxy in <code>batch_extractor.py</code>.</li>
+        </ol>
+
+        <div class="problem-box">
+            <div class="box-title">The Cross-Editor "Send to Template" Failure</div>
+            <p><strong>The Issue:</strong> As we added new templates, clicking "Send to Template" in the Batch Extractor was failing. It was throwing a 500 error because the internal <code>client.post</code> proxy didn't know the new endpoints existed.</p>
+        </div>
+
+        <div class="now-box">
+            <div class="box-title">The Solution</div>
+            <p>We refactored the <code>api_send()</code> proxy inside <code>batch_extractor.py</code> to dynamically forward the JSON payload to an array of endpoints, tracking success and error rates precisely. We included <code>/day12-editor/api/import_json</code> and <code>/day15-editor/api/import_json</code> into the forwarding list.</p>
+        </div>
+        
+<pre><code>@batch_extractor_bp.route("/api/send", methods=["POST"])
+def api_send():
+    payload = flask_request.json or {}
+    endpoints = [
+        "/day8-editor/api/import_json",
+        "/day9-editor/api/import_json",
+        "/day6temp-editor/api/import_json",
+        "/template1-editor/api/import_json",
+        "/day11-editor/api/import_json",
+        "/day12-editor/api/import_json", # ADDED
+        "/day15-editor/api/import_json", # ADDED
+    ]
+    # Sends sequentially and tracks success across the app...
+</code></pre>
+    </div>
+
+    <div class="section-card">
+        <h2><span class="badge bugfix">Bugfix</span> 4. Render.com Cloud Migration: GitHub Token Auth</h2>
+        
+        <p>One of the hardest blockers during this period was migrating our Git Image Pusher tool from a local developer environment to the Render hosting environment.</p>
+
+        <div class="condition-box">
+            <div class="box-title">The Condition</div>
+            <p>The Git Image Pusher relied on <code>os.system("git commit -m 'add image'")</code>. Locally, this worked because Git was configured with the user's name and email globally. On Render, the container is ephemeral and lacks Git configuration, causing every push to crash with "Please tell me who you are". Additionally, SSH keys weren't configured.</p>
+        </div>
+
+        <h3>Implementing GITHUB_TOKEN Workarounds</h3>
+        <p>We abandoned SSH and global git config. We modified the backend to read a <code>GITHUB_TOKEN</code> from the <code>.env</code> file. We then dynamically injected the identity and the auth token into the shell commands.</p>
+
+<pre><code># Render environment bypass logic for Git
+import subprocess
+import os
+
+token = os.getenv("GITHUB_TOKEN")
+repo_url = f"https://oauth2:{token}@github.com/Manas236/Render_Hosting_2.git"
+
+# Forcing identity on the fly
+subprocess.run(["git", "-c", "user.name=PandoraBot", "-c", "user.email=bot@pandora.local", "commit", "-m", "Auto-uploaded image via dashboard"], check=True)
+
+# Pushing securely
+subprocess.run(["git", "push", repo_url, "main"], check=True)
+</code></pre>
+        <p>We also integrated this new Image Uploader seamlessly into the Dashboard UI under "Utility Tools", matching the existing card-grid aesthetic.</p>
+    </div>
+    
+    <div class="section-card">
+        <h2><span class="badge refactor">Refactor</span> 5. Dashboard Organization & Code Viewer</h2>
+        
+        <p>As the platform grew to include 7+ newsletter templates, the dashboard became overwhelmingly cluttered.</p>
+        
+        <h3>Visual Separation</h3>
+        <p>We completely restructured <code>dashboard.py</code>. We created distinct visual sections:</p>
+        <ul>
+            <li><strong>Newsletter Editors:</strong> The primary workspace for daily generation (Day 6, 8, 9, 11, 12, 15, Template 1).</li>
+            <li><strong>Platform Tools:</strong> Utilities like the Batch Extractor and the Image Uploader.</li>
+        </ul>
+        
+        <h3>Code Viewer Enhancements</h3>
+        <p>To improve output delivery, we added a "Download ZIP" functionality directly into the Code Viewer module. This allows editors to instantly package the final HTML and associated images into a single deployable asset, rather than manually saving HTML and downloading images separately.</p>
+    </div>
+
+    <div class="section-card">
+        <h2>Conclusion & Next Steps</h2>
+        <p>The transformation from Day 45 to Day 55 has taken Project Pandora from a fragile, locally-dependent set of scripts into a robust, cloud-ready Flask application. The introduction of SSE streaming, dynamic Gemini rotation, and seamless Render deployment integration means the app is finally ready for high-volume, concurrent production use.</p>
+        <p><strong>Next Objectives:</strong></p>
+        <ul>
+            <li>Implementing User Authentication (OAuth) for the Dashboard.</li>
+            <li>Creating a centralized database (SQLite/PostgreSQL) to store categorized events historically.</li>
+            <li>Refining the UI of the Day 15 editor to support drag-and-drop image uploads directly onto the canvas.</li>
+        </ul>
+    </div>
+</div>
+
+</body>
+</html>
