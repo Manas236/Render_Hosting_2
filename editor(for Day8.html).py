@@ -22,8 +22,10 @@ logging.basicConfig(level=logging.INFO)
 
 ALLOWED_EXTENSIONS = {"html", "htm"}
 
+
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 # ─────────────────────────────────────────────
 # Auth
@@ -42,20 +44,22 @@ def require_login(f):
         return f(*args, **kwargs)
     return decorated
 
+
 # ─────────────────────────────────────────────
 # Constants
 # ─────────────────────────────────────────────
 ORIGINAL_FILE = "Day8.html"
-GITHUB_BASE   = "https://raw.githubusercontent.com/Manas236/Newsband/main/"
+GITHUB_BASE = "https://raw.githubusercontent.com/Manas236/Newsband/main/"
 
 # Tags we care about when indexing the document
-TEXT_TAGS    = {"p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "td", "span", "strong"}
+TEXT_TAGS = {"p", "div", "h1", "h2", "h3",
+             "h4", "h5", "h6", "td", "span", "strong"}
 ALL_EDITABLE = TEXT_TAGS | {"img", "a"}
 
 # ── Section-level access control ──────────────────────────────────────────────
 # Any section comment containing one of these keywords (case-insensitive) is
 # completely locked — no elements inside it will appear in the editor.
-FOOTER_SECTION_KEYWORDS  = {"footer"}
+FOOTER_SECTION_KEYWORDS = {"footer"}
 
 # Sidebar sections are partially locked: only Date and RNI Number fields show.
 SIDEBAR_SECTION_KEYWORDS = {"sidebar"}
@@ -216,16 +220,16 @@ def load_elements():
     soup = BeautifulSoup(html, "html.parser")
     wrap_bare_text_nodes(soup)
 
-    elements       = []
-    counter        = 0
-    seen_hrefs     = set()
+    elements = []
+    counter = 0
+    seen_hrefs = set()
     current_section = ""   # tracks the most recent HTML comment text
 
     for node in soup.descendants:
 
         # ── Track section comments ────────────────────────────────
         if isinstance(node, Comment):
-            current_section = str(node).strip()
+            str(node).strip()
             continue
 
         # Only process Tag nodes
@@ -237,7 +241,7 @@ def load_elements():
             continue
 
         # ── Global section visibility logic ──────────────────────
-        is_footer  = is_in_footer(node)
+        is_footer = is_in_footer(node)
         is_sidebar = is_in_sidebar(node)
 
         # ── IMG ──────────────────────────────────────────────────
@@ -268,7 +272,8 @@ def load_elements():
             node["data-editor-id"] = eid
 
             # Visible if not footer/sidebar AND hasn't been seen yet (prevents duplicate fields)
-            visible = not (is_footer or is_sidebar) and (href not in seen_hrefs)
+            visible = not (is_footer or is_sidebar) and (
+                href not in seen_hrefs)
             seen_hrefs.add(href)
 
             elements.append({
@@ -315,7 +320,7 @@ def load_elements():
 
             # ── FIX: collapse source-code indentation whitespace ──
             inner_html = collapse_inner_whitespace(inner_html)
-            text       = collapse_inner_whitespace(text)
+            text = collapse_inner_whitespace(text)
 
             elements.append({
                 "id": eid, "type": "text", "tag": tag,
@@ -325,7 +330,8 @@ def load_elements():
             counter += 1
 
     # Collect background images from <td> elements and append as bg-img entries
-    bg_elems, counter = extract_td_background_images(soup, counter_start=counter)
+    bg_elems, counter = extract_td_background_images(
+        soup, counter_start=counter)
     elements.extend(bg_elems)
 
     return soup, elements
@@ -378,7 +384,7 @@ def extract_td_background_images(soup, counter_start: int = 0) -> tuple:
         if td.get("data-editor-id"):
             continue
 
-        in_footer  = is_in_footer(td)
+        in_footer = is_in_footer(td)
         in_sidebar = is_in_sidebar(td)
 
         # Read both sources independently so the save path can update all of them.
@@ -407,7 +413,7 @@ def extract_td_background_images(soup, counter_start: int = 0) -> tuple:
             "text":          url,
             "inner_html":    url,
             "el":            td,
-            "visible":       not (in_footer or in_sidebar),
+            "visible": not (in_footer or in_sidebar),
             # Track which locations carry the URL so _process_form can sync all of them.
             "_style_bg_url": style_url,   # empty string if absent
             "_attr_bg_url":  attr_url,    # empty string if absent
@@ -444,8 +450,8 @@ def load_section_comments(soup) -> dict:
     Must be called after load_elements() (data-editor-id already stamped).
     Walks document order; maps element_id → nearest preceding HTML comment.
     """
-    mapping  = {}
-    pending  = None
+    mapping = {}
+    pending = None
 
     for node in soup.descendants:
         if isinstance(node, Comment):
@@ -469,7 +475,7 @@ def get_field_label(comment: str) -> str:
     # Discard obvious structural comments
     if "\n" in comment or "┌─" in comment or comment.strip().startswith("END "):
         return ""
-    
+
     # Remove text inside parentheses or brackets
     label = re.sub(r'[\(\[].*?[\)\]]', '', comment)
     return label.strip()
@@ -492,8 +498,8 @@ def load_style_controls(soup) -> list:
         span   → color            (Number Color)
                → font-size        (Number Font Size)
     """
-    controls    = []
-    style_seq   = [0]          # mutable counter
+    controls = []
+    style_seq = [0]          # mutable counter
     seen_py_ids = set()        # Python id() of already-stamped elements
     current_section = None
 
@@ -527,7 +533,8 @@ def load_style_controls(soup) -> list:
         return m.group(1) if m else None
 
     def _find_bg_image(style_str: str):
-        m = re.search(r"background-image\s*:\s*url\(['\"]?(.*?)['\"]?\)", style_str)
+        m = re.search(
+            r"background-image\s*:\s*url\(['\"]?(.*?)['\"]?\)", style_str)
         return m.group(1) if m else None
 
     def _add(el, label, ctype, prop, val):
@@ -566,7 +573,8 @@ def load_style_controls(soup) -> list:
         if tag == "table":
             bg = _find_hex(style_str, "background-color")
             if bg:
-                _add(node, "Card Background Color", "color", "background-color", bg)
+                _add(node, "Card Background Color",
+                     "color", "background-color", bg)
 
         elif tag == "a":
             color = _find_hex(style_str, "color")
@@ -578,7 +586,8 @@ def load_style_controls(soup) -> list:
 
             accent = _find_hex(style_str, "--accent")
             if accent:
-                _add(node, "Card Accent Color", "accent-color", "--accent", accent)
+                _add(node, "Card Accent Color",
+                     "accent-color", "--accent", accent)
 
         elif tag == "td":
             # Skip td wrappers whose DIRECT child is an already-indexed <a>
@@ -588,7 +597,8 @@ def load_style_controls(soup) -> list:
 
             bg_img = _find_bg_image(style_str)
             if bg_img and "singlecolorimage.com" not in bg_img:
-                _add(node, "Background Image URL", "url", "background-image", bg_img)
+                _add(node, "Background Image URL",
+                     "url", "background-image", bg_img)
 
             color = _find_hex(style_str, "color")
             if color:
@@ -791,7 +801,7 @@ def _estimate_card_height(card_td, container_width_px: float) -> float:
     # --- Available content width inside the text container
     # Subtract left + right padding from the card width
     if len(pad_parts) >= 2:
-        pad_left  = pad_parts[3] if len(pad_parts) == 4 else pad_parts[1]
+        pad_left = pad_parts[3] if len(pad_parts) == 4 else pad_parts[1]
         pad_right = pad_parts[1]
     else:
         pad_left = pad_right = pad_parts[0] if pad_parts else 0.0
@@ -843,7 +853,8 @@ def _estimate_card_height(card_td, container_width_px: float) -> float:
         elif len(m_parts) == 3:
             mt, _, mb = m_parts
         elif len(m_parts) == 2:
-            mt = m_parts[0]; mb = m_parts[0]
+            mt = m_parts[0]
+            mb = m_parts[0]
         elif len(m_parts) == 1:
             mt = mb = m_parts[0]
         else:
@@ -868,7 +879,8 @@ def equalize_card_heights(soup) -> None:
     all_trs = soup.find_all("tr")
     for tr in all_trs:
         # Direct <td> children with class "col-stack"
-        card_tds = [td for td in tr.find_all("td", class_="col-stack", recursive=False)]
+        card_tds = [td for td in tr.find_all(
+            "td", class_="col-stack", recursive=False)]
         if len(card_tds) < 2:
             continue  # single card or no cards — skip
 
@@ -921,7 +933,8 @@ def equalize_card_heights(soup) -> None:
 
             # Read existing padding and add to padding-bottom
             existing_style = target_td.get("style", "")
-            pad_match = re.search(r'padding\s*:\s*([^;]+)', existing_style, re.I)
+            pad_match = re.search(
+                r'padding\s*:\s*([^;]+)', existing_style, re.I)
             if pad_match:
                 parts = pad_match.group(1).strip().split()
                 if len(parts) == 3:     # top right bottom
@@ -934,13 +947,16 @@ def equalize_card_heights(soup) -> None:
                     new_pad = f"{top} {right} {new_bot}px {left}"
                 else:
                     new_pad = pad_match.group(1)  # leave unchanged
-                new_style = existing_style[:pad_match.start(1)] + new_pad + existing_style[pad_match.end(1):]
+                new_style = existing_style[:pad_match.start(
+                    1)] + new_pad + existing_style[pad_match.end(1):]
                 target_td["style"] = new_style
             else:
                 # No padding shorthand — just append padding-bottom
-                target_td["style"] = existing_style.rstrip('; ') + f"; padding-bottom:{pad_px}px;"
+                target_td["style"] = existing_style.rstrip(
+                    '; ') + f"; padding-bottom:{pad_px}px;"
 
-            logging.info("Card equalization: added %dpx padding-bottom", pad_px)
+            logging.info(
+                "Card equalization: added %dpx padding-bottom", pad_px)
 
 
 def _norm(s: str) -> str:
@@ -2281,6 +2297,7 @@ function manualSave() {
 #  FORM RENDERING HELPERS
 # ══════════════════════════════════════════════════════════════════
 
+
 def _esc(s: str) -> str:
     """HTML-escape a string for use in attribute values or textarea content."""
     return (
@@ -2292,9 +2309,9 @@ def _esc(s: str) -> str:
 
 
 def _render_field(elem: dict) -> str:
-    eid   = elem["id"]
+    eid = elem["id"]
     etype = elem["type"]
-    text  = elem["text"]
+    text = elem["text"]
 
     if etype in ("img", "bg-img"):
         # bg-img: background image on a <td>; rendered identically to <img>
@@ -2356,15 +2373,16 @@ def _render_field(elem: dict) -> str:
 
 
 def _render_style_control(sc: dict) -> str:
-    sid   = sc["style_id"]
+    sid = sc["style_id"]
     label = sc["label"]
     ctype = sc["type"]
-    prop  = sc["prop"]
-    val   = sc["value"]
+    prop = sc["prop"]
+    val = sc["value"]
     sc_id = sc["id"]
 
     if ctype == "color" or ctype == "accent-color":
-        hex6 = val.lower() if re.match(r"^#[0-9a-fA-F]{6}$", val) else "#000000"
+        hex6 = val.lower() if re.match(
+            r"^#[0-9a-fA-F]{6}$", val) else "#000000"
         palette = [
             "#c8102e", "#c8781a", "#d4920f", "#8d3222", "#6d4c41", "#bf360c",
             "#1c4f7c", "#1565c0", "#37474f", "#00796b", "#2a7a5c", "#1b6e3a",
@@ -2424,7 +2442,7 @@ def _process_form(form_data) -> str:
     Apply submitted form values onto a fresh parse of the current HTML.
     Writes result to SAVED_FILE and returns the clean HTML string.
     """
-    soup, elems    = load_elements()
+    soup, elems = load_elements()
     fix_link_visibility(elems)
     style_controls = load_style_controls(soup)
 
@@ -2439,21 +2457,21 @@ def _process_form(form_data) -> str:
             continue
 
         new_val = form_data[key]
-        el      = elem["el"]
-        etype   = elem["type"]
+        el = elem["el"]
+        etype = elem["type"]
 
         if etype == "img":
             old_src = el.get("src", "")
-            base    = GITHUB_BASE if old_src.startswith(GITHUB_BASE) else ""
-            full    = base + new_val if base else new_val
+            base = GITHUB_BASE if old_src.startswith(GITHUB_BASE) else ""
+            full = base + new_val if base else new_val
             if _norm(full) != _norm(old_src):
                 el["src"] = full
 
         elif etype == "bg-img":
             # elem["text"] is the canonical URL that was shown in the editor field.
             old_url = elem["text"]
-            base    = GITHUB_BASE if old_url.startswith(GITHUB_BASE) else ""
-            full    = base + new_val if base else new_val
+            base = GITHUB_BASE if old_url.startswith(GITHUB_BASE) else ""
+            full = base + new_val if base else new_val
             if _norm(full) == _norm(old_url):
                 continue
 
@@ -2461,7 +2479,7 @@ def _process_form(form_data) -> str:
             # both the style attribute and the HTML background attribute stay in sync.
             # This prevents one stale reference from silently overriding the new value.
             has_style_bg = bool(elem.get("_style_bg_url"))
-            has_bg_attr  = bool(elem.get("_attr_bg_url"))
+            has_bg_attr = bool(elem.get("_attr_bg_url"))
 
             if has_style_bg:
                 el["style"] = update_style_prop(
@@ -2500,9 +2518,9 @@ def _process_form(form_data) -> str:
             continue
 
         new_val = form_data[key].strip()
-        el      = sc["el"]
-        prop    = sc["prop"]
-        ctype   = sc["type"]
+        el = sc["el"]
+        prop = sc["prop"]
+        ctype = sc["type"]
 
         if not new_val:
             continue
@@ -2546,9 +2564,11 @@ def _process_form(form_data) -> str:
                     )
                     logging.info("Logo spacer set to %dpx", spacer_height)
                 else:
-                    logging.warning("logo_spacer_height submitted but spacer td not found")
+                    logging.warning(
+                        "logo_spacer_height submitted but spacer td not found")
         except ValueError:
-            logging.warning("Invalid logo_spacer_height value: %r", spacer_height_raw)
+            logging.warning(
+                "Invalid logo_spacer_height value: %r", spacer_height_raw)
 
     # ── card height equalisation ───────────────────────────────────
     equalize_card_heights(soup)
@@ -2641,7 +2661,7 @@ def editor():
     """Main editor page — two-panel layout."""
     from collections import defaultdict
 
-    soup, elems    = load_elements()
+    soup, elems = load_elements()
     fix_link_visibility(elems)
     style_controls = load_style_controls(soup)
 
@@ -2658,10 +2678,10 @@ def editor():
     for sc in style_controls:
         sid_to_scs[sc["style_id"]].append(sc)
 
-    form_parts      = []
-    last_section    = None
-    rendered_eids   = set()
-    rendered_sids   = set()
+    form_parts = []
+    last_section = None
+    rendered_eids = set()
+    rendered_sids = set()
 
     for node in soup.descendants:
 
@@ -2671,10 +2691,12 @@ def editor():
                 last_section = section
                 # Don't show a section banner for footer — it has no editable fields anyway
                 # Hide structural comments (END tags, multi-line notes, boxes)
-                is_structural = section.upper().startswith("END") or "┌─" in section or "\n" in section
+                is_structural = section.upper().startswith(
+                    "END") or "┌─" in section or "\n" in section
                 if not _section_is_footer(section) and not is_structural:
                     label = section.strip("= ").strip()
-                    form_parts.append(f'<div class="sec-banner">📋 {_esc(label)}</div>')
+                    form_parts.append(
+                        f'<div class="sec-banner">📋 {_esc(label)}</div>')
             continue
 
         if not hasattr(node, "get"):
@@ -2707,10 +2729,10 @@ _ALIGNMENT_SCRIPT = """
   function superscriptOrdinal(text) {
     if (typeof text !== 'string') return text;
     return text
-        .replace(/(\d+)th/g, '$1ᵗʰ')
-        .replace(/(\d+)st/g, '$1ˢᵗ')
-        .replace(/(\d+)nd/g, '$1ⁿᵈ')
-        .replace(/(\d+)rd/g, '$1ʳᵈ');
+        .replace(/(\\d+)th/g, '$1ᵗʰ')
+        .replace(/(\\d+)st/g, '$1ˢᵗ')
+        .replace(/(\\d+)nd/g, '$1ⁿᵈ')
+        .replace(/(\\d+)rd/g, '$1ʳᵈ');
   }
 
   function runAlignment() {
@@ -2999,7 +3021,8 @@ def preview():
     soup, _ = load_elements()        # stamps data-editor-id
     load_style_controls(soup)        # stamps data-style-id
     stamp_logo_spacer(soup)          # stamps data-logo-spacer on the spacer td
-    equalize_card_heights(soup)      # equalise card heights before first render
+    # equalise card heights before first render
+    equalize_card_heights(soup)
 
     script_tag = BeautifulSoup(_ALIGNMENT_SCRIPT, "html.parser")
 

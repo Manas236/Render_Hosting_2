@@ -65,6 +65,7 @@ def get_tomorrow_date_str() -> str:
     dt = datetime.now() + timedelta(days=1)
     return dt.strftime("%B %d, %Y").replace(" 0", " ")
 
+
 def parse_fields(html: str) -> dict:
     soup = BeautifulSoup(html, "html.parser")
     result = {}

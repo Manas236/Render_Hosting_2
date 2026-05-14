@@ -738,6 +738,17 @@
                 </div>
             </div>
 
+            <!-- MARKETS SECTION -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-label"><span class="accent-dot">●</span> Markets Ticker</span>
+                    <button class="btn btn-ghost" id="fetchLiveBtn" onclick="fetchLiveMarkets()" style="padding:3px 10px; font-size:9px;">⚡ Live</button>
+                </div>
+                <div class="section-body" id="marketsList">
+                    <!-- populated by JS -->
+                </div>
+            </div>
+
             <!-- STORIES SECTION -->
             <div class="section" style="flex:1;">
                 <div class="section-header">
@@ -828,6 +839,9 @@
         function populateForm(data) {
             document.getElementById('hdrDate').value = data.date || '';
             document.getElementById('hdrRni').value = data.rni || '';
+
+            const ml = document.getElementById('marketsList');
+            if (ml) { ml.innerHTML = ''; (data.markets || []).forEach((m, i) => buildMarketRow(m, i, ml)); }
 
             const list = document.getElementById('storiesList');
             list.innerHTML = '';
@@ -938,6 +952,7 @@
                 date: val('hdrDate'),
                 rni: val('hdrRni'),
                 stories,
+                markets: getMarketsData(),
             };
         }
 
@@ -1048,6 +1063,85 @@
             } catch (e) {
                 errEl.textContent = 'Import failed — ' + e.message;
                 errEl.classList.add('visible');
+            }
+        }
+
+        /* ── Markets ─────────────────────────────────────────────────────────────── */
+        function buildMarketRow(mkt, i, container) {
+            const isPos = mkt.positive !== false;
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'border:1px solid var(--border); border-radius:6px; padding:10px 12px; display:flex; flex-direction:column; gap:8px; background:var(--surface);';
+            wrap.innerHTML = `
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                    <span style="font-family:var(--mono); font-size:9px; letter-spacing:1.8px; text-transform:uppercase; color:var(--text-3);">${escH(mkt.label || '')}</span>
+                    <button type="button" id="mkt${i}_dir" onclick="toggleMarketDir(${i})"
+                        style="cursor:pointer; border:1px solid var(--border); background:var(--panel); padding:2px 8px; border-radius:4px; font-size:13px; color:${isPos ? 'var(--green)' : '#e05555'}; transition:all 0.15s;">
+                        ${isPos ? '▲' : '▼'}
+                    </button>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <div class="field" style="width:90px; flex-shrink:0; gap:3px;">
+                        <label style="font-size:8px;">Value</label>
+                        <input type="text" id="mkt${i}_value" value="${escAttr(mkt.value || '')}"
+                               oninput="scheduleUpdate()" autocomplete="off" style="font-size:12px;" />
+                    </div>
+                    <div class="field" style="flex:1; gap:3px;">
+                        <label style="font-size:8px;">Change</label>
+                        <input type="text" id="mkt${i}_change" value="${escAttr(mkt.change || '')}"
+                               oninput="scheduleUpdate()" autocomplete="off" style="font-size:12px;" />
+                    </div>
+                </div>
+                <input type="hidden" id="mkt${i}_label" value="${escAttr(mkt.label || '')}" />
+                <input type="hidden" id="mkt${i}_pos" value="${isPos ? '1' : '0'}" />
+            `;
+            container.appendChild(wrap);
+        }
+
+        function toggleMarketDir(i) {
+            const hidden = document.getElementById(`mkt${i}_pos`);
+            const btn = document.getElementById(`mkt${i}_dir`);
+            const newPos = hidden.value !== '1';
+            hidden.value = newPos ? '1' : '0';
+            btn.textContent = newPos ? '▲' : '▼';
+            btn.style.color = newPos ? 'var(--green)' : '#e05555';
+            scheduleUpdate();
+        }
+
+        function getMarketsData() {
+            const markets = [];
+            let i = 0;
+            while (document.getElementById(`mkt${i}_label`)) {
+                markets.push({
+                    label: document.getElementById(`mkt${i}_label`).value || '',
+                    value: val(`mkt${i}_value`),
+                    change: val(`mkt${i}_change`),
+                    positive: document.getElementById(`mkt${i}_pos`).value === '1',
+                });
+                i++;
+            }
+            return markets;
+        }
+
+        async function fetchLiveMarkets() {
+            const btn = document.getElementById('fetchLiveBtn');
+            btn.textContent = '⏳ Fetching…';
+            btn.disabled = true;
+            try {
+                const res = await fetch("{{ api_prefix|default('/day15-editor') }}/api/markets/fetch");
+                const data = await res.json();
+                if (data.error) throw new Error(data.error);
+                const ml = document.getElementById('marketsList');
+                ml.innerHTML = '';
+                data.markets.forEach((m, i) => buildMarketRow(m, i, ml));
+                await sendUpdate();
+                setStatus('saved', 'MARKETS UPDATED');
+                setTimeout(() => setStatus('', 'READY'), 2200);
+            } catch (e) {
+                setStatus('error', 'FETCH FAILED: ' + e.message);
+                setTimeout(() => setStatus('', 'READY'), 3500);
+            } finally {
+                btn.textContent = '⚡ Live';
+                btn.disabled = false;
             }
         }
 

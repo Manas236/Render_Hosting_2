@@ -289,6 +289,7 @@ def get_tomorrow_date_str() -> str:
     dt = datetime.now() + timedelta(days=1)
     return dt.strftime("%d/%m/%Y")
 
+
 def parse_fields(html: str) -> dict:
     soup = BeautifulSoup(html, "html.parser")
     result = {}
@@ -509,6 +510,10 @@ def update_html(html: str, data: dict) -> str:
                     change = (mkt.get("change") or "").strip()
                     if change:
                         _set_text(divs[2], change)
+                    positive = mkt.get("positive", True)
+                    color = "#4caf7a" if positive else "#e07a6b"
+                    existing_style = divs[2].get("style", "")
+                    divs[2]["style"] = re.sub(r'color:#[0-9a-fA-F]{6}', f'color:{color}', existing_style)
 
     return str(soup)
 
@@ -549,6 +554,49 @@ def api_export():
         download_name="newsband_day15_newsletter.html",
         mimetype="text/html",
     )
+
+
+@day15_editor_bp.route("/api/markets/fetch")
+def api_markets_fetch():
+    try:
+        import yfinance as yf
+    except ImportError:
+        return jsonify({"error": "yfinance not installed — run: pip install yfinance"}), 500
+    try:
+        def fetch_two(sym):
+            hist = yf.Ticker(sym).history(period="5d")["Close"].dropna()
+            if len(hist) < 2:
+                return None, None
+            return float(hist.iloc[-1]), float(hist.iloc[-2])
+
+        def build_entry(now, prev, label, value_fmt, chg_dec=2):
+            if now is None or prev is None:
+                return {"label": label, "value": "N/A", "change": "N/A", "positive": True}
+            chg = now - prev
+            pct = (chg / prev) * 100
+            arrow = "▲" if chg >= 0 else "▼"
+            sign = "+" if pct >= 0 else "−"
+            chg_str = f"{arrow} {abs(chg):,.{chg_dec}f}  ({sign}{abs(pct):.2f}%)"
+            return {"label": label, "value": value_fmt(now), "change": chg_str, "positive": chg >= 0}
+
+        s_now, s_prev = fetch_two("^BSESN")
+        n_now, n_prev = fetch_two("^NSEI")
+        u_now, u_prev = fetch_two("INR=X")
+        g_now_usd, g_prev_usd = fetch_two("GC=F")
+
+        # Gold: USD/troy oz → INR/10g  (1 troy oz = 31.1035 g)
+        g_now = (g_now_usd * u_now * 10 / 31.1035) if g_now_usd and u_now else None
+        g_prev = (g_prev_usd * u_prev * 10 / 31.1035) if g_prev_usd and u_prev else None
+
+        markets = [
+            build_entry(s_now, s_prev, "Sensex",        lambda v: f"{int(round(v)):,}"),
+            build_entry(n_now, n_prev, "Nifty 50",       lambda v: f"{int(round(v)):,}"),
+            build_entry(u_now, u_prev, "USD / INR",      lambda v: f"{v:.2f}"),
+            build_entry(g_now, g_prev, "Gold 24K ₹/10g", lambda v: f"{int(round(v)):,}", chg_dec=0),
+        ]
+        return jsonify({"markets": markets})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @day15_editor_bp.route("/api/reset", methods=["POST"])

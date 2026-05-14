@@ -159,13 +159,15 @@ function manualSave() { saveState(); showToast('✔ Saved to your browser!'); }
 </html>
 """
 
+
 @editor_bp.route("/editor/<tid>")
 @require_login
 def editor(tid):
     """Main editor page — two-panel layout."""
     tcfg = config.TEMPLATES_CONFIG.get(tid)
-    if not tcfg: return redirect(url_for('dashboard_bp.dashboard'))
-    
+    if not tcfg:
+        return redirect(url_for('dashboard_bp.dashboard'))
+
     file_path = tcfg["file"]
     soup, elems = helpers.load_elements(file_path)
     helpers.fix_link_visibility(elems)
@@ -175,9 +177,11 @@ def editor(tid):
     for eid, elem in eid_to_elem.items():
         if eid in section_mapping:
             lbl = helpers.get_field_label(section_mapping[eid])
-            if lbl: elem["label_comment"] = lbl
+            if lbl:
+                elem["label_comment"] = lbl
     sid_to_scs = defaultdict(list)
-    for sc in style_controls: sid_to_scs[sc["style_id"]].append(sc)
+    for sc in style_controls:
+        sid_to_scs[sc["style_id"]].append(sc)
 
     form_parts, last_section, rendered_eids, rendered_sids = [], None, set(), set()
     for node in soup.descendants:
@@ -185,45 +189,53 @@ def editor(tid):
             section = str(node).strip()
             if section and section != last_section:
                 last_section = section
-                is_structural = section.upper().startswith("END") or "┌─" in section or "\n" in section
+                is_structural = section.upper().startswith(
+                    "END") or "┌─" in section or "\n" in section
                 if not helpers._section_is_footer(section) and not is_structural:
-                    form_parts.append(f'<div class="sec-banner">📋 {helpers._esc(section.strip("= ").strip())}</div>')
+                    form_parts.append(
+                        f'<div class="sec-banner">📋 {helpers._esc(section.strip("= ").strip())}</div>')
         elif hasattr(node, "get"):
             eid, sid = node.get("data-editor-id"), node.get("data-style-id")
             if eid and eid in eid_to_elem and eid not in rendered_eids:
                 elem = eid_to_elem[eid]
-                if elem.get("visible", True): rendered_eids.add(eid); form_parts.append(helpers._render_field(elem))
+                if elem.get("visible", True):
+                    rendered_eids.add(eid)
+                    form_parts.append(helpers._render_field(elem))
             if sid and sid not in rendered_sids and sid in sid_to_scs:
                 rendered_sids.add(sid)
-                for sc in sid_to_scs[sid]: form_parts.append(helpers._render_style_control(sc))
+                for sc in sid_to_scs[sid]:
+                    form_parts.append(helpers._render_style_control(sc))
 
     return render_template_string(
-        EDITOR_PAGE, 
+        EDITOR_PAGE,
         form_html="\n".join(form_parts),
         tid=tid,
         template_name=tcfg["name"],
         has_alignment=tcfg.get("has_alignment", False)
     )
 
+
 @editor_bp.route("/editor/preview/<tid>")
 @require_login
 def preview(tid):
     tcfg = config.TEMPLATES_CONFIG.get(tid)
-    if not tcfg: return ""
-    
+    if not tcfg:
+        return ""
+
     soup, _ = helpers.load_elements(tcfg["file"])
     helpers.load_style_controls(soup)
-    
+
     if tcfg.get("has_alignment"):
         helpers.stamp_logo_spacer(soup)
         script_html = helpers._ALIGNMENT_SCRIPT
     else:
         script_html = helpers._BASIC_PREVIEW_SCRIPT
-    
+
     script_tag = BeautifulSoup(script_html, "html.parser")
     body = soup.find("body")
-    if body: body.append(script_tag)
-        
+    if body:
+        body.append(script_tag)
+
     return Response(str(soup), mimetype="text/html")
 
 
@@ -232,11 +244,13 @@ def preview(tid):
 def save(tid):
     return redirect(url_for('editor_bp.editor', tid=tid))
 
+
 @editor_bp.route("/editor/api/update/<tid>", methods=["POST"])
 @require_login
 def api_update(tid):
     tcfg = config.TEMPLATES_CONFIG.get(tid)
-    if not tcfg: return jsonify({"error": "invalid"}), 400
+    if not tcfg:
+        return jsonify({"error": "invalid"}), 400
     html = helpers._process_form(request.form, tcfg["file"])
     # If the template requires alignment, inject the script so it works in the live preview
     if tcfg.get("has_alignment"):
@@ -245,24 +259,29 @@ def api_update(tid):
         helpers.stamp_logo_spacer(soup)
         script_tag = BeautifulSoup(helpers._ALIGNMENT_SCRIPT, "html.parser")
         body = soup.find("body")
-        if body: body.append(script_tag)
+        if body:
+            body.append(script_tag)
         html = str(soup)
-        
+
     return jsonify({"success": True, "html": html})
+
 
 @editor_bp.route("/editor/download/<tid>", methods=["POST"])
 @require_login
 def download(tid):
     tcfg = config.TEMPLATES_CONFIG.get(tid)
-    if not tcfg: return redirect(url_for('dashboard_bp.dashboard'))
+    if not tcfg:
+        return redirect(url_for('dashboard_bp.dashboard'))
 
     dom_html = request.form.get("dom_html", "").strip()
     if dom_html:
         soup = BeautifulSoup(dom_html, "html.parser")
-        for script in soup.find_all("script"): script.decompose()
+        for script in soup.find_all("script"):
+            script.decompose()
         helpers.strip_editor_attrs(soup)
         html = helpers.format_html(soup)
     else:
-        logging.warning("download: dom_html not supplied; falling back to _process_form")
+        logging.warning(
+            "download: dom_html not supplied; falling back to _process_form")
         html = helpers._process_form(request.form, tcfg["file"])
     return Response(html, mimetype="text/html", headers={"Content-Disposition": f'attachment; filename="{tcfg["file"].replace(".html", "")}_edited.html"'})

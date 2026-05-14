@@ -43,7 +43,8 @@ ALLOWED_EXTENSIONS = {"html", "htm"}
 # ─────────────────────────────────────────────
 # HTML Processing Constants
 # ─────────────────────────────────────────────
-TEXT_TAGS = {"p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "td", "span", "strong"}
+TEXT_TAGS = {"p", "div", "h1", "h2", "h3",
+             "h4", "h5", "h6", "td", "span", "strong"}
 ALL_EDITABLE = TEXT_TAGS | {"img", "a"}
 
 FOOTER_SECTION_KEYWORDS = {"footer"}

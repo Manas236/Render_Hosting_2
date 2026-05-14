@@ -15,11 +15,14 @@ day9_editor_bp = Blueprint('day9_editor', __name__)
 with open("Day9.html", "r", encoding="utf-8") as f:
     BASE_HTML = f.read()
     print(f"DEBUG: BASE_HTML length: {len(BASE_HTML)}")
-    print(f"DEBUG: BASE_HTML snippet: {BASE_HTML[1500:1700]}") # Looking for header area
+    # Looking for header area
+    print(f"DEBUG: BASE_HTML snippet: {BASE_HTML[1500:1700]}")
 
 _current_html = BASE_HTML   # mutable working copy
 
 # Auto-apply tomorrow's date on startup so it's always fresh
+
+
 def _auto_apply_date():
     global _current_html
     from datetime import datetime, timedelta
@@ -92,6 +95,7 @@ def get_tomorrow_date_str() -> str:
     dt = datetime.now() + timedelta(days=1)
     return dt.strftime("%d/%m/%Y")
 
+
 def parse_fields(html: str) -> dict:
     soup = BeautifulSoup(html, "html.parser")
     result = {}
@@ -99,7 +103,7 @@ def parse_fields(html: str) -> dict:
     # Header — Date
     date_div = _find_header_date(soup)
     if date_div:
-        result["date"] = get_tomorrow_date_str()
+        result["date"] = date_div.get_text().replace("Date:", "").strip()
 
     # Header — RNI
     rni_div = _find_header_rni(soup)

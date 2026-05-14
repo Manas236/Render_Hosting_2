@@ -101,19 +101,24 @@ CONVERTER_HTML = """
 </html>
 """
 
+
 @codeview_bp.route("/converter", methods=["GET", "POST"])
 @require_login
 def converter():
     if request.method == "POST":
         file = request.files.get("file")
-        if not file or file.filename == "": return render_template_string(CONVERTER_HTML, error="No file selected.", code=None)
-        if not allowed_file(file.filename): return render_template_string(CONVERTER_HTML, error="Only .html and .htm files are accepted.", code=None)
+        if not file or file.filename == "":
+            return render_template_string(CONVERTER_HTML, error="No file selected.", code=None)
+        if not allowed_file(file.filename):
+            return render_template_string(CONVERTER_HTML, error="Only .html and .htm files are accepted.", code=None)
         try:
             raw_bytes = file.read()
             code_text = raw_bytes.decode("utf-8")
-        except UnicodeDecodeError: return render_template_string(CONVERTER_HTML, error="Could not read the file. Make sure it is a valid UTF-8 HTML file.", code=None)
+        except UnicodeDecodeError:
+            return render_template_string(CONVERTER_HTML, error="Could not read the file. Make sure it is a valid UTF-8 HTML file.", code=None)
         return render_template_string(CONVERTER_HTML, code=code_text, filename=file.filename, error=None)
     return render_template_string(CONVERTER_HTML, code=None, error=None)
+
 
 @codeview_bp.route("/download_zip", methods=["POST"])
 @require_login
@@ -121,17 +126,19 @@ def download_zip():
     import io
     import zipfile
     from flask import send_file
-    
+
     code = request.form.get("code", "")
     filename = request.form.get("filename", "code.html")
-    
+
     memory_file = io.BytesIO()
     with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
-        zip_filename = filename if filename.endswith('.html') else filename + '.html'
+        zip_filename = filename if filename.endswith(
+            '.html') else filename + '.html'
         zf.writestr(zip_filename, code.encode('utf-8'))
     memory_file.seek(0)
-    
-    download_name = filename.rsplit('.', 1)[0] + '.zip' if '.' in filename else filename + '.zip'
+
+    download_name = filename.rsplit(
+        '.', 1)[0] + '.zip' if '.' in filename else filename + '.zip'
     return send_file(
         memory_file,
         mimetype="application/zip",

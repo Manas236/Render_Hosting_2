@@ -2,12 +2,12 @@
 Batch Extractor — processes up to 5 article URLs with streaming SSE responses.
 """
 
+from flask import Blueprint
 import sys
 import os
 import json
 import logging
 import threading
-import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
@@ -42,7 +42,8 @@ logger = logging.getLogger("BatchExtractor")
 logger.setLevel(logging.INFO)
 if not logger.handlers:
     ch = logging.StreamHandler()
-    ch.setFormatter(logging.Formatter('[%(asctime)s] [%(levelname)s] %(message)s', '%H:%M:%S'))
+    ch.setFormatter(logging.Formatter(
+        '[%(asctime)s] [%(levelname)s] %(message)s', '%H:%M:%S'))
     logger.addHandler(ch)
 
 HEADERS = {
@@ -56,6 +57,8 @@ HEADERS = {
 }
 
 # ── Dynamic key discovery: finds GEMINI_API_KEY_1 … GEMINI_API_KEY_N ──────────
+
+
 def _discover_api_keys() -> list[str]:
     """Scan env vars for GEMINI_API_KEY_<n> and return them sorted by n."""
     import re as _re
@@ -67,6 +70,7 @@ def _discover_api_keys() -> list[str]:
     keys = [found[k] for k in sorted(found)]
     logger.info(f"[*] Discovered {len(keys)} Gemini API key(s)")
     return keys
+
 
 API_KEYS = _discover_api_keys()
 
@@ -98,17 +102,20 @@ def _call_gemini(prompt: str) -> str | None:
         return None
     for _ in range(len(API_KEYS)):
         api_key = _next_key()
-        masked = f"{api_key[:6]}...{api_key[-4:]}" if len(api_key) > 10 else "***"
+        masked = f"{api_key[:6]}...{api_key[-4:]}" if len(
+            api_key) > 10 else "***"
         client = genai.Client(api_key=api_key)
         for model in GEMINI_MODELS:
             try:
-                response = client.models.generate_content(model=model, contents=prompt)
+                response = client.models.generate_content(
+                    model=model, contents=prompt)
                 if response and response.text:
                     return response.text.strip()
             except Exception as e:
                 err = str(e)
                 if "429" in err or "exhausted" in err.lower() or "quota" in err.lower():
-                    logger.warning(f"[!] Rate limited {model} key {masked}: {err[:100]}")
+                    logger.warning(
+                        f"[!] Rate limited {model} key {masked}: {err[:100]}")
                 else:
                     logger.error(f"[!] {model} failed: {err[:100]}")
                     break
@@ -135,7 +142,8 @@ def extract(source: str) -> dict:
     title = title_tag.get_text(strip=True) if title_tag else ""
 
     img_tag = soup.find(class_="maan-post-img")
-    image_url = img_tag.find("img")["src"] if img_tag and img_tag.find("img") else ""
+    image_url = img_tag.find(
+        "img")["src"] if img_tag and img_tag.find("img") else ""
 
     content_tags = soup.find_all(class_="maan-text")
     content_tag = (
@@ -144,11 +152,13 @@ def extract(source: str) -> dict:
     )
     if content_tag:
         ps = content_tag.find_all("p")
-        leaf_ps = [p.get_text(strip=True) for p in ps if not p.find("p") and p.get_text(strip=True)]
+        leaf_ps = [p.get_text(strip=True) for p in ps if not p.find(
+            "p") and p.get_text(strip=True)]
         if leaf_ps:
             content = leaf_ps[0]
         else:
-            text_lines = [l.strip() for l in content_tag.get_text().split("\n") if l.strip()]
+            text_lines = [l.strip()
+                          for l in content_tag.get_text().split("\n") if l.strip()]
             content = text_lines[0] if text_lines else ""
     else:
         content = ""
@@ -166,7 +176,8 @@ def summarize_short(content: str) -> str:
     )
     result = _call_gemini(prompt)
     if not result:
-        logger.warning("[!] summarize_short exhausted all keys — returning original")
+        logger.warning(
+            "[!] summarize_short exhausted all keys — returning original")
         return content
     words = result.split()
     return " ".join(words[:30]) if len(words) > 30 else result
@@ -203,7 +214,8 @@ def process_url(url: str) -> dict:
             logger.info(f"[*] {word_count} words → summarizing")
             final_summary = summarize_short(raw_content) or raw_content
         else:
-            logger.info(f"[*] {word_count} words → already short, skipping summarize")
+            logger.info(
+                f"[*] {word_count} words → already short, skipping summarize")
             final_summary = raw_content
 
         categorize_input = final_summary if final_summary else raw_content[:300]
@@ -222,7 +234,6 @@ def process_url(url: str) -> dict:
         return {"link": url, "error": str(e)}
 
 
-from flask import Blueprint
 batch_extractor_bp = Blueprint('batch_extractor_bp', __name__)
 
 HTML_TEMPLATE = """
@@ -630,7 +641,8 @@ def api_batch():
     stories = [None] * len(urls)
 
     with ThreadPoolExecutor(max_workers=2) as executor:
-        future_to_idx = {executor.submit(process_url, url): i for i, url in enumerate(urls)}
+        future_to_idx = {executor.submit(
+            process_url, url): i for i, url in enumerate(urls)}
         for future in as_completed(future_to_idx):
             idx = future_to_idx[future]
             try:
@@ -650,7 +662,8 @@ def api_batch_stream():
     from flask import Response, stream_with_context
     import queue
 
-    urls = [u.strip() for u in flask_request.args.getlist("url") if u and u.strip()]
+    urls = [u.strip()
+            for u in flask_request.args.getlist("url") if u and u.strip()]
     if not urls:
         def error_stream():
             yield 'event: error_msg\ndata: No URLs provided\n\n'
@@ -720,13 +733,13 @@ def api_send():
         "/day12-editor/api/import_json",
         "/day15-editor/api/import_json",
     ]
-    
+
     success_count = 0
     errors = []
-    
+
     from flask import current_app
     client = current_app.test_client()
-    
+
     for target in endpoints:
         logger.info(f"[*] Forwarding to {target} internally")
         try:
@@ -734,12 +747,13 @@ def api_send():
             if resp.status_code == 200:
                 success_count += 1
             else:
-                logger.error(f"[X] Forward failed to {target}: returned {resp.status_code}")
+                logger.error(
+                    f"[X] Forward failed to {target}: returned {resp.status_code}")
                 errors.append(f"{target}: returned {resp.status_code}")
         except Exception as e:
             logger.error(f"[X] Forward failed to {target}: {e}")
             errors.append(f"{target}: {str(e)}")
-            
+
     if success_count > 0:
         return jsonify({"success": True, "message": f"Sent to {success_count} editors", "errors": errors})
     else:

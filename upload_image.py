@@ -9,7 +9,8 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 upload_image_bp = Blueprint('upload_image_bp', __name__)
 
 # Save images locally relative to the app so they can be pushed to the same repository
-REPO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploaded_images")
+REPO_PATH = os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), "uploaded_images")
 os.makedirs(REPO_PATH, exist_ok=True)
 
 HTML = """
@@ -512,7 +513,8 @@ def run_cmd(cmd):
 
 
 def ordinal(n):
-    suffix = "th" if 11 <= (n % 100) <= 13 else {1:"st",2:"nd",3:"rd"}.get(n % 10, "th")
+    suffix = "th" if 11 <= (n % 100) <= 13 else {
+        1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
     return f"{n}{suffix} commit"
 
 
@@ -531,7 +533,7 @@ def index():
 
 @upload_image_bp.route('/push', methods=['POST'])
 def push():
-    image      = request.files.get('image')
+    image = request.files.get('image')
     commit_msg = request.form.get('commit_msg', '').strip()
 
     if not image:
@@ -544,7 +546,8 @@ def push():
     save_path = os.path.join(REPO_PATH, image.filename)
     try:
         image.save(save_path)
-        steps.append({'icon': '✅', 'name': f'Saved  →  {image.filename}', 'output': ''})
+        steps.append(
+            {'icon': '✅', 'name': f'Saved  →  {image.filename}', 'output': ''})
     except Exception as e:
         return jsonify({'success': False,
                         'steps': [{'icon': '❌', 'name': 'Save image', 'output': str(e)}]})
@@ -558,8 +561,10 @@ def push():
 
     commands = [
         ('git add .',                     'git add .'),
-        (f'git commit -m "{commit_msg}"', f'git -c user.name="Newsband Image Pusher" -c user.email="bot@newsband.app" commit --allow-empty -m "{commit_msg}"'),
-        ('git pull (sync with remote)',   f'git -c user.name="Newsband Image Pusher" -c user.email="bot@newsband.app" pull --rebase {auth_url} main'),
+        (f'git commit -m "{commit_msg}"',
+         f'git -c user.name="Newsband Image Pusher" -c user.email="bot@newsband.app" commit --allow-empty -m "{commit_msg}"'),
+        ('git pull (sync with remote)',
+         f'git -c user.name="Newsband Image Pusher" -c user.email="bot@newsband.app" pull --no-rebase {auth_url} main'),
         ('git push to repository',        f'git push {auth_url} HEAD:main'),
     ]
 
@@ -569,7 +574,8 @@ def push():
         if GITHUB_TOKEN:
             output = output.replace(GITHUB_TOKEN, "***")
         ok = (code == 0)
-        steps.append({'icon': '✅' if ok else '❌', 'name': label, 'output': output})
+        steps.append({'icon': '✅' if ok else '❌',
+                     'name': label, 'output': output})
         if not ok:
             success = False
             break

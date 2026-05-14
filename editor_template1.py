@@ -105,6 +105,7 @@ def get_tomorrow_date_str() -> str:
     dt = datetime.now() + timedelta(days=1)
     return dt.strftime("%B %d, %Y").replace(" 0", " ")
 
+
 def parse_fields(html: str) -> dict:
     soup = BeautifulSoup(html, "html.parser")
     result = {}
@@ -143,7 +144,8 @@ def parse_fields(html: str) -> dict:
             bg_td = _find_bg_image_td(card)
             if bg_td:
                 import re
-                m = re.search(r"background-image:\s*url\(['\"]?(.*?)['\"]?\)", bg_td.get("style", ""))
+                m = re.search(
+                    r"background-image:\s*url\(['\"]?(.*?)['\"]?\)", bg_td.get("style", ""))
                 if m:
                     story["image"] = m.group(1)
 
