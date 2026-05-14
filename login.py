@@ -73,6 +73,7 @@ LOGIN_HTML = """
 </html>
 """
 
+
 @login_bp.route('/', methods=['GET', 'POST'])
 def login():
     """Login page — entry point."""
@@ -86,6 +87,7 @@ def login():
             return redirect(url_for('dashboard_bp.dashboard'))
         return render_template_string(LOGIN_HTML, error=True, logo_url=config.LOGO_URL)
     return render_template_string(LOGIN_HTML, error=False, logo_url=config.LOGO_URL)
+
 
 @login_bp.route('/logout')
 def logout():

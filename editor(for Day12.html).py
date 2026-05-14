@@ -5,7 +5,6 @@ Footer, layout structure, CSS, and logo are strictly locked.
 """
 
 import io
-import re
 from flask import Blueprint, request, jsonify, render_template, send_file, Response
 from bs4 import BeautifulSoup, NavigableString
 
@@ -116,6 +115,7 @@ def get_tomorrow_date_str() -> str:
     from datetime import datetime, timedelta
     dt = datetime.now() + timedelta(days=1)
     return dt.strftime("%B %d, %Y").replace(" 0", " ")
+
 
 def parse_fields(html: str) -> dict:
     soup = BeautifulSoup(html, "html.parser")

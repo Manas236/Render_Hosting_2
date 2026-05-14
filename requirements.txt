@@ -5,3 +5,4 @@ gevent
 requests
 google-genai
 python-dotenv
+yfinance

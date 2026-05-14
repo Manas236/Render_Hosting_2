@@ -2,6 +2,8 @@
 HTML Extractor — pulls title, image, and content from maan-themed pages.
 """
 
+import logging
+import os
 import sys
 from pathlib import Path
 
@@ -17,7 +19,6 @@ except ImportError:
 
 try:
     from google import genai
-    from google.genai import types
 except ImportError:
     sys.exit("Missing dependency: pip install google-genai")
 
@@ -68,23 +69,27 @@ def extract(source: str) -> dict:
 
     # Image URL
     img_tag = soup.find(class_="maan-post-img")
-    image_url = img_tag.find("img")["src"] if img_tag and img_tag.find("img") else ""
+    image_url = img_tag.find(
+        "img")["src"] if img_tag and img_tag.find("img") else ""
 
     # Content — direct child <p> tags inside maan-text (recursive=False avoids blob duplicates)
     content_tags = soup.find_all(class_="maan-text")
-    content_tag = max(content_tags, key=lambda t: len(t.find_all("p")), default=None) if content_tags else None
+    content_tag = max(content_tags, key=lambda t: len(
+        t.find_all("p")), default=None) if content_tags else None
     if content_tag:
         # Find all p tags.
         ps = content_tag.find_all("p")
         # Filter for those that actually contain text and don't have other p tags inside them
-        leaf_ps = [p.get_text(strip=True) for p in ps if not p.find("p") and p.get_text(strip=True)]
-        
+        leaf_ps = [p.get_text(strip=True) for p in ps if not p.find(
+            "p") and p.get_text(strip=True)]
+
         if leaf_ps:
             # Strictly return ONLY the first paragraph
             content = leaf_ps[0]
         else:
             # Fallback: if no p tags, maybe just the first line of text
-            text_lines = [l.strip() for l in content_tag.get_text().split('\n') if l.strip()]
+            text_lines = [l.strip()
+                          for l in content_tag.get_text().split('\n') if l.strip()]
             content = text_lines[0] if text_lines else ""
     else:
         content = ""
@@ -92,14 +97,12 @@ def extract(source: str) -> dict:
     return {"title": title, "image_url": image_url, "content": content}
 
 
-import os
-import logging
-
 logger = logging.getLogger("Extractor")
 logger.setLevel(logging.INFO)
 if not logger.handlers:
     ch = logging.StreamHandler()
-    ch.setFormatter(logging.Formatter('[%(asctime)s] [%(levelname)s] %(message)s', '%H:%M:%S'))
+    ch.setFormatter(logging.Formatter(
+        '[%(asctime)s] [%(levelname)s] %(message)s', '%H:%M:%S'))
     logger.addHandler(ch)
 
 API_KEYS = [
@@ -119,6 +122,7 @@ GEMINI_MODELS = [
     "gemini-2.5-flash"
 ]
 
+
 def summarize(content: str) -> str:
     """Ask Gemini to summarize content to 20 words or less. Only called when content exceeds 25 words."""
     global current_key_index
@@ -135,14 +139,17 @@ def summarize(content: str) -> str:
 
     for _ in range(len(API_KEYS)):
         api_key = API_KEYS[current_key_index]
-        masked = f"{api_key[:6]}...{api_key[-4:]}" if len(api_key) > 10 else "***"
-        logger.info(f"--- Summarize Key Index {current_key_index} ({masked}) ---")
+        masked = f"{api_key[:6]}...{api_key[-4:]}" if len(
+            api_key) > 10 else "***"
+        logger.info(
+            f"--- Summarize Key Index {current_key_index} ({masked}) ---")
         client = genai.Client(api_key=api_key)
 
         for model in GEMINI_MODELS:
             try:
                 logger.info(f"[*] Summarizing with model: {model}")
-                response = client.models.generate_content(model=model, contents=prompt)
+                response = client.models.generate_content(
+                    model=model, contents=prompt)
                 if not response or not response.text:
                     logger.warning(f"[!] Empty response from {model}")
                     continue
@@ -152,11 +159,14 @@ def summarize(content: str) -> str:
             except Exception as e:
                 error_str = str(e)
                 if "429" in error_str or "exhausted" in error_str.lower() or "Quota" in error_str:
-                    logger.warning(f"[!] Rate Limited (429) on {model}: {error_str[:150]}")
+                    logger.warning(
+                        f"[!] Rate Limited (429) on {model}: {error_str[:150]}")
                 else:
-                    logger.error(f"[!] Model {model} failed: {error_str[:150]}")
+                    logger.error(
+                        f"[!] Model {model} failed: {error_str[:150]}")
 
-        logger.warning(f"[!] All models failed for key index {current_key_index}. Cycling to next key...")
+        logger.warning(
+            f"[!] All models failed for key index {current_key_index}. Cycling to next key...")
         current_key_index = (current_key_index + 1) % len(API_KEYS)
 
     logger.critical("Exhausted all API keys and models for summarization!")
@@ -182,10 +192,11 @@ def categorize(title: str, snippet: str) -> str:
 
     for _ in range(len(API_KEYS)):
         api_key = API_KEYS[current_key_index]
-        masked = f"{api_key[:6]}...{api_key[-4:]}" if len(api_key) > 10 else "***"
+        masked = f"{api_key[:6]}...{api_key[-4:]}" if len(
+            api_key) > 10 else "***"
         logger.info(f"--- Key Index {current_key_index} ({masked}) ---")
         client = genai.Client(api_key=api_key)
-        
+
         for model in GEMINI_MODELS:
             try:
                 logger.info(f"[*] Trying model: {model}")
@@ -196,22 +207,24 @@ def categorize(title: str, snippet: str) -> str:
                 if not response or not response.text:
                     logger.warning(f"[!] Empty response from {model}")
                     continue
-                    
+
                 cat_result = response.text.strip()
                 logger.info(f"[+] Categorization success: {cat_result}")
                 return cat_result
             except Exception as e:
                 error_str = str(e)
                 if "429" in error_str or "exhausted" in error_str.lower() or "Quota" in error_str:
-                    logger.warning(f"[!] Rate Limited (429) on {model}: {error_str[:150]}")
+                    logger.warning(
+                        f"[!] Rate Limited (429) on {model}: {error_str[:150]}")
                 else:
-                    logger.error(f"[!] Model {model} failed: {error_str[:150]}")
-                pass
-                
+                    logger.error(
+                        f"[!] Model {model} failed: {error_str[:150]}")
+
         # If we reach here, all models failed for this key. Cycle to the next key.
-        logger.warning(f"[!] All models failed for key index {current_key_index}. Cycling to next key...")
+        logger.warning(
+            f"[!] All models failed for key index {current_key_index}. Cycling to next key...")
         current_key_index = (current_key_index + 1) % len(API_KEYS)
-        
+
     logger.critical("Exhausted all API keys and models!")
     return "(categorization failed: exhausted all keys and models)"
 
@@ -221,7 +234,8 @@ def categorize(title: str, snippet: str) -> str:
 # ══════════════════════════════════════════════════════════════════════════════
 
 source = ""               # ← paste URL or local file path here
-output = ""               # ← save to file e.g. "result.txt" (leave "" to print to terminal)
+# ← save to file e.g. "result.txt" (leave "" to print to terminal)
+output = ""
 
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -496,9 +510,11 @@ HTML_TEMPLATE = """
 </html>
 """
 
+
 @extractor_bp.route('/')
 def index():
     return render_template_string(HTML_TEMPLATE)
+
 
 @extractor_bp.route('/api/extract', methods=['POST'])
 def api_extract():
@@ -507,7 +523,7 @@ def api_extract():
     logger.info(f"[*] Received extraction request for: {source_url}")
     if not source_url:
         return jsonify({"error": "No URL provided"}), 400
-        
+
     try:
         extracted = extract(source_url)
         logger.info(f"[+] Content extracted. Categorizing...")
@@ -517,11 +533,12 @@ def api_extract():
             logger.info(f"[*] Content is {word_count} words — summarizing...")
             final_content = summarize(raw_content)
         else:
-            logger.info(f"[*] Content is {word_count} words — short enough, skipping summarization.")
+            logger.info(
+                f"[*] Content is {word_count} words — short enough, skipping summarization.")
             final_content = raw_content
         snippet = final_content.split("\n\n")[0] if final_content else ""
         category = categorize(extracted["title"], snippet)
-        
+
         logger.info(f"[+] Extraction complete for: {source_url}")
         return jsonify({
             "title": extracted["title"],
@@ -532,6 +549,7 @@ def api_extract():
     except Exception as e:
         logger.error(f"[X] Extraction failed: {e}")
         return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     # Use 5001 - port 5060 is blocked by browsers as "Unsafe" (SIP port)

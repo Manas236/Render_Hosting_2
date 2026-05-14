@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template_string, url_for
+from flask import Blueprint, render_template_string
 import config
 from helpers import require_login
 
@@ -133,11 +133,12 @@ DASHBOARD_HTML = """
 </html>
 """
 
+
 @dashboard_bp.route('/dashboard')
 @require_login
 def dashboard():
     """Dashboard page — routes to Editor or Converter."""
     return render_template_string(
-        DASHBOARD_HTML, 
+        DASHBOARD_HTML,
         logo_url=config.LOGO_URL
     )

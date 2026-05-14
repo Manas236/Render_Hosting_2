@@ -54,7 +54,8 @@ def _find_category(card):
     """Find category <p> — identified by letter-spacing:4px and color:#7a1a2e."""
     return card.find(
         "p",
-        style=lambda s: s and "letter-spacing:4px" in s.replace(" ", "") and "color:#7a1a2e" in s.replace(" ", ""),
+        style=lambda s: s and "letter-spacing:4px" in s.replace(
+            " ", "") and "color:#7a1a2e" in s.replace(" ", ""),
     )
 
 
@@ -83,6 +84,7 @@ def get_tomorrow_date_str() -> str:
     from datetime import datetime, timedelta
     dt = datetime.now() + timedelta(days=1)
     return dt.strftime("%B %d, %Y").replace(" 0", " ")
+
 
 def parse_fields(html: str) -> dict:
     soup = BeautifulSoup(html, "html.parser")
