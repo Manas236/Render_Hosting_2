@@ -559,15 +559,44 @@ def api_export():
 @day15_editor_bp.route("/api/markets/fetch")
 def api_markets_fetch():
     try:
-        import yfinance as yf
-    except ImportError:
-        return jsonify({"error": "yfinance not installed — run: pip install yfinance"}), 500
-    try:
+        def fetch_mumbai_gold():
+            import requests as _req
+            from bs4 import BeautifulSoup as _BS
+            url = "https://www.goodreturns.in/gold-rates/mumbai.html"
+            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+            try:
+                resp = _req.get(url, headers=headers, timeout=10)
+                soup = _BS(resp.text, 'html.parser')
+                # First table on the page is 24K gold rates
+                tables = soup.find_all('table')
+                if tables:
+                    table = tables[0]  # Table 0 = 24K
+                    for tr in table.find_all('tr'):
+                        cols = [td.get_text(strip=True) for td in tr.find_all(['th', 'td'])]
+                        if len(cols) >= 3 and cols[0] == '10':
+                            today_str = cols[1].replace('₹', '').replace(',', '').strip()
+                            yday_str = cols[2].replace('₹', '').replace(',', '').strip()
+                            return float(today_str), float(yday_str)
+            except Exception:
+                pass
+            return None, None
+
         def fetch_two(sym):
-            hist = yf.Ticker(sym).history(period="5d")["Close"].dropna()
-            if len(hist) < 2:
-                return None, None
-            return float(hist.iloc[-1]), float(hist.iloc[-2])
+            import requests
+            url = f"https://query2.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=5d"
+            headers = {"User-Agent": "Mozilla/5.0"}
+            try:
+                resp = requests.get(url, headers=headers, timeout=10)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    result = data['chart']['result'][0]
+                    closes = result['indicators']['quote'][0]['close']
+                    valid_closes = [c for c in closes if c is not None]
+                    if len(valid_closes) >= 2:
+                        return float(valid_closes[-1]), float(valid_closes[-2])
+            except Exception:
+                pass
+            return None, None
 
         def build_entry(now, prev, label, value_fmt, chg_dec=2):
             if now is None or prev is None:
@@ -582,17 +611,13 @@ def api_markets_fetch():
         s_now, s_prev = fetch_two("^BSESN")
         n_now, n_prev = fetch_two("^NSEI")
         u_now, u_prev = fetch_two("INR=X")
-        g_now_usd, g_prev_usd = fetch_two("GC=F")
-
-        # Gold: USD/troy oz → INR/10g  (1 troy oz = 31.1035 g)
-        g_now = (g_now_usd * u_now * 10 / 31.1035) if g_now_usd and u_now else None
-        g_prev = (g_prev_usd * u_prev * 10 / 31.1035) if g_prev_usd and u_prev else None
+        g_now, g_prev = fetch_mumbai_gold()
 
         markets = [
             build_entry(s_now, s_prev, "Sensex",        lambda v: f"{int(round(v)):,}"),
             build_entry(n_now, n_prev, "Nifty 50",       lambda v: f"{int(round(v)):,}"),
             build_entry(u_now, u_prev, "USD / INR",      lambda v: f"{v:.2f}"),
-            build_entry(g_now, g_prev, "Gold 24K ₹/10g", lambda v: f"{int(round(v)):,}", chg_dec=0),
+            build_entry(g_now, g_prev, "Gold 24K (Mumbai) ₹/10g", lambda v: f"{int(round(v)):,}", chg_dec=0),
         ]
         return jsonify({"markets": markets})
     except Exception as e:

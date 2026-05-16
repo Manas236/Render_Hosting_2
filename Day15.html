@@ -15,34 +15,33 @@
         img { border:0; outline:none; text-decoration:none; -ms-interpolation-mode:bicubic; display:block; }
         a { text-decoration:none; }
 
-        /* Mobile stacking — standard email responsive technique */
-        @media only screen and (max-width: 620px) {
-            .shell    { width:100% !important; }
-            .pad-outer{ padding:20px 12px !important; }
-            .stack    { display:block !important; width:100% !important; max-width:100% !important; }
-            .stack-pad-r { padding-right:0 !important; padding-bottom:28px !important; }
-            .stack-pad-l { padding-left:0 !important; padding-top:0 !important; }
-            .center-m { text-align:center !important; }
-            .hide-m   { display:none !important; }
-            .h-feature{ font-size:34px !important; line-height:1.12 !important; }
-            .h-medium { font-size:22px !important; line-height:1.2 !important; }
-            .h-compact{ font-size:18px !important; line-height:1.25 !important; }
-            .marginalia td { display:block !important; width:100% !important; border-right:0 !important; border-bottom:1px solid #d8d2c4 !important; padding:22px 0 !important; }
-            .marginalia td.last-stat { border-bottom:0 !important; }
-            .editor-pad { padding:34px 24px !important; }
-            .section-pad{ padding:36px 24px !important; }
+        /* Mobile + landscape — zoom-scale the whole shell to fit viewport */
+        @media only screen and (max-width: 754px),
+               only screen and (orientation: landscape) and (max-height: 500px) {
+            body { overflow-x:hidden !important; margin:0 !important; }
+            table.shell { zoom: calc(100vw / 754) !important; }
         }
     </style>
+    <!--[if mso]>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:AllowPNG/>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
 </head>
 
-<body style="margin:0; padding:0; background:#e8e4dc;">
+<body style="margin:0; padding:0; background:#e8e4dc; mso-line-height-rule:exactly;">
 
     <!-- ============================================================ -->
     <!--  OUTER WRAPPER                                                -->
     <!-- ============================================================ -->
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#e8e4dc;">
         <tr>
-            <td align="center" class="pad-outer" style="padding:40px 20px;">
+            <td align="center" style="padding:40px 20px;">
 
                 <!-- NEWSLETTER SHELL -->
                 <table role="presentation" class="shell" width="754" align="center" cellpadding="0" cellspacing="0" border="0" style="width:754px; max-width:754px; background:#faf7f1; border-radius:12px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,0.15);">
@@ -106,7 +105,7 @@
                             <!-- Feature copy -->
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                                 <tr>
-                                    <td class="section-pad" style="padding:36px 56px 48px 56px;">
+                                    <td style="padding:36px 56px 48px 56px;">
 
                                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                                             <tr>
@@ -124,7 +123,7 @@
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td class="h-feature" style="font-family:Georgia,'Times New Roman',serif; font-size:40px; line-height:1.1; color:#101010; font-weight:700; letter-spacing:-0.5px; padding-bottom:18px; text-align:justify;">
+                                                <td style="font-family:Georgia,'Times New Roman',serif; font-size:40px; line-height:1.1; color:#101010; font-weight:700; letter-spacing:-0.5px; padding-bottom:18px; text-align:justify;">
                                                     Centre clears &#8377;74,000 cr port modernisation push; Mumbai, Paradip, Chennai in first phase
                                                 </td>
                                             </tr>
@@ -173,12 +172,12 @@
                     <!--  TWIN MEDIUM STORIES                            -->
                     <!-- ============================================== -->
                     <tr>
-                        <td class="section-pad" style="background:#faf7f1; padding:8px 56px 48px 56px;">
+                        <td style="background:#faf7f1; padding:8px 56px 48px 56px;">
 
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                                 <tr>
                                     <!-- LEFT MEDIUM -->
-                                    <td class="stack stack-pad-r" valign="top" width="50%" style="width:50%; padding-right:22px;">
+                                    <td valign="top" width="50%" style="width:50%; padding-right:22px;">
                                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                                             <tr>
                                                 <td style="font-size:0; line-height:0; padding-bottom:18px;">
@@ -193,7 +192,7 @@
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td class="h-medium" style="font-family:Georgia,'Times New Roman',serif; font-size:23px; line-height:1.22; color:#101010; font-weight:700; letter-spacing:-0.2px; padding-bottom:12px; text-align:justify;">
+                                                <td style="font-family:Georgia,'Times New Roman',serif; font-size:23px; line-height:1.22; color:#101010; font-weight:700; letter-spacing:-0.2px; padding-bottom:12px; text-align:justify;">
                                                     Sensex ends at record high; IT, banks drive 612-point surge
                                                 </td>
                                             </tr>
@@ -212,10 +211,10 @@
                                         </table>
                                     </td>
 
-                                    <td class="hide-m" width="1" style="width:1px; border-left:1px solid #d8d2c4;">&nbsp;</td>
+                                    <td width="1" style="width:1px; border-left:1px solid #d8d2c4;">&nbsp;</td>
 
                                     <!-- RIGHT MEDIUM -->
-                                    <td class="stack stack-pad-l" valign="top" width="50%" style="width:50%; padding-left:22px;">
+                                    <td valign="top" width="50%" style="width:50%; padding-left:22px;">
                                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                                             <tr>
                                                 <td style="font-size:0; line-height:0; padding-bottom:18px;">
@@ -230,7 +229,7 @@
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td class="h-medium" style="font-family:Georgia,'Times New Roman',serif; font-size:23px; line-height:1.22; color:#101010; font-weight:700; letter-spacing:-0.2px; padding-bottom:12px; text-align:justify;">
+                                                <td style="font-family:Georgia,'Times New Roman',serif; font-size:23px; line-height:1.22; color:#101010; font-weight:700; letter-spacing:-0.2px; padding-bottom:12px; text-align:justify;">
                                                     BMC tables draft monsoon code; climate retrofits mandatory for high-rises
                                                 </td>
                                             </tr>
@@ -276,7 +275,7 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td class="marginalia" style="padding:6px 32px 26px 32px;">
+                                    <td style="padding:6px 32px 26px 32px;">
                                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                                             <tr>
                                                 <td valign="top" width="25%" align="left" style="width:25%; padding:14px 14px 14px 0; border-right:1px solid #2a2a2a;">
@@ -294,8 +293,8 @@
                                                     <div style="font-family:Georgia,'Times New Roman',serif; font-size:24px; line-height:1; color:#faf7f1; font-weight:400; padding-bottom:6px;">83.42</div>
                                                     <div style="font-family:Arial, Helvetica, sans-serif; font-size:11px; color:#e07a6b; font-weight:700;">&#9660; 0.06 &nbsp;(&minus;0.07%)</div>
                                                 </td>
-                                                <td valign="top" width="25%" align="left" class="last-stat" style="width:25%; padding:14px 0 14px 14px;">
-                                                    <div style="font-family:Arial, Helvetica, sans-serif; font-size:10px; letter-spacing:2px; color:#8a8378; text-transform:uppercase; padding-bottom:8px;">Gold 24K &#8377;/10g</div>
+                                                <td valign="top" width="25%" align="left" style="width:25%; padding:14px 0 14px 14px;">
+                                                    <div style="font-family:Arial, Helvetica, sans-serif; font-size:10px; letter-spacing:2px; color:#8a8378; text-transform:uppercase; padding-bottom:8px;">Gold 24K (Mumbai) &#8377;/10g</div>
                                                     <div style="font-family:Georgia,'Times New Roman',serif; font-size:24px; line-height:1; color:#faf7f1; font-weight:400; padding-bottom:6px;">68,910</div>
                                                     <div style="font-family:Arial, Helvetica, sans-serif; font-size:11px; color:#4caf7a; font-weight:700;">&#9650; 240 &nbsp;(+0.35%)</div>
                                                 </td>
@@ -312,13 +311,13 @@
                     <!--  COMPACT STORY — image left, text right         -->
                     <!-- ============================================== -->
                     <tr>
-                        <td class="section-pad" style="background:#faf7f1; padding:44px 56px 24px 56px;">
+                        <td style="background:#faf7f1; padding:44px 56px 24px 56px;">
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="padding-bottom:0;">
                                 <tr>
-                                    <td class="stack stack-pad-r" valign="top" width="38%" style="width:38%; padding-right:24px;">
+                                    <td valign="top" width="38%" style="width:38%; padding-right:24px;">
                                         <img src="https://picsum.photos/seed/bengaluru-ai-startup-office/520/420" width="240" alt="Bengaluru tech office" style="width:100%; max-width:240px; height:auto; display:block;">
                                     </td>
-                                    <td class="stack stack-pad-l" valign="top" width="62%" style="width:62%; padding-left:0;">
+                                    <td valign="top" width="62%" style="width:62%; padding-left:0;">
                                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                                             <tr>
                                                 <td style="padding-bottom:10px;">
@@ -328,7 +327,7 @@
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td class="h-compact" style="font-family:Georgia,'Times New Roman',serif; font-size:21px; line-height:1.22; color:#101010; font-weight:700; padding-bottom:10px; text-align:justify;">
+                                                <td style="font-family:Georgia,'Times New Roman',serif; font-size:21px; line-height:1.22; color:#101010; font-weight:700; padding-bottom:10px; text-align:justify;">
                                                     Bengaluru AI firm Vyaakar raises $42 mn in Series B led by Peak XV
                                                 </td>
                                             </tr>
@@ -363,11 +362,11 @@
                     </tr>
 
                     <tr>
-                        <td class="section-pad" style="background:#faf7f1; padding:28px 56px 56px 56px;">
+                        <td style="background:#faf7f1; padding:28px 56px 56px 56px;">
                             <!-- Compact 2 — text left, image right (mirrored) -->
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                                 <tr>
-                                    <td class="stack stack-pad-r" valign="top" width="62%" style="width:62%; padding-right:24px;">
+                                    <td valign="top" width="62%" style="width:62%; padding-right:24px;">
                                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                                             <tr>
                                                 <td style="padding-bottom:10px;">
@@ -377,7 +376,7 @@
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td class="h-compact" style="font-family:Georgia,'Times New Roman',serif; font-size:21px; line-height:1.22; color:#101010; font-weight:700; padding-bottom:10px; text-align:justify;">
+                                                <td style="font-family:Georgia,'Times New Roman',serif; font-size:21px; line-height:1.22; color:#101010; font-weight:700; padding-bottom:10px; text-align:justify;">
                                                     India to host G20 energy ministers' meet in Hyderabad in April
                                                 </td>
                                             </tr>
@@ -395,7 +394,7 @@
                                             </tr>
                                         </table>
                                     </td>
-                                    <td class="stack stack-pad-l" valign="top" width="38%" style="width:38%; padding-left:0;">
+                                    <td valign="top" width="38%" style="width:38%; padding-left:0;">
                                         <img src="https://picsum.photos/seed/hyderabad-g20-summit/520/420" width="240" alt="Hyderabad convention venue" style="width:100%; max-width:240px; height:auto; display:block; margin-left:auto;">
                                     </td>
                                 </tr>
@@ -429,86 +428,80 @@
 
                     <!-- ====== FOOTER (preserved) ====== -->
                     <tr>
-                        <td colspan="2" id="footer-cell" style="border: none; padding: 0;">
-                            <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+                        <td id="footer-cell" align="center" style="background-color: #0a0a0a; padding: 38px 24px 30px; text-align: center; border: none;">
+
+                            <p style="font-family: Georgia, 'Times New Roman', serif; font-size: 12px; color: #bfbfbf; font-style: italic; margin: 0 0 16px 0;">
+                            </p>
+
+                            <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center" style="margin: 0 auto 16px auto;">
                                 <tr>
-                                    <td align="center" style="background-color: #0a0a0a; padding: 38px 24px 30px; text-align: center;">
-
-                                        <p style="font-family: Georgia, 'Times New Roman', serif; font-size: 12px; color: #bfbfbf; font-style: italic; margin: 0 0 16px 0;">
-                                        </p>
-
-                                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center" style="margin: 0 auto 16px auto;">
-                                            <tr>
-                                                <td style="padding: 0 5px; border: 0;">
-                                                    <a href="https://www.instagram.com/newsbandofficial/" target="_blank" style="text-decoration: none;">
-                                                        <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                                                            <tr>
-                                                                <td width="38" height="38" style="background-color: #ffffff; border-radius: 50%; text-align: center; vertical-align: middle;">
-                                                                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/instagram.svg" width="17" height="17" alt="Instagram" style="display: block; margin: 0 auto;">
-                                                                </td>
-                                                            </tr>
-                                                        </table>
-                                                    </a>
-                                                </td>
-                                                <td style="padding: 0 5px; border: 0;">
-                                                    <a href="https://www.facebook.com/newsband.in" target="_blank" style="text-decoration: none;">
-                                                        <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                                                            <tr>
-                                                                <td width="38" height="38" style="background-color: #ffffff; border-radius: 50%; text-align: center; vertical-align: middle;">
-                                                                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/facebook.svg" width="17" height="17" alt="Facebook" style="display: block; margin: 0 auto;">
-                                                                </td>
-                                                            </tr>
-                                                        </table>
-                                                    </a>
-                                                </td>
-                                                <td style="padding: 0 5px; border: 0;">
-                                                    <a href="https://x.com/NewsbandTweets" target="_blank" style="text-decoration: none;">
-                                                        <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                                                            <tr>
-                                                                <td width="38" height="38" style="background-color: #ffffff; border-radius: 50%; text-align: center; vertical-align: middle;">
-                                                                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/x.svg" width="17" height="17" alt="X" style="display: block; margin: 0 auto;">
-                                                                </td>
-                                                            </tr>
-                                                        </table>
-                                                    </a>
-                                                </td>
-                                                <td style="padding: 0 5px; border: 0;">
-                                                    <a href="https://www.youtube.com/@Newsband-" target="_blank" style="text-decoration: none;">
-                                                        <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                                                            <tr>
-                                                                <td width="38" height="38" style="background-color: #ffffff; border-radius: 50%; text-align: center; vertical-align: middle;">
-                                                                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/youtube.svg" width="17" height="17" alt="YouTube" style="display: block; margin: 0 auto;">
-                                                                </td>
-                                                            </tr>
-                                                        </table>
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                        </table>
-
-                                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center" style="margin: 0 auto 14px auto;">
-                                            <tr>
-                                                <td align="center" valign="middle" style="vertical-align: middle; padding: 0 14px;">
-                                                    <a href="https://www.newsband.in/" target="_blank" style="font-family: Georgia, 'Times New Roman', serif; font-size: 11px; color: #bbbbbb; text-decoration: none;">Website</a>
-                                                </td>
-                                                <td align="center" valign="middle" style="vertical-align: middle; color: #666666; font-size: 14px;">|</td>
-                                                <td align="center" valign="middle" style="vertical-align: middle; padding: 0 14px;">
-                                                    <a href="https://www.newsband.in/privacy-policy" target="_blank" style="font-family: Georgia, 'Times New Roman', serif; font-size: 11px; color: #bbbbbb; text-decoration: none;">Privacy Policy</a>
-                                                </td>
-                                                <td align="center" valign="middle" style="vertical-align: middle; color: #666666; font-size: 14px;">|</td>
-                                                <td align="center" valign="middle" style="vertical-align: middle; padding: 0 14px;">
-                                                    <a href="*|UNSUB|*" target="_blank" style="font-family: Georgia, 'Times New Roman', serif; font-size: 11px; color: #bbbbbb; text-decoration: none;">Unsubscribe</a>
-                                                </td>
-                                            </tr>
-                                        </table>
-
-                                        <div style="font-family: 'Arial Narrow', Arial, sans-serif; font-size: 9px; letter-spacing: 2.5px; color: #999999;">
-                                            All rights reserved
-                                        </div>
-
+                                    <td style="padding: 0 5px; border: 0;">
+                                        <a href="https://www.instagram.com/newsbandofficial/" target="_blank" style="text-decoration: none;">
+                                            <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                                                <tr>
+                                                    <td width="38" height="38" style="background-color: #ffffff; border-radius: 50%; text-align: center; vertical-align: middle;">
+                                                        <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/instagram.svg" width="17" height="17" alt="Instagram" style="display: block; margin: 0 auto;">
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </a>
+                                    </td>
+                                    <td style="padding: 0 5px; border: 0;">
+                                        <a href="https://www.facebook.com/newsband.in" target="_blank" style="text-decoration: none;">
+                                            <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                                                <tr>
+                                                    <td width="38" height="38" style="background-color: #ffffff; border-radius: 50%; text-align: center; vertical-align: middle;">
+                                                        <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/facebook.svg" width="17" height="17" alt="Facebook" style="display: block; margin: 0 auto;">
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </a>
+                                    </td>
+                                    <td style="padding: 0 5px; border: 0;">
+                                        <a href="https://x.com/NewsbandTweets" target="_blank" style="text-decoration: none;">
+                                            <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                                                <tr>
+                                                    <td width="38" height="38" style="background-color: #ffffff; border-radius: 50%; text-align: center; vertical-align: middle;">
+                                                        <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/x.svg" width="17" height="17" alt="X" style="display: block; margin: 0 auto;">
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </a>
+                                    </td>
+                                    <td style="padding: 0 5px; border: 0;">
+                                        <a href="https://www.youtube.com/@Newsband-" target="_blank" style="text-decoration: none;">
+                                            <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                                                <tr>
+                                                    <td width="38" height="38" style="background-color: #ffffff; border-radius: 50%; text-align: center; vertical-align: middle;">
+                                                        <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/youtube.svg" width="17" height="17" alt="YouTube" style="display: block; margin: 0 auto;">
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </a>
                                     </td>
                                 </tr>
                             </table>
+
+                            <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center" style="margin: 0 auto 14px auto;">
+                                <tr>
+                                    <td align="center" valign="middle" style="vertical-align: middle; padding: 0 14px;">
+                                        <a href="https://www.newsband.in/" target="_blank" style="font-family: Georgia, 'Times New Roman', serif; font-size: 11px; color: #bbbbbb; text-decoration: none;">Website</a>
+                                    </td>
+                                    <td align="center" valign="middle" style="vertical-align: middle; color: #666666; font-size: 14px;">|</td>
+                                    <td align="center" valign="middle" style="vertical-align: middle; padding: 0 14px;">
+                                        <a href="https://www.newsband.in/privacy-policy" target="_blank" style="font-family: Georgia, 'Times New Roman', serif; font-size: 11px; color: #bbbbbb; text-decoration: none;">Privacy Policy</a>
+                                    </td>
+                                    <td align="center" valign="middle" style="vertical-align: middle; color: #666666; font-size: 14px;">|</td>
+                                    <td align="center" valign="middle" style="vertical-align: middle; padding: 0 14px;">
+                                        <a href="*|UNSUB|*" target="_blank" style="font-family: Georgia, 'Times New Roman', serif; font-size: 11px; color: #bbbbbb; text-decoration: none;">Unsubscribe</a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <div style="font-family: 'Arial Narrow', Arial, sans-serif; font-size: 9px; letter-spacing: 2.5px; color: #999999;">
+                                All rights reserved
+                            </div>
+
                         </td>
                     </tr>
                     <!-- ====== END FOOTER ====== -->
