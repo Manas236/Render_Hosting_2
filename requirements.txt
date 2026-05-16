@@ -5,4 +5,5 @@ gevent
 requests
 google-genai
 python-dotenv
-yfinance
+flask-limiter
+playwright-stealth
