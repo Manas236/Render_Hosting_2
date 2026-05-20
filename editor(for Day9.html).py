@@ -27,7 +27,7 @@ def _auto_apply_date():
     global _current_html
     from datetime import datetime, timedelta
     dt = datetime.now() + timedelta(days=1)
-    date_str = dt.strftime("%d/%m/%Y")
+    date_str = dt.strftime("%B %d, %Y").replace(" 0", " ")
     _current_html = update_html(_current_html, {"date": date_str})
 
 # Deferred call — update_html is defined below, so we call at module tail
@@ -90,10 +90,10 @@ def _find_image_img(card):
 # ── Parse: extract current editable fields ────────────────────────────────────
 
 def get_tomorrow_date_str() -> str:
-    """Return tomorrow's date as DD/MM/YYYY to match Day9.html format."""
+    """Return tomorrow's date as Month DD, YYYY."""
     from datetime import datetime, timedelta
     dt = datetime.now() + timedelta(days=1)
-    return dt.strftime("%d/%m/%Y")
+    return dt.strftime("%B %d, %Y").replace(" 0", " ")
 
 
 def parse_fields(html: str) -> dict:
@@ -159,15 +159,23 @@ def update_html(html: str, data: dict) -> str:
         for td in soup.find_all("td"):
             txt = td.string
             if txt and "NEWSBAND" in txt and ("\u00b7" in txt or "·" in txt):
-                parts = date_val.split("/")
-                if len(parts) == 3:
-                    try:
-                        _set_text(
-                            td,
-                            f"NEWSBAND \u00b7 {parts[0]} \u00b7 {parts[1]} \u00b7 {parts[2]}",
-                        )
-                    except Exception:
-                        pass
+                try:
+                    from datetime import datetime as _dt
+                    parsed = _dt.strptime(date_val, "%B %d, %Y")
+                    _set_text(
+                        td,
+                        f"NEWSBAND · {parsed.day:02d} · {parsed.month:02d} · {parsed.year}",
+                    )
+                except ValueError:
+                    parts = date_val.split("/")
+                    if len(parts) == 3:
+                        try:
+                            _set_text(
+                                td,
+                                f"NEWSBAND · {parts[0]} · {parts[1]} · {parts[2]}",
+                            )
+                        except Exception:
+                            pass
                 break
 
     # Header — RNI

@@ -101,6 +101,13 @@ DASHBOARD_HTML = """
           <div class="dash-btn-title">Day 15 Editor</div>
           <div class="dash-btn-desc">Visual editor specifically for Day15.</div>
         </a>
+        <a href="{{ url_for('day12_2_editor.editor') }}" class="dash-btn">
+          <div class="dash-btn-photo-wrap">
+            <img src="/static_files/Day12.png" class="dash-btn-photo" alt="Day12(2) Editor" />
+          </div>
+          <div class="dash-btn-title">Day 12(2) Editor</div>
+          <div class="dash-btn-desc">Visual editor for Day12(2) with markets ticker.</div>
+        </a>
       </div>
 
       <div class="rule-divider" style="margin-top: 36px;"><span></span><em>UTILITY TOOLS</em><span></span></div>

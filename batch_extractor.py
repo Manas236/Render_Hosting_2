@@ -21,10 +21,7 @@ try:
 except ImportError:
     requests = None
 
-try:
-    from google import genai
-except ImportError:
-    sys.exit("Missing dependency: pip install google-genai")
+
 
 try:
     from dotenv import load_dotenv
@@ -104,21 +101,27 @@ def _call_gemini(prompt: str) -> str | None:
         api_key = _next_key()
         masked = f"{api_key[:6]}...{api_key[-4:]}" if len(
             api_key) > 10 else "***"
-        client = genai.Client(api_key=api_key)
         for model in GEMINI_MODELS:
             try:
-                response = client.models.generate_content(
-                    model=model, contents=prompt)
-                if response and response.text:
-                    return response.text.strip()
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+                headers = {'Content-Type': 'application/json'}
+                data = {"contents": [{"parts": [{"text": prompt}]}]}
+                
+                resp = requests.post(url, headers=headers, json=data, timeout=30)
+                if resp.ok:
+                    res_json = resp.json()
+                    candidates = res_json.get("candidates", [])
+                    if candidates and candidates[0].get("content", {}).get("parts"):
+                        return candidates[0]["content"]["parts"][0]["text"].strip()
+                elif resp.status_code == 429:
+                    logger.warning(f"[!] Rate limited {model} key {masked}")
+                else:
+                    logger.error(f"[!] {model} failed: HTTP {resp.status_code}")
+                    break
             except Exception as e:
                 err = str(e)
-                if "429" in err or "exhausted" in err.lower() or "quota" in err.lower():
-                    logger.warning(
-                        f"[!] Rate limited {model} key {masked}: {err[:100]}")
-                else:
-                    logger.error(f"[!] {model} failed: {err[:100]}")
-                    break
+                logger.error(f"[!] {model} failed: {err[:100]}")
+                break
     return None
 
 
@@ -211,11 +214,11 @@ def process_url(url: str) -> dict:
 
         word_count = len(raw_content.split()) if raw_content else 0
         if word_count > 25:
-            logger.info(f"[*] {word_count} words → summarizing")
+            logger.info(f"[*] {word_count} words -> summarizing")
             final_summary = summarize_short(raw_content) or raw_content
         else:
             logger.info(
-                f"[*] {word_count} words → already short, skipping summarize")
+                f"[*] {word_count} words -> already short, skipping summarize")
             final_summary = raw_content
 
         categorize_input = final_summary if final_summary else raw_content[:300]
@@ -732,6 +735,7 @@ def api_send():
         "/day11-editor/api/import_json",
         "/day12-editor/api/import_json",
         "/day15-editor/api/import_json",
+        "/day12-2-editor/api/import_json",
     ]
 
     success_count = 0

@@ -17,10 +17,7 @@ try:
 except ImportError:
     requests = None
 
-try:
-    from google import genai
-except ImportError:
-    sys.exit("Missing dependency: pip install google-genai")
+
 
 try:
     from dotenv import load_dotenv
@@ -143,27 +140,32 @@ def summarize(content: str) -> str:
             api_key) > 10 else "***"
         logger.info(
             f"--- Summarize Key Index {current_key_index} ({masked}) ---")
-        client = genai.Client(api_key=api_key)
 
         for model in GEMINI_MODELS:
             try:
                 logger.info(f"[*] Summarizing with model: {model}")
-                response = client.models.generate_content(
-                    model=model, contents=prompt)
-                if not response or not response.text:
-                    logger.warning(f"[!] Empty response from {model}")
-                    continue
-                summary = response.text.strip()
-                logger.info(f"[+] Summary: {summary}")
-                return summary
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+                headers = {'Content-Type': 'application/json'}
+                data = {"contents": [{"parts": [{"text": prompt}]}]}
+                
+                resp = requests.post(url, headers=headers, json=data, timeout=30)
+                if resp.ok:
+                    res_json = resp.json()
+                    candidates = res_json.get("candidates", [])
+                    if candidates and candidates[0].get("content", {}).get("parts"):
+                        summary = candidates[0]["content"]["parts"][0]["text"].strip()
+                        logger.info(f"[+] Summary: {summary}")
+                        return summary
+                    else:
+                        logger.warning(f"[!] Empty response from {model}")
+                        continue
+                elif resp.status_code == 429:
+                    logger.warning(f"[!] Rate Limited (429) on {model}")
+                else:
+                    logger.error(f"[!] Model {model} failed: HTTP {resp.status_code} - {resp.text[:150]}")
             except Exception as e:
                 error_str = str(e)
-                if "429" in error_str or "exhausted" in error_str.lower() or "Quota" in error_str:
-                    logger.warning(
-                        f"[!] Rate Limited (429) on {model}: {error_str[:150]}")
-                else:
-                    logger.error(
-                        f"[!] Model {model} failed: {error_str[:150]}")
+                logger.error(f"[!] Model {model} request failed: {error_str[:150]}")
 
         logger.warning(
             f"[!] All models failed for key index {current_key_index}. Cycling to next key...")
@@ -195,30 +197,33 @@ def categorize(title: str, snippet: str) -> str:
         masked = f"{api_key[:6]}...{api_key[-4:]}" if len(
             api_key) > 10 else "***"
         logger.info(f"--- Key Index {current_key_index} ({masked}) ---")
-        client = genai.Client(api_key=api_key)
 
         for model in GEMINI_MODELS:
             try:
                 logger.info(f"[*] Trying model: {model}")
-                response = client.models.generate_content(
-                    model=model,
-                    contents=prompt,
-                )
-                if not response or not response.text:
-                    logger.warning(f"[!] Empty response from {model}")
-                    continue
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+                headers = {'Content-Type': 'application/json'}
+                data = {"contents": [{"parts": [{"text": prompt}]}]}
+                
+                resp = requests.post(url, headers=headers, json=data, timeout=30)
+                if resp.ok:
+                    res_json = resp.json()
+                    candidates = res_json.get("candidates", [])
+                    if candidates and candidates[0].get("content", {}).get("parts"):
+                        cat_result = candidates[0]["content"]["parts"][0]["text"].strip()
+                        logger.info(f"[+] Categorization success: {cat_result}")
+                        return cat_result
+                    else:
+                        logger.warning(f"[!] Empty response from {model}")
+                        continue
+                elif resp.status_code == 429:
+                    logger.warning(f"[!] Rate Limited (429) on {model}")
+                else:
+                    logger.error(f"[!] Model {model} failed: HTTP {resp.status_code} - {resp.text[:150]}")
 
-                cat_result = response.text.strip()
-                logger.info(f"[+] Categorization success: {cat_result}")
-                return cat_result
             except Exception as e:
                 error_str = str(e)
-                if "429" in error_str or "exhausted" in error_str.lower() or "Quota" in error_str:
-                    logger.warning(
-                        f"[!] Rate Limited (429) on {model}: {error_str[:150]}")
-                else:
-                    logger.error(
-                        f"[!] Model {model} failed: {error_str[:150]}")
+                logger.error(f"[!] Model {model} request failed: {error_str[:150]}")
 
         # If we reach here, all models failed for this key. Cycle to the next key.
         logger.warning(
