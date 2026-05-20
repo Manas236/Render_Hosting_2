@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office"
     xmlns:v="urn:schemas-microsoft-com:vml">
@@ -21,15 +21,14 @@
     <![endif]-->
     <!--[if !mso]><!-->
     <style type="text/css">
-        @media only screen and (max-width: 754px) {
-            body {
-                overflow-x: hidden !important;
-                margin: 0 !important;
-            }
-
-            table.nb-wrapper {
-                zoom: calc(100vw / 754) !important;
-            }
+        body { margin:0; padding:0; background-color:#e0e0e0; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; }
+        table { border-collapse:collapse; }
+        
+        /* Mobile + landscape — zoom-scale the whole shell to fit viewport */
+        @media only screen and (max-width: 754px),
+               only screen and (orientation: landscape) and (max-height: 500px) {
+            body { overflow-x:hidden !important; margin:0 !important; }
+            table.nb-wrapper { zoom: calc(100vw / 754) !important; }
         }
     </style>
     <!--<![endif]-->
@@ -42,9 +41,9 @@
         style="background-color:#e0e0e0; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%;" width="100%">
         <tr>
             <td align="center" style="padding:40px 0; background-color:#e0e0e0;">
-                <!-- nb-wrapper: fixed 754px, zoom-scaled on mobile -->
+                <!-- nb-wrapper: fixed 754px, scaled down on mobile -->
                 <table border="0" cellpadding="0" cellspacing="0" class="nb-wrapper" role="presentation"
-                    style="width:754px; max-width:754px; background-color:#ffffff; border-radius:12px; overflow:hidden;"
+                    style="width:754px; max-width:754px; background-color:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,0.15);"
                     width="754">
                     <!-- ====== HEADER (PRESERVED EXACTLY) ====== -->
                     <tr>
@@ -119,6 +118,66 @@
                                 </table>
                             </a>
                             <!-- ===================== END FEATURED ARTICLE ===================== -->
+                            <!-- ===================== MARKET OVERVIEW ===================== -->
+                            <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
+                                <tr>
+                                    <td style="background-color:#0f172a; padding:0;">
+                                        <!-- Header row -->
+                                        <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
+                                            <tr>
+                                                <td style="padding:20px 32px 10px 32px;">
+                                                    <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
+                                                        <tr>
+                                                            <td align="left" style="font-family:Arial, Helvetica, sans-serif; font-size:10px; font-weight:600; letter-spacing:3px; color:#ffffff; text-transform:uppercase; -webkit-text-size-adjust:100%;">
+                                                                Financial Markets
+                                                            </td>
+                                                            <td align="right" style="font-family:Arial, Helvetica, sans-serif; font-size:10px; letter-spacing:2px; color:#475569; text-transform:uppercase; -webkit-text-size-adjust:100%;">
+                                                                Close &nbsp;·&nbsp; 3:30 PM IST
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        <!-- 1×4 ticker -->
+                                        <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
+                                            <tr>
+                                                <td style="padding:4px 32px 24px 32px;">
+                                                    <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
+                                                        <tr>
+                                                            <!-- Sensex -->
+                                                            <td valign="top" width="25%" align="left" style="width:25%; padding:14px 14px 14px 0; border-right:1px solid #1e293b;">
+                                                                <div style="font-family:Arial, Helvetica, sans-serif; font-size:10px; font-weight:600; letter-spacing:2px; color:#475569; text-transform:uppercase; padding-bottom:8px;">SENSEX</div>
+                                                                <div style="font-family:Arial, Helvetica, sans-serif; font-size:24px; font-weight:700; color:#f1f5f9; letter-spacing:-0.5px; padding-bottom:6px;">76,284</div>
+                                                                <div style="font-family:Arial, Helvetica, sans-serif; font-size:12px; font-weight:700; color:#10b981;">&#9650; 612.40 (+0.81%)</div>
+                                                            </td>
+                                                            <!-- Nifty 50 -->
+                                                            <td valign="top" width="25%" align="left" style="width:25%; padding:14px; border-right:1px solid #1e293b;">
+                                                                <div style="font-family:Arial, Helvetica, sans-serif; font-size:10px; font-weight:600; letter-spacing:2px; color:#475569; text-transform:uppercase; padding-bottom:8px;">NIFTY 50</div>
+                                                                <div style="font-family:Arial, Helvetica, sans-serif; font-size:24px; font-weight:700; color:#f1f5f9; letter-spacing:-0.5px; padding-bottom:6px;">23,118</div>
+                                                                <div style="font-family:Arial, Helvetica, sans-serif; font-size:12px; font-weight:700; color:#10b981;">&#9650; 187.55 (+0.82%)</div>
+                                                            </td>
+                                                            <!-- USD / INR -->
+                                                            <td valign="top" width="25%" align="left" style="width:25%; padding:14px; border-right:1px solid #1e293b;">
+                                                                <div style="font-family:Arial, Helvetica, sans-serif; font-size:10px; font-weight:600; letter-spacing:2px; color:#475569; text-transform:uppercase; padding-bottom:8px;">USD / INR</div>
+                                                                <div style="font-family:Arial, Helvetica, sans-serif; font-size:24px; font-weight:700; color:#f1f5f9; letter-spacing:-0.5px; padding-bottom:6px;">83.42</div>
+                                                                <div style="font-family:Arial, Helvetica, sans-serif; font-size:12px; font-weight:700; color:#ef4444;">&#9660; 0.06 (&minus;0.07%)</div>
+                                                            </td>
+                                                            <!-- Gold 24K (Mumbai) -->
+                                                            <td valign="top" width="25%" align="left" style="width:25%; padding:14px 0 14px 14px;">
+                                                                <div style="font-family:Arial, Helvetica, sans-serif; font-size:10px; font-weight:600; letter-spacing:2px; color:#475569; text-transform:uppercase; padding-bottom:8px;">GOLD 24K (MUMBAI)</div>
+                                                                <div style="font-family:Arial, Helvetica, sans-serif; font-size:24px; font-weight:700; color:#f1f5f9; letter-spacing:-0.5px; padding-bottom:6px;">68,910</div>
+                                                                <div style="font-family:Arial, Helvetica, sans-serif; font-size:12px; font-weight:700; color:#10b981;">&#9650; 240 (+0.35%)</div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            <!-- ===================== END MARKET OVERVIEW ===================== -->
                             <!-- ===================== DIVIDER ===================== -->
                             <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
                                 <tr>
@@ -128,7 +187,7 @@
                                             <tr>
                                                 <td
                                                     style="border-top:1px solid #e8e8e8; font-size:1px; line-height:1px;">
-                                                    Â </td>
+                                                    &nbsp;</td>
                                             </tr>
                                         </table>
                                     </td>
@@ -146,9 +205,9 @@
                                             <td width="320" valign="top" style="background-color:#ffffff;">
                                             <![endif]-->
                                             <table align="left" border="0" cellpadding="0" cellspacing="0"
-                                                role="presentation" style="width:320px; max-width:320px;">
+                                                role="presentation" style="width:100%; max-width:320px;" class="fluid">
                                                 <tr>
-                                                    <td style="padding:0 16px 0 0; background-color:#ffffff;">
+                                                    <td style="padding:0 16px 0 0; background-color:#ffffff;" class="stack-img">
                                                         <img alt="Students using digital devices in classroom"
                                                             src="https://www.newsband.in/uploads/blog_main_img/0ff0f65aacd0da4304e0469670cf868a_1.jpg"
                                                             style="display:block; width:100%; height:auto; border-radius:6px;">
@@ -160,7 +219,7 @@
                                             <td width="370" valign="top" style="background-color:#ffffff;">
                                             <![endif]-->
                                             <table align="left" border="0" cellpadding="0" cellspacing="0"
-                                                role="presentation" style="width:354px; max-width:354px;">
+                                                role="presentation" style="width:100%; max-width:354px;" class="fluid">
                                                 <tr>
                                                     <td style="background-color:#ffffff;">
                                                         <!-- Category -->
@@ -201,7 +260,7 @@
                                             <tr>
                                                 <td
                                                     style="border-top:1px solid #e8e8e8; font-size:1px; line-height:1px;">
-                                                    Â </td>
+                                                    &nbsp;</td>
                                             </tr>
                                         </table>
                                     </td>
@@ -219,9 +278,9 @@
                                             <td width="320" valign="top" style="background-color:#ffffff;">
                                             <![endif]-->
                                             <table align="left" border="0" cellpadding="0" cellspacing="0"
-                                                role="presentation" style="width:320px; max-width:320px;">
+                                                role="presentation" style="width:100%; max-width:320px;" class="fluid">
                                                 <tr>
-                                                    <td style="padding:0 16px 0 0; background-color:#ffffff;">
+                                                    <td style="padding:0 16px 0 0; background-color:#ffffff;" class="stack-img">
                                                         <img alt="Students participating in physical education activities"
                                                             src="https://www.newsband.in/uploads/blog_main_img/55228948f5d458ec4473c79ea00ae12d_1.jpg"
                                                             style="display:block; width:100%; height:auto; border-radius:6px;">
@@ -233,7 +292,7 @@
                                             <td width="370" valign="top" style="background-color:#ffffff;">
                                             <![endif]-->
                                             <table align="left" border="0" cellpadding="0" cellspacing="0"
-                                                role="presentation" style="width:354px; max-width:354px;">
+                                                role="presentation" style="width:100%; max-width:354px;" class="fluid">
                                                 <tr>
                                                     <td style="background-color:#ffffff;">
                                                         <!-- Category -->
@@ -270,89 +329,7 @@
                     </tr>
                     <!-- ====== END BODY ====== -->
 
-                    <!-- ============================================== -->
-                    <!--  MARKETS TICKER â€” informational strip           -->
-                    <!-- ============================================== -->
-                    <tr>
-                        <td style="background:#0f0f0f; padding:0;">
-                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                                <tr>
-                                    <td style="padding:22px 32px 10px 32px;">
-                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
-                                            border="0">
-                                            <tr>
-                                                <td align="left"
-                                                    style="font-family:Arial, Helvetica, sans-serif; font-size:10px; letter-spacing:3px; color:#ffffff; text-transform:uppercase; font-weight:700;">
-                                                    Markets &nbsp;Â·&nbsp; Close
-                                                </td>
-                                                <td align="right"
-                                                    style="font-family:Arial, Helvetica, sans-serif; font-size:10px; letter-spacing:2px; color:#8a8378; text-transform:uppercase;">
-                                                    3:30 PM IST
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding:6px 32px 26px 32px;">
-                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
-                                            border="0">
-                                            <tr>
-                                                <td valign="top" width="25%" align="left"
-                                                    style="width:25%; padding:14px 14px 14px 0; border-right:1px solid #2a2a2a;">
-                                                    <div
-                                                        style="font-family:Arial, Helvetica, sans-serif; font-size:10px; letter-spacing:2px; color:#8a8378; text-transform:uppercase; padding-bottom:8px;">
-                                                        Sensex</div>
-                                                    <div
-                                                        style="font-family:Georgia,'Times New Roman',serif; font-size:24px; line-height:1; color:#faf7f1; font-weight:400; padding-bottom:6px;">
-                                                        76,284</div>
-                                                    <div
-                                                        style="font-family:Arial, Helvetica, sans-serif; font-size:11px; color:#4caf7a; font-weight:700;">
-                                                        &#9650; 612.40 &nbsp;(+0.81%)</div>
-                                                </td>
-                                                <td valign="top" width="25%" align="left"
-                                                    style="width:25%; padding:14px; border-right:1px solid #2a2a2a;">
-                                                    <div
-                                                        style="font-family:Arial, Helvetica, sans-serif; font-size:10px; letter-spacing:2px; color:#8a8378; text-transform:uppercase; padding-bottom:8px;">
-                                                        Nifty 50</div>
-                                                    <div
-                                                        style="font-family:Georgia,'Times New Roman',serif; font-size:24px; line-height:1; color:#faf7f1; font-weight:400; padding-bottom:6px;">
-                                                        23,118</div>
-                                                    <div
-                                                        style="font-family:Arial, Helvetica, sans-serif; font-size:11px; color:#4caf7a; font-weight:700;">
-                                                        &#9650; 187.55 &nbsp;(+0.82%)</div>
-                                                </td>
-                                                <td valign="top" width="25%" align="left"
-                                                    style="width:25%; padding:14px; border-right:1px solid #2a2a2a;">
-                                                    <div
-                                                        style="font-family:Arial, Helvetica, sans-serif; font-size:10px; letter-spacing:2px; color:#8a8378; text-transform:uppercase; padding-bottom:8px;">
-                                                        USD / INR</div>
-                                                    <div
-                                                        style="font-family:Georgia,'Times New Roman',serif; font-size:24px; line-height:1; color:#faf7f1; font-weight:400; padding-bottom:6px;">
-                                                        83.42</div>
-                                                    <div
-                                                        style="font-family:Arial, Helvetica, sans-serif; font-size:11px; color:#e07a6b; font-weight:700;">
-                                                        &#9660; 0.06 &nbsp;(&minus;0.07%)</div>
-                                                </td>
-                                                <td valign="top" width="25%" align="left"
-                                                    style="width:25%; padding:14px 0 14px 14px;">
-                                                    <div
-                                                        style="font-family:Arial, Helvetica, sans-serif; font-size:10px; letter-spacing:2px; color:#8a8378; text-transform:uppercase; padding-bottom:8px;">
-                                                        Gold 24K (Mumbai) &#8377;/10g</div>
-                                                    <div
-                                                        style="font-family:Georgia,'Times New Roman',serif; font-size:24px; line-height:1; color:#faf7f1; font-weight:400; padding-bottom:6px;">
-                                                        68,910</div>
-                                                    <div
-                                                        style="font-family:Arial, Helvetica, sans-serif; font-size:11px; color:#4caf7a; font-weight:700;">
-                                                        &#9650; 240 &nbsp;(+0.35%)</div>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
+
 
                     <!-- ===================== TWO-COLUMN GRID (Vertical cards, each fully clickable) ===================== -->
                     <tr>
@@ -363,9 +340,9 @@
                             <![endif]-->
                             <!-- LEFT CARD -->
                             <table align="left" border="0" cellpadding="0" cellspacing="0" role="presentation"
-                                style="width:335px; max-width:335px;">
+                                style="width:100%; max-width:335px;" class="fluid">
                                 <tr>
-                                    <td style="padding:0 10px 0 0; background-color:#ffffff;">
+                                    <td style="padding:0 10px 0 0; background-color:#ffffff;" class="stack-pad">
                                         <a href="https://www.newsband.in/article_detail/snake-expert-rescues-five-foot-harantol-in-kalyan-west"
                                             style="text-decoration:none; color:inherit; display:block;"
                                             target="_blank">
@@ -402,9 +379,9 @@
                             <![endif]-->
                             <!-- RIGHT CARD -->
                             <table align="left" border="0" cellpadding="0" cellspacing="0" role="presentation"
-                                style="width:335px; max-width:335px;">
+                                style="width:100%; max-width:335px;" class="fluid">
                                 <tr>
-                                    <td style="padding:0 0 0 10px; background-color:#ffffff;">
+                                    <td style="padding:0 0 0 10px; background-color:#ffffff;" class="stack-pad">
                                         <a href="https://www.newsband.in/article_detail/diljit-dosanjh-returns-to-jimmy-fallons-show"
                                             style="text-decoration:none; color:inherit; display:block;"
                                             target="_blank">

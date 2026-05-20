@@ -179,63 +179,45 @@ def _find_twin_stories(soup):
 def _find_compact_stories(soup):
     """
     Find the 2 compact stories (image+text side-by-side).
-    These have 21px headlines and max-width:240px images.
+    These are wrapped in <a display:block> tags containing max-width:240px images.
     Returns list of 2 dicts with tag references.
     """
     stories = []
 
-    # Find images with max-width:240px (compact story images)
-    compact_images = []
-    for img in soup.find_all("img"):
-        style = img.get("style", "")
-        if "max-width:240px" in style and "width:100%" in style:
-            compact_images.append(img)
-
-    # Find 21px headlines
-    compact_headlines = []
-    for td in soup.find_all("td"):
-        style = td.get("style", "")
-        if "font-size:21px" in style and "font-weight:700" in style:
-            compact_headlines.append(td)
-
-    # Categories in compact — same span pattern but after the twin stories
-    # We'll find them by looking at spans with background:#8b2a1f after the twin section
-    all_cat_spans = []
-    for span in soup.find_all("span"):
-        style = span.get("style", "")
-        if "background:#8b2a1f" in style and "padding:4px 9px" in style:
-            all_cat_spans.append(span)
-    # First 2 are twin stories, next 2 are compact stories
-    compact_cats = all_cat_spans[2:4] if len(all_cat_spans) >= 4 else []
-
-    # Compact summaries — same style as twin but after the twin section
-    all_summaries = []
-    for td in soup.find_all("td"):
-        style = td.get("style", "")
-        if "font-size:14px" in style and "line-height:1.55" in style and "color:#3a3a3a" in style and "text-align:justify" in style:
-            all_summaries.append(td)
-    compact_summaries = all_summaries[2:4] if len(all_summaries) >= 4 else []
-
-    # Links — "Read →" after the first 2
-    all_read_links = []
+    # Find wrapping <a> tags: display:block; text-decoration:none; color:inherit
+    # each wraps an entire compact story card (image + text).
+    compact_wrappers = []
     for a in soup.find_all("a"):
-        text = a.get_text().strip()
-        if text.startswith("Read") and "→" in text and "Full" not in text:
-            all_read_links.append(a)
-    compact_links = all_read_links[2:4] if len(all_read_links) >= 4 else []
+        style = a.get("style", "")
+        if "display:block" in style and "text-decoration:none" in style and "color:inherit" in style:
+            for img in a.find_all("img"):
+                if "max-width:240px" in img.get("style", ""):
+                    compact_wrappers.append(a)
+                    break
 
-    for i in range(min(2, len(compact_headlines))):
-        story = {"index": i}
-        if i < len(compact_images):
-            story["image"] = compact_images[i]
-        if i < len(compact_cats):
-            story["category"] = compact_cats[i]
-        if i < len(compact_headlines):
-            story["headline"] = compact_headlines[i]
-        if i < len(compact_summaries):
-            story["summary"] = compact_summaries[i]
-        if i < len(compact_links):
-            story["link"] = compact_links[i]
+    for i, wrapper in enumerate(compact_wrappers[:2]):
+        story = {"index": i, "link": wrapper}
+
+        for img in wrapper.find_all("img"):
+            if "max-width:240px" in img.get("style", ""):
+                story["image"] = img
+                break
+
+        for span in wrapper.find_all("span"):
+            if "background:#8b2a1f" in span.get("style", "") and "padding:4px 9px" in span.get("style", ""):
+                story["category"] = span
+                break
+
+        for td in wrapper.find_all("td"):
+            if "font-size:21px" in td.get("style", "") and "font-weight:700" in td.get("style", ""):
+                story["headline"] = td
+                break
+
+        for td in wrapper.find_all("td"):
+            if "font-size:14px" in td.get("style", "") and "line-height:1.55" in td.get("style", "") and "color:#3a3a3a" in td.get("style", ""):
+                story["summary"] = td
+                break
+
         stories.append(story)
 
     return stories
@@ -287,7 +269,7 @@ def _find_market_data(soup):
 def get_tomorrow_date_str() -> str:
     from datetime import datetime, timedelta
     dt = datetime.now() + timedelta(days=1)
-    return dt.strftime("%d/%m/%Y")
+    return dt.strftime("%B %d, %Y").replace(" 0", " ")
 
 
 def parse_fields(html: str) -> dict:
@@ -560,23 +542,117 @@ def api_export():
 def api_markets_fetch():
     try:
         def fetch_mumbai_gold():
+            """
+            Fetch Mumbai 24K gold price.
+            Primary:   goodreturns.in (Mumbai-specific)
+            Fallback1: goodreturns.in (national)
+            Fallback2: Yahoo Finance GC=F (COMEX gold) converted to INR/10g
+            """
             import requests as _req
             from bs4 import BeautifulSoup as _BS
-            url = "https://www.goodreturns.in/gold-rates/mumbai.html"
-            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"}
+
+            # Primary: goodreturns.in Mumbai
             try:
+                url = "https://www.goodreturns.in/gold-rates/mumbai.html"
                 resp = _req.get(url, headers=headers, timeout=10)
-                soup = _BS(resp.text, 'html.parser')
-                # First table on the page is 24K gold rates
-                tables = soup.find_all('table')
-                if tables:
-                    table = tables[0]  # Table 0 = 24K
-                    for tr in table.find_all('tr'):
-                        cols = [td.get_text(strip=True) for td in tr.find_all(['th', 'td'])]
-                        if len(cols) >= 3 and cols[0] == '10':
-                            today_str = cols[1].replace('₹', '').replace(',', '').strip()
-                            yday_str = cols[2].replace('₹', '').replace(',', '').strip()
-                            return float(today_str), float(yday_str)
+                if resp.status_code == 200:
+                    soup = _BS(resp.text, 'html.parser')
+                    tables = soup.find_all('table')
+                    if tables:
+                        table = tables[0]
+                        for tr in table.find_all('tr'):
+                            cols = [td.get_text(strip=True) for td in tr.find_all(['th', 'td'])]
+                            if len(cols) >= 3 and cols[0] == '10':
+                                today_str = cols[1].replace('₹', '').replace(',', '').strip()
+                                yday_str = cols[2].replace('₹', '').replace(',', '').strip()
+                                if today_str and today_str != 'N/A' and yday_str and yday_str != 'N/A':
+                                    today_val, yday_val = float(today_str), float(yday_str)
+                                    if today_val > 0 and yday_val > 0:
+                                        print("DEBUG [Gold]: goodreturns.in Mumbai -> success")
+                                        return today_val, yday_val
+                print("DEBUG [Gold]: goodreturns.in Mumbai returned N/A, trying fallback...")
+            except Exception as e:
+                print(f"DEBUG [Gold]: goodreturns.in Mumbai failed ({e}), trying fallback...")
+
+            # Fallback 1: goodreturns.in national
+            try:
+                url2 = "https://www.goodreturns.in/gold-rates/"
+                resp2 = _req.get(url2, headers=headers, timeout=10)
+                if resp2.status_code == 200:
+                    soup2 = _BS(resp2.text, 'html.parser')
+                    tables2 = soup2.find_all('table')
+                    if tables2:
+                        for tr in tables2[0].find_all('tr'):
+                            cols = [td.get_text(strip=True) for td in tr.find_all(['th', 'td'])]
+                            if len(cols) >= 3 and cols[0] == '10':
+                                today_str = cols[1].replace('₹', '').replace(',', '').strip()
+                                yday_str = cols[2].replace('₹', '').replace(',', '').strip()
+                                if today_str and today_str != 'N/A' and yday_str and yday_str != 'N/A':
+                                    today_val, yday_val = float(today_str), float(yday_str)
+                                    if today_val > 0 and yday_val > 0:
+                                        print("DEBUG [Gold]: goodreturns.in national -> success")
+                                        return today_val, yday_val
+            except Exception as e:
+                print(f"DEBUG [Gold]: goodreturns.in national failed ({e})")
+
+            # Fallback 2: Yahoo Finance COMEX (GC=F) + USD/INR conversion
+            # 1 troy oz = 31.1035g -> price_inr_per_10g = (gold_usd/31.1035)*10*usd_inr
+            try:
+                import requests
+                hdrs = {"User-Agent": "Mozilla/5.0"}
+                gold_resp = requests.get("https://query2.finance.yahoo.com/v8/finance/chart/GC=F?interval=1d&range=5d", headers=hdrs, timeout=10)
+                usd_resp = requests.get("https://query2.finance.yahoo.com/v8/finance/chart/INR=X?interval=1d&range=5d", headers=hdrs, timeout=10)
+                if gold_resp.status_code == 200 and usd_resp.status_code == 200:
+                    gold_closes = [c for c in gold_resp.json()['chart']['result'][0]['indicators']['quote'][0]['close'] if c is not None]
+                    usd_closes = [c for c in usd_resp.json()['chart']['result'][0]['indicators']['quote'][0]['close'] if c is not None]
+                    if len(gold_closes) >= 2 and len(usd_closes) >= 1:
+                        usd_inr = usd_closes[-1]
+                        today_inr = (gold_closes[-1] / 31.1035) * 10 * usd_inr
+                        prev_inr = (gold_closes[-2] / 31.1035) * 10 * usd_inr
+                        print(f"DEBUG [Gold]: COMEX fallback -> INR {today_inr:.0f}/10g")
+                        return round(today_inr), round(prev_inr)
+            except Exception as e:
+                print(f"DEBUG [Gold]: COMEX fallback failed ({e})")
+
+            return None, None
+
+        def fetch_usd_inr():
+            """
+            Fetch USD/INR exchange rate.
+            Primary:   Frankfurter API (ECB daily rates, free, reliable)
+            Fallback:  Yahoo Finance INR=X
+            """
+            import requests
+            from datetime import datetime, timedelta
+            headers = {"User-Agent": "Mozilla/5.0"}
+
+            try:
+                resp = requests.get("https://api.frankfurter.app/latest?from=USD&to=INR", headers=headers, timeout=10)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    today_rate = float(data['rates']['INR'])
+                    today_date_str = data['date']
+                    today_dt = datetime.strptime(today_date_str, "%Y-%m-%d")
+                    prev_dt = today_dt - timedelta(days=1)
+                    resp_prev = requests.get(
+                        f"https://api.frankfurter.app/{prev_dt.strftime('%Y-%m-%d')}?from=USD&to=INR",
+                        headers=headers, timeout=10
+                    )
+                    if resp_prev.status_code == 200:
+                        prev_rate = float(resp_prev.json()['rates']['INR'])
+                        print(f"DEBUG [USD/INR]: Frankfurter -> {today_rate:.2f}")
+                        return today_rate, prev_rate
+            except Exception as e:
+                print(f"DEBUG [USD/INR]: Frankfurter failed ({e}), trying Yahoo...")
+
+            try:
+                url = "https://query2.finance.yahoo.com/v8/finance/chart/INR=X?interval=1d&range=5d"
+                resp = requests.get(url, headers=headers, timeout=10)
+                if resp.status_code == 200:
+                    closes = [c for c in resp.json()['chart']['result'][0]['indicators']['quote'][0]['close'] if c is not None]
+                    if len(closes) >= 2:
+                        return float(closes[-1]), float(closes[-2])
             except Exception:
                 pass
             return None, None
@@ -610,7 +686,7 @@ def api_markets_fetch():
 
         s_now, s_prev = fetch_two("^BSESN")
         n_now, n_prev = fetch_two("^NSEI")
-        u_now, u_prev = fetch_two("INR=X")
+        u_now, u_prev = fetch_usd_inr()
         g_now, g_prev = fetch_mumbai_gold()
 
         markets = [

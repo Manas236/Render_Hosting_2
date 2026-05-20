@@ -69,6 +69,14 @@ def create_app():
     spec_day15.loader.exec_module(day15_module)
     day15_editor_bp = day15_module.day15_editor_bp
 
+    # ── Day 12(2) Editor (BS4-based) ──
+    spec_day12_2 = importlib.util.spec_from_file_location(
+        "day12_2_editor", "editor(for Day12(2).html).py")
+    day12_2_module = importlib.util.module_from_spec(spec_day12_2)
+    sys.modules["day12_2_editor"] = day12_2_module
+    spec_day12_2.loader.exec_module(day12_2_module)
+    day12_2_editor_bp = day12_2_module.day12_2_editor_bp
+
     app.register_blueprint(login_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(codeview_bp)
@@ -80,6 +88,7 @@ def create_app():
     app.register_blueprint(day11_editor_bp, url_prefix='/day11-editor')
     app.register_blueprint(day12_editor_bp, url_prefix='/day12-editor')
     app.register_blueprint(day15_editor_bp, url_prefix='/day15-editor')
+    app.register_blueprint(day12_2_editor_bp, url_prefix='/day12-2-editor')
     app.register_blueprint(batch_extractor_bp, url_prefix='/batch-extractor')
     app.register_blueprint(upload_image_bp, url_prefix='/upload-image')
     # ─────────────────────────────────────────────
