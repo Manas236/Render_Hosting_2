@@ -548,11 +548,13 @@ def api_markets_fetch():
             Fallback1: goodreturns.in (national)
             Fallback2: Yahoo Finance GC=F (COMEX gold) converted to INR/10g
             """
+            import os
             import requests as _req
             from bs4 import BeautifulSoup as _BS
+            from datetime import datetime, timedelta
             headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"}
 
-            # Primary: goodreturns.in Mumbai
+            # Fallback 1: goodreturns.in Mumbai
             try:
                 url = "https://www.goodreturns.in/gold-rates/mumbai.html"
                 resp = _req.get(url, headers=headers, timeout=10)
@@ -575,7 +577,7 @@ def api_markets_fetch():
             except Exception as e:
                 print(f"DEBUG [Gold]: goodreturns.in Mumbai failed ({e}), trying fallback...")
 
-            # Fallback 1: goodreturns.in national
+            # Fallback 2: goodreturns.in national
             try:
                 url2 = "https://www.goodreturns.in/gold-rates/"
                 resp2 = _req.get(url2, headers=headers, timeout=10)
@@ -596,7 +598,7 @@ def api_markets_fetch():
             except Exception as e:
                 print(f"DEBUG [Gold]: goodreturns.in national failed ({e})")
 
-            # Fallback 2: Yahoo Finance COMEX (GC=F) + USD/INR conversion
+            # Fallback 3: Yahoo Finance COMEX (GC=F) + USD/INR conversion
             # 1 troy oz = 31.1035g -> price_inr_per_10g = (gold_usd/31.1035)*10*usd_inr
             try:
                 import requests

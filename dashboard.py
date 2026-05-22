@@ -108,6 +108,20 @@ DASHBOARD_HTML = """
           <div class="dash-btn-title">Day 12(2) Editor</div>
           <div class="dash-btn-desc">Visual editor for Day12(2) with markets ticker.</div>
         </a>
+        <a href="{{ url_for('day9_2_editor.editor') }}" class="dash-btn">
+          <div class="dash-btn-photo-wrap">
+            <img src="/static_files/Day9.png" class="dash-btn-photo" alt="Day9(2) Editor" />
+          </div>
+          <div class="dash-btn-title">Day 9(2) Editor</div>
+          <div class="dash-btn-desc">Visual editor for Day9(2) with markets ticker.</div>
+        </a>
+        <a href="{{ url_for('day17_editor.editor') }}" class="dash-btn">
+          <div class="dash-btn-photo-wrap">
+            <img src="/static_files/Day17.png" class="dash-btn-photo" alt="Day17 Editor" />
+          </div>
+          <div class="dash-btn-title">Day 17 Editor</div>
+          <div class="dash-btn-desc">Visual editor for Day17 with weather and markets ticker.</div>
+        </a>
       </div>
 
       <div class="rule-divider" style="margin-top: 36px;"><span></span><em>UTILITY TOOLS</em><span></span></div>

@@ -362,7 +362,7 @@ HTML = """
   <div class="drop-zone" id="dropZone">
     <input type="file" id="fileInput" accept="image/*" onchange="previewFile(this)" />
     <div class="drop-icon">☁️</div>
-    <div class="drop-text">Drag & drop or <span>browse</span></div>
+    <div class="drop-text">Drag & drop, <span>browse</span>, or <span>Ctrl+V</span></div>
     <div class="drop-text" style="font-size:0.75rem;margin-top:6px;">PNG · JPG · JPEG · WEBP · GIF</div>
   </div>
 
@@ -438,6 +438,27 @@ HTML = """
       setTimeout(() => btn.textContent = '📋 Copy', 2000);
     });
   }
+
+  /* ── Clipboard paste ── */
+  document.addEventListener('paste', function(e) {
+    const items = e.clipboardData && e.clipboardData.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        const file = items[i].getAsFile();
+        if (!file) continue;
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        const input = document.getElementById('fileInput');
+        input.files = dt.files;
+        previewFile(input);
+        /* flash the drop zone to confirm paste was received */
+        dropZone.classList.add('dragover');
+        setTimeout(() => dropZone.classList.remove('dragover'), 300);
+        break;
+      }
+    }
+  });
 
   /* ── Push ── */
   async function pushImage() {

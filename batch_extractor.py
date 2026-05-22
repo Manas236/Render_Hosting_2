@@ -736,6 +736,8 @@ def api_send():
         "/day12-editor/api/import_json",
         "/day15-editor/api/import_json",
         "/day12-2-editor/api/import_json",
+        "/day9-2-editor/api/import_json",
+        "/day17-editor/api/import_json",
     ]
 
     success_count = 0

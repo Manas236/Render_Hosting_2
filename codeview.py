@@ -22,7 +22,7 @@ CONVERTER_HTML = """
         .btn-back { display: inline-block; font-size: 0.9rem; color: #555; text-decoration: none; font-weight: 500; transition: color 0.15s; }
         .btn-back:hover { color: #111; }
         .card { background: #ffffff; border: 1px solid #e0ddd6; border-radius: 14px; padding: 32px; width: 100%; max-width: 700px; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05); }
-        .upload-zone { border: 2px dashed #c9c5bb; border-radius: 10px; padding: 40px 24px; text-align: center; background: #faf9f6; transition: border-color 0.2s, background 0.2s; cursor: pointer; }
+        .upload-zone { display: block; border: 2px dashed #c9c5bb; border-radius: 10px; padding: 40px 24px; text-align: center; background: #faf9f6; transition: border-color 0.2s, background 0.2s; cursor: pointer; }
         .upload-zone:hover, .upload-zone.drag-over { border-color: #888; background: #f2f1ec; }
         .upload-zone input[type="file"] { display: none; }
         .upload-icon { font-size: 2.4rem; margin-bottom: 12px; display: block; }
@@ -43,6 +43,16 @@ CONVERTER_HTML = """
         pre { overflow-x: auto; overflow-y: auto; max-height: 520px; padding: 20px 22px; font-family: "DM Mono", monospace; font-size: 0.82rem; line-height: 1.75; color: #2d2d2d; white-space: pre; }
         .upload-another { display: inline-block; margin-top: 24px; font-size: 0.88rem; color: #888; text-decoration: none; border-bottom: 1px solid #ccc; padding-bottom: 1px; transition: color 0.15s, border-color 0.15s; }
         .upload-another:hover { color: #333; border-color: #555; }
+        .editor-load-section { margin-top: 20px; }
+        .divider-text { text-align: center; font-size: 0.82rem; color: #aaa; margin: 16px 0 12px; position: relative; }
+        .divider-text::before, .divider-text::after { content: ''; position: absolute; top: 50%; width: 30%; height: 1px; background: #e0ddd6; }
+        .divider-text::before { left: 0; }
+        .divider-text::after { right: 0; }
+        .editor-load-row { display: flex; gap: 8px; }
+        .editor-select { flex: 1; padding: 10px 12px; font-family: "DM Sans", sans-serif; font-size: 0.88rem; color: #333; background: #faf9f6; border: 1px solid #ddd8cf; border-radius: 8px; outline: none; cursor: pointer; }
+        .editor-select:focus { border-color: #aaa; }
+        .btn-load-editor { padding: 10px 18px; background: #1a1a1a; color: #fff; font-family: "DM Sans", sans-serif; font-size: 0.88rem; font-weight: 500; border: none; border-radius: 8px; cursor: pointer; transition: background 0.18s; white-space: nowrap; }
+        .btn-load-editor:hover { background: #333; }
     </style>
 </head>
 <body>
@@ -52,14 +62,34 @@ CONVERTER_HTML = """
         {% if error %}<div class="error-banner">⚠ {{ error }}</div>{% endif %}
         {% if not code %}
         <form method="POST" action="/converter" enctype="multipart/form-data" id="uploadForm">
-            <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+            <label class="upload-zone" id="dropZone">
                 <span class="upload-icon">📄</span>
-                <label><span class="upload-main-text">Click to choose a file</span><span class="upload-sub-text">or drag and drop it here · .html / .htm only</span></label>
+                <span class="upload-main-text">Click to choose a file</span>
+                <span class="upload-sub-text">or drag and drop it here · .html / .htm only</span>
                 <input type="file" id="fileInput" name="file" accept=".html,.htm" onchange="handleFileSelect(this)" />
                 <div class="selected-file-name" id="fileName"></div>
-            </div>
+            </label>
             <button type="submit" class="btn-primary">View Source Code →</button>
         </form>
+        <div class="editor-load-section">
+            <div class="divider-text">or load directly from an editor</div>
+            <div class="editor-load-row">
+                <select id="editorSelect" class="editor-select">
+                    <option value="">Choose an editor…</option>
+                    <option value="/day8-editor/api/preview">Day 8</option>
+                    <option value="/day9-editor/api/preview">Day 9</option>
+                    <option value="/day9-2-editor/api/preview">Day 9 (v2)</option>
+                    <option value="/day6temp-editor/api/preview">Day 6 (Template)</option>
+                    <option value="/template1-editor/api/preview">Template 1</option>
+                    <option value="/day11-editor/api/preview">Day 11</option>
+                    <option value="/day12-editor/api/preview">Day 12</option>
+                    <option value="/day12-2-editor/api/preview">Day 12 (v2)</option>
+                    <option value="/day15-editor/api/preview">Day 15</option>
+                    <option value="/day17-editor/api/preview">Day 17</option>
+                </select>
+                <button type="button" class="btn-load-editor" onclick="loadFromEditor()">Load →</button>
+            </div>
+        </div>
         {% else %}
         <div class="code-header">
             <span class="code-filename">{{ filename }}</span>
@@ -81,11 +111,31 @@ CONVERTER_HTML = """
     <script>
         const dropZone = document.getElementById("dropZone");
         if (dropZone) {
+            dropZone.addEventListener("click", () => { const inp = document.getElementById("fileInput"); if (inp) inp.value = ""; });
             dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("drag-over"); });
             dropZone.addEventListener("dragleave", () => { dropZone.classList.remove("drag-over"); });
             dropZone.addEventListener("drop", (e) => { e.preventDefault(); dropZone.classList.remove("drag-over"); const files = e.dataTransfer.files; if (files.length > 0) { const input = document.getElementById("fileInput"); input.files = files; handleFileSelect(input); } });
         }
         function handleFileSelect(input) { const nameEl = document.getElementById("fileName"); if (input.files.length > 0) nameEl.textContent = "Selected: " + input.files[0].name; }
+        function loadFromEditor() {
+            const sel = document.getElementById("editorSelect");
+            if (!sel || !sel.value) return;
+            const url = sel.value;
+            const label = sel.options[sel.selectedIndex].text;
+            const btn = document.querySelector(".btn-load-editor");
+            sel.disabled = true; btn.disabled = true; btn.textContent = "Loading…";
+            fetch(url)
+                .then(r => { if (!r.ok) throw new Error(); return r.text(); })
+                .then(html => {
+                    const form = document.createElement("form");
+                    form.method = "POST"; form.action = "/converter";
+                    const ci = document.createElement("input"); ci.type = "hidden"; ci.name = "content"; ci.value = html;
+                    const fi = document.createElement("input"); fi.type = "hidden"; fi.name = "editor_filename"; fi.value = label.replace(/\s+/g, "_") + ".html";
+                    form.appendChild(ci); form.appendChild(fi);
+                    document.body.appendChild(form); form.submit();
+                })
+                .catch(() => { sel.disabled = false; btn.disabled = false; btn.textContent = "Load →"; alert("Could not load from that editor. Make sure the app is running and the editor has been opened at least once."); });
+        }
         function copyCode() {
             const code = document.getElementById("codeContent").textContent;
             function showCopied() {
@@ -106,6 +156,10 @@ CONVERTER_HTML = """
 @require_login
 def converter():
     if request.method == "POST":
+        content = request.form.get("content")
+        if content is not None:
+            filename = request.form.get("editor_filename", "editor_export.html")
+            return render_template_string(CONVERTER_HTML, code=content, filename=filename, error=None)
         file = request.files.get("file")
         if not file or file.filename == "":
             return render_template_string(CONVERTER_HTML, error="No file selected.", code=None)
