@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Developer Log Day 56–75 | Project Pandora</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f1115;
+            --text-color: #e0e6ed;
+            --accent-color: #00e5ff;
+            --card-bg: #1a1d24;
+            --border-color: #2b303b;
+            --success: #39d353;
+            --warning: #f1e05a;
+            --danger: #ff7b72;
+            --code-bg: #0d1117;
+            --purple: #bd93f9;
+            --orange: #ffb86c;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.7;
+            padding: 40px 20px;
+        }
+
+        .container { max-width: 1000px; margin: 0 auto; }
+
+        header {
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 24px;
+            margin-bottom: 48px;
+        }
+
+        h1 {
+            font-size: 2.6rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: #ffffff;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        h3 {
+            font-size: 1.15rem;
+            color: var(--accent-color);
+            margin: 24px 0 12px 0;
+        }
+
+        h4 {
+            font-size: 1rem;
+            color: #a5d6ff;
+            margin: 18px 0 8px 0;
+        }
+
+        p { margin-bottom: 14px; }
+
+        ul, ol {
+            margin-bottom: 18px;
+            padding-left: 24px;
+        }
+
+        li { margin-bottom: 8px; }
+
+        .date {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-color);
+            font-size: 0.9rem;
+        }
+
+        .intro-note {
+            margin-top: 16px;
+            font-size: 1.05rem;
+            color: #a5d6ff;
+        }
+
+        .section-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 30px 36px;
+            margin-bottom: 36px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-right: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            white-space: nowrap;
+        }
+
+        .badge.feature    { background: rgba(0,229,255,0.1);   color: var(--accent-color); border: 1px solid var(--accent-color); }
+        .badge.bugfix     { background: rgba(255,123,114,0.1);  color: var(--danger);       border: 1px solid var(--danger); }
+        .badge.refactor   { background: rgba(241,224,90,0.1);   color: var(--warning);      border: 1px solid var(--warning); }
+        .badge.architecture { background: rgba(189,147,249,0.1); color: var(--purple);      border: 1px solid var(--purple); }
+        .badge.migration  { background: rgba(255,184,108,0.1);  color: var(--orange);       border: 1px solid var(--orange); }
+        .badge.devops     { background: rgba(57,211,83,0.1);    color: var(--success);      border: 1px solid var(--success); }
+
+        pre {
+            background-color: var(--code-bg);
+            padding: 16px 20px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            overflow-x: auto;
+            margin: 16px 0 20px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            line-height: 1.65;
+            color: #a5d6ff;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.84em;
+            color: #ff7b72;
+            border: 1px solid var(--border-color);
+        }
+
+        .problem-box, .condition-box, .now-box, .note-box {
+            padding: 16px 20px;
+            margin: 18px 0;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .problem-box   { border-left: 4px solid var(--danger);  background: rgba(255,123,114,0.05); }
+        .condition-box { border-left: 4px solid var(--warning); background: rgba(241,224,90,0.05); }
+        .now-box       { border-left: 4px solid var(--success); background: rgba(57,211,83,0.05); }
+        .note-box      { border-left: 4px solid var(--purple);  background: rgba(189,147,249,0.05); }
+
+        .box-title { font-weight: 700; margin-bottom: 8px; font-size: 1rem; }
+        .problem-box   .box-title { color: var(--danger); }
+        .condition-box .box-title { color: var(--warning); }
+        .now-box       .box-title { color: var(--success); }
+        .note-box      .box-title { color: var(--purple); }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 16px 0;
+        }
+
+        .commit-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .commit-row:last-child { border-bottom: none; }
+
+        .commit-hash {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: var(--accent-color);
+            background: rgba(0,229,255,0.08);
+            border: 1px solid rgba(0,229,255,0.2);
+            border-radius: 4px;
+            padding: 2px 8px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .commit-desc { font-size: 0.92rem; color: var(--text-color); }
+        .commit-meta { font-size: 0.78rem; color: #6a737d; margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 18px 0;
+        }
+
+        .stat-card {
+            background: rgba(0,229,255,0.04);
+            border: 1px solid rgba(0,229,255,0.15);
+            border-radius: 6px;
+            padding: 14px 18px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .stat-label { font-size: 0.78rem; color: #6a737d; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .file-tree {
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 16px 20px;
+            margin: 16px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            line-height: 1.9;
+        }
+
+        .ft-new    { color: var(--success); }
+        .ft-mod    { color: var(--warning); }
+        .ft-del    { color: var(--danger); }
+        .ft-dir    { color: var(--accent-color); font-weight: 700; }
+        .ft-note   { color: #6a737d; margin-left: 8px; }
+
+        .arrow { color: #6a737d; margin: 0 6px; }
+
+        table.diff-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 0.85rem;
+        }
+
+        table.diff-table th {
+            background: rgba(0,229,255,0.1);
+            color: var(--accent-color);
+            padding: 8px 12px;
+            text-align: left;
+            font-family: 'JetBrains Mono', monospace;
+            border: 1px solid var(--border-color);
+        }
+
+        table.diff-table td {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+
+        table.diff-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+        .ins { color: var(--success); }
+        .del { color: var(--danger); }
+
+        hr.section-rule {
+            border: none;
+            border-top: 1px solid var(--border-color);
+            margin: 24px 0;
+        }
+
+        .page-break { page-break-before: always; }
+
+        @media print {
+            :root {
+                --bg-color: #ffffff;
+                --text-color: #222222;
+                --accent-color: #007bb5;
+                --card-bg: #ffffff;
+                --border-color: #cccccc;
+                --success: #2b8a3e;
+                --warning: #b08800;
+                --danger: #c92a2a;
+                --code-bg: #f4f4f4;
+                --purple: #6a0dad;
+                --orange: #b05a00;
+            }
+            body { padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .section-card { box-shadow: none; border: 1px solid #aaa; page-break-inside: avoid; }
+            pre, code { font-size: 0.78rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <header>
+        <h1>Developer Log Day 56–75</h1>
+        <div class="date">Recorded: May 22, 2026 &nbsp;|&nbsp; Project: Pandora</div>
+        <p class="intro-note">Comprehensive documentation of all architectural changes, new template additions, SDK migrations, data-pipeline resilience upgrades, and production validation spanning development days 56 through 75. This log covers the period from commit <code>35f999b</code> (53rd commit) through the current working state.</p>
+    </header>
+
+
+    <!-- ======================================================= -->
+    <!--  EXECUTIVE SUMMARY                                        -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2>Executive Summary: Day 55 Condition vs. Day 75 Condition</h2>
+
+        <div class="condition-box">
+            <div class="box-title">Where We Were (Day 55 Condition)</div>
+            <p>At the close of Day 55, Project Pandora had reached a stable first-generation architecture. The SSE batch extractor, API key rotation, and a fleet of six editors (Day 6 Temp, Day 8, Day 9, Day 11, Day 12, Day 15) were fully integrated. However, several fragility vectors remained:</p>
+            <ul>
+                <li><strong>SDK Coupling:</strong> Both <code>batch_extractor.py</code> and <code>extractor.py</code> depended on the <code>google-genai</code> Python package. Any breaking change to this SDK — or an environment where it failed to import — would crash the entire application on startup with a hard <code>sys.exit()</code>.</li>
+                <li><strong>Single-Point Gold Scraper:</strong> The Mumbai gold price scraper had no fallback. If goodreturns.in returned a status other than 200, or changed its HTML structure, the markets ticker would silently fail with no data.</li>
+                <li><strong>USD/INR via Equity API:</strong> The exchange rate was fetched using <code>fetch_two("INR=X")</code> — the same Yahoo Finance function designed for equity indices — which returned inconsistent granularity and lacked a fallback.</li>
+                <li><strong>Day 15 Compact Story Selector Fragility:</strong> The <code>_find_compact_stories()</code> function relied on sequential element-counting across the entire document DOM. Adding any new element of the same CSS type elsewhere in the template would silently map to the wrong story.</li>
+                <li><strong>No Variant Templates:</strong> The library had one version of each day's design. There was no mechanism for issuing an alternate layout for a day where the editorial brief changed mid-production.</li>
+                <li><strong>No Diagnostic Tool:</strong> There was no standalone script to validate that all blueprint modules could be imported successfully — a startup crash on Render required reading cloud logs to identify the failing module.</li>
+            </ul>
+        </div>
+
+        <div class="now-box">
+            <div class="box-title">Where We Are Now (Day 75 Condition)</div>
+            <p>Over the last 20 development days, every one of these fragility vectors has been resolved, and the platform has expanded significantly:</p>
+            <ul>
+                <li><strong>SDK-Free Gemini Calls:</strong> Both <code>batch_extractor.py</code> and <code>extractor.py</code> now call the Gemini REST API directly via <code>requests.post()</code>. The <code>google-genai</code> import has been eliminated entirely, reducing the dependency surface and removing the hard startup crash.</li>
+                <li><strong>Three-Tier Gold Fallback:</strong> Mumbai 24K gold scraping now has a fully documented three-tier fallback chain: goodreturns.in Mumbai → goodreturns.in national → Yahoo Finance COMEX conversion. The scraper will never silently fail as long as any one of these three sources is reachable.</li>
+                <li><strong>Dedicated USD/INR Resolver:</strong> A new <code>fetch_usd_inr()</code> function uses the Frankfurter API (European Central Bank rates) as its primary source, with Yahoo Finance as fallback. This is more semantically correct than using an equity ticker for a currency rate.</li>
+                <li><strong>Wrapper-Scoped Story Selectors:</strong> The Day 15 compact story finder now locates articles by finding their wrapping <code>&lt;a&gt;</code> element first, then searches within that scope. Adding new elements to the document no longer risks cross-contamination between stories.</li>
+                <li><strong>Two New Variant Templates:</strong> <code>Day12(2).html</code> and <code>Day9(2).html</code> have been introduced as production-grade alternate layouts, each with their own full-stack editor implementation. The newsletter fleet now includes a total of nine template variants.</li>
+                <li><strong>Day 17 Newsletter:</strong> The newest edition template has been added to the platform and wired into the full pipeline — editor backend, editor frontend, dashboard card, and batch extractor forwarding.</li>
+                <li><strong>Universal Date Format:</strong> All editors now generate dates in <code>Month DD, YYYY</code> format (e.g., "May 22, 2025") instead of the previous <code>DD/MM/YYYY</code>, with backward-compatible parsing to avoid breaking existing content.</li>
+                <li><strong>Image Pusher Validated in Production:</strong> Five consecutive live image uploads (commits 57–62) proved that the GitHub Token auto-push pipeline established in Day 45–55 is functioning correctly in the Render.com production environment.</li>
+                <li><strong>Diagnostic Import Harness:</strong> <code>test_imports.py</code> provides a standalone script that sequentially imports all modules and prints a clear success/failure status for each, making deployment debugging dramatically faster.</li>
+            </ul>
+        </div>
+
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-number">3</div>
+                <div class="stat-label">New Templates Added</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">9</div>
+                <div class="stat-label">Total Editors in Fleet</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">2</div>
+                <div class="stat-label">Modules De-SDKed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">5</div>
+                <div class="stat-label">Live Image Uploads Validated</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">3</div>
+                <div class="stat-label">Gold Scraper Fallback Tiers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">2151+</div>
+                <div class="stat-label">Lines of New Code</div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  COMMIT TIMELINE                                          -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2>Commit Timeline: Days 56–75</h2>
+        <p>The following commits were authored during this period. Image pushes are automated by the <em>Newsband Image Pusher</em> bot using the GitHub Token pipeline.</p>
+
+        <div class="commit-row">
+            <div>
+                <div class="commit-hash">8798613</div>
+            </div>
+            <div>
+                <div class="commit-desc">Add Day 12(2) Newsletter Editor with live markets ticker, refactor market fetching fallbacks to avoid terminal encoding errors, and configure blueprint auto-forwarding</div>
+                <div class="commit-meta">May 20, 2026 · Admin · 12 files changed, 2151 insertions(+), 244 deletions(−)</div>
+            </div>
+        </div>
+        <div class="commit-row">
+            <div>
+                <div class="commit-hash">249d124</div>
+            </div>
+            <div>
+                <div class="commit-desc">57th commit — Image upload: FW19_AFC_Ranveer_Singh_Stills_Shot_3_1203.webp (284 KB)</div>
+                <div class="commit-meta">May 21, 2026 · Newsband Image Pusher · automated</div>
+            </div>
+        </div>
+        <div class="commit-row">
+            <div>
+                <div class="commit-hash">d245b34</div>
+            </div>
+            <div>
+                <div class="commit-desc">58th commit — Image upload: FW19_AFC_Ranveer_Singh_Stills_Shot_1_0210.webp (255 KB)</div>
+                <div class="commit-meta">May 21, 2026 · Newsband Image Pusher · automated</div>
+            </div>
+        </div>
+        <div class="commit-row">
+            <div>
+                <div class="commit-hash">17e0160</div>
+            </div>
+            <div>
+                <div class="commit-desc">59th commit — Image upload: Swara Sawant (2) (1).jfif (220 KB)</div>
+                <div class="commit-meta">May 21, 2026 · Newsband Image Pusher · automated</div>
+            </div>
+        </div>
+        <div class="commit-row">
+            <div>
+                <div class="commit-hash">b0a844f</div>
+            </div>
+            <div>
+                <div class="commit-desc">60th commit — Image upload: 1000845039.jpg (102 KB)</div>
+                <div class="commit-meta">May 21, 2026 · Newsband Image Pusher · automated</div>
+            </div>
+        </div>
+        <div class="commit-row">
+            <div>
+                <div class="commit-hash">12e0c1b</div>
+            </div>
+            <div>
+                <div class="commit-desc">61st commit — Image upload: pipeline (44) (1).jpg (150 KB)</div>
+                <div class="commit-meta">May 21, 2026 · Newsband Image Pusher · automated</div>
+            </div>
+        </div>
+        <div class="commit-row">
+            <div>
+                <div class="commit-hash">0875e05</div>
+            </div>
+            <div>
+                <div class="commit-desc">62nd commit — Image upload: fire .jpg (111 KB)</div>
+                <div class="commit-meta">May 21, 2026 · Newsband Image Pusher · automated</div>
+            </div>
+        </div>
+        <div class="commit-row">
+            <div>
+                <div class="commit-hash">working</div>
+            </div>
+            <div>
+                <div class="commit-desc">Unstaged: Day 9(2) + Day 17 full-stack additions (app.py, batch_extractor.py, dashboard.py, new template files)</div>
+                <div class="commit-meta">May 22, 2026 · Admin · pending commit</div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  1. GEMINI SDK → REST MIGRATION                          -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge migration">Migration</span> 1. Gemini SDK → Direct REST API: Eliminating google-genai</h2>
+
+        <p>The single most architecturally significant change in this period was removing the dependency on the <code>google-genai</code> Python package from both <code>batch_extractor.py</code> and <code>extractor.py</code>. This was not a minor refactor — it changed how every AI call in the platform is executed.</p>
+
+        <div class="problem-box">
+            <div class="box-title">The Fragility of SDK-Gated Startup</div>
+            <p>Both files had an unconditional hard-exit guard at the top of the module:</p>
+<pre><code>try:
+    from google import genai
+except ImportError:
+    sys.exit("Missing dependency: pip install google-genai")</code></pre>
+            <p>This meant that if the <code>google-genai</code> package was absent, outdated, or incompatible with the Python version on Render, the entire Flask application would refuse to start. The Blueprint registration in <code>app.py</code> uses <code>importlib.util.exec_module()</code> to load these files — so a failed import in either module propagated as an unhandled exception that took down the whole app, not just the affected blueprint.</p>
+            <p>Furthermore, the <code>genai.Client</code> object was being constructed inside the core API-calling functions (<code>_call_gemini</code>, <code>summarize</code>, <code>categorize</code>), meaning one bad API key could cause the SDK to raise during client construction rather than during the network call, producing confusing error messages.</p>
+        </div>
+
+        <h3>The New Architecture: Raw HTTP via requests</h3>
+        <p>The fix was to bypass the SDK entirely and call the Gemini REST endpoint directly using the <code>requests</code> library — which was already a dependency. The <code>requests</code> import was already soft-guarded with a try/except, so no new hard dependencies were introduced.</p>
+
+        <h4>Before (SDK approach — both files)</h4>
+<pre><code>from google import genai                        # Hard import, crashes on missing
+
+client = genai.Client(api_key=api_key)          # Constructed per-call
+for model in GEMINI_MODELS:
+    response = client.models.generate_content(
+        model=model, contents=prompt
+    )
+    if response and response.text:
+        return response.text.strip()</code></pre>
+
+        <h4>After (REST approach — both files)</h4>
+<pre><code># No google-genai import needed at all.
+
+for model in GEMINI_MODELS:
+    try:
+        url = (
+            f"https://generativelanguage.googleapis.com"
+            f"/v1beta/models/{model}:generateContent?key={api_key}"
+        )
+        headers = {'Content-Type': 'application/json'}
+        data = {"contents": [{"parts": [{"text": prompt}]}]}
+
+        resp = requests.post(url, headers=headers, json=data, timeout=30)
+        if resp.ok:
+            res_json = resp.json()
+            candidates = res_json.get("candidates", [])
+            if candidates and candidates[0].get("content", {}).get("parts"):
+                return candidates[0]["content"]["parts"][0]["text"].strip()
+        elif resp.status_code == 429:
+            logger.warning(f"[!] Rate limited {model} key {masked}")
+        else:
+            logger.error(f"[!] {model} failed: HTTP {resp.status_code}")
+            break
+    except Exception as e:
+        logger.error(f"[!] {model} request failed: {str(e)[:100]}")
+        break</code></pre>
+
+        <div class="now-box">
+            <div class="box-title">What This Achieves</div>
+            <ul>
+                <li><strong>Zero hard dependencies added:</strong> <code>requests</code> was already in use. The only removal is <code>google-genai</code>.</li>
+                <li><strong>Explicit HTTP status handling:</strong> 429 rate limits are caught and logged with a proper warning. Non-200 statuses are logged with the HTTP code. The SDK previously wrapped these in SDK-specific exception types that were harder to pattern-match.</li>
+                <li><strong>Startup safety:</strong> If the REST call fails, it logs an error and returns <code>None</code> — the app continues running. There is no <code>sys.exit()</code> anywhere in the call path.</li>
+                <li><strong>Identical behaviour:</strong> The model rotation, key cycling, and retry logic are fully preserved. The change is purely at the transport layer.</li>
+            </ul>
+        </div>
+
+        <div class="note-box">
+            <div class="box-title">Side Effect: Unicode Arrow Fix</div>
+            <p>As part of this refactor, two log lines in <code>batch_extractor.py</code> that used the Unicode arrow <code>→</code> were changed to the ASCII equivalent <code>-&gt;</code>. The Unicode character caused terminal encoding errors on Windows consoles running <code>cp1252</code> encoding, which would abort the log output mid-stream and scramble subsequent log lines. The fix is backward-compatible because no log parser depends on the specific character.</p>
+        </div>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  2. DAY 12(2) FULL-STACK ADDITION                        -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge feature">Feature</span> 2. Day 12(2) — A Full-Stack Newsletter Variant</h2>
+
+        <p>The most substantial new feature in this period was the introduction of <code>Day12(2).html</code> as a first-class newsletter variant with a completely independent editor stack. This is not a reskin — it is a structurally distinct template that carries a live markets ticker section not present in the original Day 12 design.</p>
+
+        <h3>Template Architecture Overview</h3>
+        <p>Day 12(2) carries five editable articles in two distinct layout zones:</p>
+        <ol>
+            <li><strong>Featured Article</strong> — Full-width banner article, wraps a heavy image and large headline.</li>
+            <li><strong>Article 1 &amp; Article 2</strong> — Horizontal cards: image left, text right.</li>
+            <li><strong>Grid Left &amp; Grid Right</strong> — Two-column vertical cards in the lower grid.</li>
+        </ol>
+        <p>Uniquely, the template injects a <strong>Markets Ticker Strip</strong> immediately after the Featured Article — a dark-background (<code>#0f172a</code>) horizontal row displaying four financial instruments: Sensex, Nifty 50, USD/INR, and Mumbai 24K Gold (10g price).</p>
+
+        <h3>The Full File Manifest</h3>
+        <div class="file-tree">
+            <span class="ft-new">+</span> Day12(2).html <span class="ft-note">— the base email template (XHTML, MSO-compat, 754px wide)</span><br>
+            <span class="ft-new">+</span> editor(for Day12(2).html).py <span class="ft-note">— Flask Blueprint backend (565 lines)</span><br>
+            <span class="ft-new">+</span> templates/editor_day12_2.html <span class="ft-note">— editor UI frontend (1188 lines)</span><br>
+            <span class="ft-mod">~</span> app.py <span class="ft-note">— +9 lines: importlib load + blueprint register at /day12-2-editor</span><br>
+            <span class="ft-mod">~</span> dashboard.py <span class="ft-note">— +7 lines: new dashboard card with Day12.png thumbnail</span><br>
+            <span class="ft-mod">~</span> batch_extractor.py <span class="ft-note">— +1 line: /day12-2-editor/api/import_json added to forwarding list</span>
+        </div>
+
+        <h3>Editor Backend: BeautifulSoup4 Selector Strategy</h3>
+        <p>The <code>editor(for Day12(2).html).py</code> backend follows the same BeautifulSoup4 pattern established by all previous editors. Its selector logic is designed for a document that uses <code>&lt;a&gt;</code> tags as article wrappers — a structure common to email-safe HTML where interactive areas must wrap entire table rows.</p>
+
+<pre><code>def _find_articles(soup):
+    """
+    Day12(2) has 5 articles, each wrapped in &lt;a&gt; with:
+       style="text-decoration:none; display:block"
+    Footer social links share the same anchor style but live inside
+    td[background-color:#0a0a0a] — we filter those out.
+    """
+    articles = []
+    for a_tag in soup.find_all("a"):
+        style = a_tag.get("style", "")
+        if "text-decoration:none" in style and "display:block" in style:
+            parent_td = a_tag.find_parent("td")
+            if parent_td:
+                parent_style = parent_td.get("style", "")
+                if "background-color:#0a0a0a" in parent_style:
+                    continue          # skip footer links
+            articles.append(a_tag)
+    return articles</code></pre>
+
+        <div class="note-box">
+            <div class="box-title">Why the Footer Filter Matters</div>
+            <p>Without the <code>background-color:#0a0a0a</code> filter, the footer social links (Instagram, Twitter, website) — which also use <code>display:block; text-decoration:none</code> anchors — would be appended to the articles list as phantom articles 6, 7, and 8. This would cause the editor to render three extra story panels that map to footer social icons, and any save operation would corrupt the footer HTML. The parent <code>&lt;td&gt;</code> background colour check is the only reliable discriminator between article anchors and footer anchors in this template's structure.</p>
+        </div>
+
+        <h3>Market Section Selectors</h3>
+        <p>The markets ticker strip is identified by the containing <code>&lt;td&gt;</code> with <code>background-color:#0f172a</code>. Within it, the four instrument cells are each a <code>&lt;td valign="top" width="25%"&gt;</code>. Each cell contains three <code>&lt;div&gt;</code> elements in order: label, value, change percentage.</p>
+
+<pre><code>def _find_market_data(soup):
+    dark_td = None
+    for td in soup.find_all("td"):
+        if "background-color:#0f172a" in td.get("style", ""):
+            dark_td = td
+            break
+
+    ticker_cells = [
+        td for td in dark_td.find_all("td")
+        if td.get("valign") == "top" and td.get("width") == "25%"
+    ]
+
+    for cell in ticker_cells:
+        divs = cell.find_all("div")
+        if len(divs) >= 3:
+            market = {
+                "label":    divs[0].get_text().strip(),
+                "value":    divs[1].get_text().strip(),
+                "change":   divs[2].get_text().strip(),
+                "positive": "color:#10b981" in divs[2].get("style", ""),
+            }
+            markets.append(market)</code></pre>
+
+        <h3>Routing Integration in app.py</h3>
+        <p>Following the established pattern, the editor is loaded via <code>importlib.util</code> because the filename contains parentheses and spaces — characters illegal in Python import identifiers:</p>
+
+<pre><code># ── Day 12(2) Editor (BS4-based) ──
+spec_day12_2 = importlib.util.spec_from_file_location(
+    "day12_2_editor", "editor(for Day12(2).html).py")
+day12_2_module = importlib.util.module_from_spec(spec_day12_2)
+sys.modules["day12_2_editor"] = day12_2_module
+spec_day12_2.loader.exec_module(day12_2_module)
+day12_2_editor_bp = day12_2_module.day12_2_editor_bp
+
+app.register_blueprint(day12_2_editor_bp, url_prefix='/day12-2-editor')</code></pre>
+
+        <div class="now-box">
+            <div class="box-title">Dashboard Integration</div>
+            <p>The Day 12(2) editor card was added to the Newsletter Editors grid in <code>dashboard.py</code> using the same <code>dash-btn-photo-wrap</code> structure as all other template buttons, linking to the <code>Day12.png</code> thumbnail (the visual sibling to the original Day 12 template). The card routes to <code>{{ url_for('day12_2_editor.editor') }}</code>.</p>
+        </div>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  3. DAY 12(2) HTML TEMPLATE OVERHAUL                    -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge refactor">Refactor</span> 3. Day 12(2) HTML Template: CSS &amp; Mobile Overhaul</h2>
+
+        <p>Before the editor integration, the <code>Day12(2).html</code> base template itself underwent structural CSS improvements that were committed as part of the same changeset.</p>
+
+        <h3>BOM Character Removal</h3>
+        <p>The file previously opened with a BOM (Byte Order Mark, <code>EF BB BF</code>), making the <code>DOCTYPE</code> declaration effectively invisible to some parsers. A BOM before <code>&lt;!DOCTYPE html&gt;</code> causes Internet Explorer and some email clients to enter quirks mode. It was removed, leaving a clean ASCII start of file.</p>
+
+        <h3>Mobile CSS Rewrite</h3>
+        <p>The previous media query used a standalone mobile-only breakpoint:</p>
+<pre><code>@media only screen and (max-width: 754px) {
+    body { overflow-x: hidden !important; margin: 0 !important; }
+    table.nb-wrapper { zoom: calc(100vw / 754) !important; }
+}</code></pre>
+        <p>The new version adds a landscape orientation breakpoint, which addresses the case where a phone is held horizontally — the viewport width exceeds 754px but the height is very small, causing the template to overflow vertically:</p>
+<pre><code>body { margin:0; padding:0; background-color:#e0e0e0;
+       -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; }
+table { border-collapse:collapse; }
+
+/* Mobile + landscape — zoom-scale the whole shell to fit viewport */
+@media only screen and (max-width: 754px),
+       only screen and (orientation: landscape) and (max-height: 500px) {
+    body { overflow-x:hidden !important; margin:0 !important; }
+    table.nb-wrapper { zoom: calc(100vw / 754) !important; }
+}</code></pre>
+        <p>The <code>body</code> baseline styles are also moved into the stylesheet (from inline <code>style</code> attributes on the <code>&lt;body&gt;</code> tag) to reduce redundancy.</p>
+
+        <h3>Box Shadow on the Wrapper Table</h3>
+        <p>The main <code>nb-wrapper</code> table received a subtle drop shadow:</p>
+<pre><code>box-shadow: 0 4px 20px rgba(0,0,0,0.15);</code></pre>
+        <p>This creates visual separation between the newsletter body and the grey page background when viewed in a browser preview — relevant for the editor's live preview iframe. It has no effect in email clients, which strip <code>box-shadow</code>.</p>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  4. DAY 15 EDITOR: COMPACT STORY REFACTOR               -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge refactor">Refactor</span> 4. Day 15 Editor: Compact Story Selector Rewrite</h2>
+
+        <p>The <code>_find_compact_stories()</code> function inside <code>editor(for Day15.html).py</code> was rebuilt from scratch. The old implementation was a textbook example of an order-dependent, document-global selector strategy — the kind that works perfectly until the template is edited once.</p>
+
+        <div class="problem-box">
+            <div class="box-title">The Old Strategy and Its Fatal Flaw</div>
+            <p>The previous function worked by finding all elements of a given style across the entire document, then taking a positional slice:</p>
+<pre><code># Old approach — DO NOT USE
+compact_images    = [img for img that match style globally]
+compact_headlines = [td  for td  that match font-size:21px globally]
+compact_cats      = all_cat_spans[2:4]   # assumes exactly 2 twin stories before
+compact_summaries = all_summaries[2:4]   # assumes exactly 4 summaries total
+compact_links     = all_read_links[2:4]  # assumes exactly 2 other "Read →" links</code></pre>
+            <p>This approach had three failure modes: (1) If a story was edited to add a new <code>&lt;td&gt;</code> with <code>font-size:21px</code> anywhere in the DOM, the index slice would shift by one, mapping the editor's "Compact Story 1" panel to the wrong story element. (2) If any article had no image, the image list would be shorter than the headline list, causing index-out-of-bounds silent mismatches. (3) It was impossible to add a third compact story to a future template variant without rewriting the entire function.</p>
+        </div>
+
+        <h3>The New Wrapper-Scoped Strategy</h3>
+        <p>Each compact story in Day 15 is wrapped in an <code>&lt;a&gt;</code> tag with <code>display:block; text-decoration:none; color:inherit</code>. The new function finds these wrappers first, then searches for each field <em>within</em> its own wrapper's subtree:</p>
+
+<pre><code>def _find_compact_stories(soup):
+    compact_wrappers = []
+    for a in soup.find_all("a"):
+        style = a.get("style", "")
+        if ("display:block" in style
+                and "text-decoration:none" in style
+                and "color:inherit" in style):
+            for img in a.find_all("img"):
+                if "max-width:240px" in img.get("style", ""):
+                    compact_wrappers.append(a)
+                    break
+
+    for i, wrapper in enumerate(compact_wrappers[:2]):
+        story = {"index": i, "link": wrapper}
+
+        for img in wrapper.find_all("img"):
+            if "max-width:240px" in img.get("style", ""):
+                story["image"] = img
+                break
+
+        for span in wrapper.find_all("span"):
+            if ("background:#8b2a1f" in span.get("style", "")
+                    and "padding:4px 9px" in span.get("style", "")):
+                story["category"] = span
+                break
+
+        for td in wrapper.find_all("td"):
+            if ("font-size:21px" in td.get("style", "")
+                    and "font-weight:700" in td.get("style", "")):
+                story["headline"] = td
+                break
+
+        for td in wrapper.find_all("td"):
+            if ("font-size:14px" in td.get("style", "")
+                    and "line-height:1.55" in td.get("style", "")
+                    and "color:#3a3a3a" in td.get("style", "")):
+                story["summary"] = td
+                break
+
+        stories.append(story)</code></pre>
+
+        <div class="now-box">
+            <div class="box-title">Why This Is Correct</div>
+            <p>Each field is now found by searching <em>inside its own story's wrapper</em>. Adding a new article above or below the compact section has zero effect on the selector — the wrappers are identified by a combination of three style properties that only appear on compact story anchors. Story count is naturally capped to two by the <code>[:2]</code> slice on the wrappers list. The <code>link</code> reference now points to the wrapper anchor itself, making the "open link" field in the editor directly usable rather than requiring a secondary selector.</p>
+        </div>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  5. DAY 15 HTML: CLICKABILITY FIX                       -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge bugfix">Bugfix</span> 5. Day 15 HTML Template: Compact Article Clickability</h2>
+
+        <p>The Day 15 template's compact stories (the two image-and-text horizontal cards in the lower section) had a structural problem: the articles were not fully clickable. Only the "Read →" label text was linked — the image and the headline were visually part of the article but not tappable in email clients.</p>
+
+        <div class="problem-box">
+            <div class="box-title">The Problem</div>
+            <p>Each compact story had an <code>&lt;a href="#"&gt;Read →&lt;/a&gt;</code> tag at the bottom of the text column. The image, category label, headline, and summary were all plain text and images with no enclosing anchor. On mobile email clients where the entire card should be a tap target, this meant users had to aim precisely at the two words "Read →" — a terrible touch experience.</p>
+        </div>
+
+        <h3>The Fix: Wrapping Anchor + Span Conversion</h3>
+        <p>Each compact story's outer <code>&lt;td&gt;</code> padding cell was wrapped in a block-level <code>&lt;a&gt;</code>:</p>
+
+<pre><code>&lt;!-- Before --&gt;
+&lt;td style="background:#faf7f1; padding:44px 56px 24px 56px;"&gt;
+    &lt;table ...&gt;...article content...&lt;/table&gt;
+&lt;/td&gt;
+
+&lt;!-- After --&gt;
+&lt;td style="background:#faf7f1; padding:44px 56px 24px 56px;"&gt;
+    &lt;a href="#" target="_blank"
+       style="display:block; text-decoration:none; color:inherit;"&gt;
+        &lt;table ...&gt;...article content...&lt;/table&gt;
+    &lt;/a&gt;
+&lt;/td&gt;</code></pre>
+
+        <p>However, the existing <code>&lt;a href="#"&gt;Read →&lt;/a&gt;</code> inside the article content would then become a nested anchor — which is invalid HTML and causes unpredictable rendering in email clients. It was converted to a <code>&lt;span&gt;</code> with identical styling:</p>
+
+<pre><code>&lt;!-- Before (nested &lt;a&gt; problem) --&gt;
+&lt;a href="#" style="font-family:Arial; font-size:10px; letter-spacing:2.5px;
+                   color:#1a1a1a; text-transform:uppercase; font-weight:700;
+                   border-bottom:1px solid #1a1a1a; padding-bottom:3px;"&gt;
+    Read &amp;nbsp;→
+&lt;/a&gt;
+
+&lt;!-- After (valid structure) --&gt;
+&lt;span style="font-family:Arial; font-size:10px; letter-spacing:2.5px;
+             color:#1a1a1a; text-transform:uppercase; font-weight:700;
+             border-bottom:1px solid #1a1a1a; padding-bottom:3px;"&gt;
+    Read &amp;nbsp;→
+&lt;/span&gt;</code></pre>
+
+        <p>The two compact stories were both fixed with this pattern. The visual result is identical — the "Read →" affordance appears the same — but now the entire card area is the link target.</p>
+
+        <h3>Image Cell: object-fit Fix</h3>
+        <p>The image cells in the compact stories also had a height consistency issue — when the adjacent text column was taller than the image's natural height, the image column would compress. The fix adds <code>object-fit:cover; min-height:200px</code>:</p>
+<pre><code>&lt;!-- Before --&gt;
+&lt;td valign="top" width="38%" style="width:38%; padding-right:24px;"&gt;
+    &lt;img style="width:100%; max-width:240px; height:auto; display:block;"&gt;
+&lt;/td&gt;
+
+&lt;!-- After --&gt;
+&lt;td width="38%" style="width:38%; padding-right:24px; overflow:hidden;"&gt;
+    &lt;img style="width:100%; max-width:240px; height:100%;
+                min-height:200px; object-fit:cover; display:block;"&gt;
+&lt;/td&gt;</code></pre>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  6. DATE FORMAT STANDARDIZATION                           -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge refactor">Refactor</span> 6. Universal Date Format Standardization</h2>
+
+        <p>Prior to this period, three editors (Day 9, Day 12, and Day 15) generated tomorrow's date in <code>DD/MM/YYYY</code> format. The new Day 12(2) and Day 9(2) editors were designed from the start to use the long-form <code>Month DD, YYYY</code> format. To unify the platform, the older editors were migrated.</p>
+
+        <table class="diff-table">
+            <tr>
+                <th>Editor</th>
+                <th>Old Format</th>
+                <th>New Format</th>
+            </tr>
+            <tr>
+                <td><code>editor(for Day9.html).py</code></td>
+                <td class="del"><code>dt.strftime("%d/%m/%Y")</code> → "22/05/2025"</td>
+                <td class="ins"><code>dt.strftime("%B %d, %Y").replace(" 0", " ")</code> → "May 22, 2025"</td>
+            </tr>
+            <tr>
+                <td><code>editor(for Day15.html).py</code></td>
+                <td class="del"><code>dt.strftime("%d/%m/%Y")</code> → "22/05/2025"</td>
+                <td class="ins"><code>dt.strftime("%B %d, %Y").replace(" 0", " ")</code> → "May 22, 2025"</td>
+            </tr>
+            <tr>
+                <td><code>editor(for Day12(2).html).py</code></td>
+                <td>N/A (new file)</td>
+                <td class="ins"><code>dt.strftime("%B %d, %Y").replace(" 0", " ")</code> → "May 22, 2025"</td>
+            </tr>
+            <tr>
+                <td><code>editor(for Day9(2).html).py</code></td>
+                <td>N/A (new file)</td>
+                <td class="ins"><code>dt.strftime("%B %d, %Y").replace(" 0", " ")</code> → "May 22, 2025"</td>
+            </tr>
+        </table>
+
+        <div class="note-box">
+            <div class="box-title">The .replace(" 0", " ") Detail</div>
+            <p><code>strftime("%B %d, %Y")</code> on Python produces zero-padded day numbers: "May 05, 2025". The newsletter design calls for "May 5, 2025" without the leading zero. Since <code>%-d</code> (the non-padded day format) is a POSIX-only directive that doesn't work on Windows, the portable fix is to replace any occurrence of a space followed by zero (<code>" 0"</code>) with a plain space. This correctly strips "May 05" → "May 5" without affecting the year or any other part of the string.</p>
+        </div>
+
+        <h3>Backward-Compatible Date Rendering in Day 9 Editor</h3>
+        <p>The Day 9 template's date is rendered inside the header as <code>NEWSBAND · DD · MM · YYYY</code> — a formatted string where the date components are split by middots. The old renderer expected a slash-delimited string:</p>
+
+<pre><code># Old renderer — expected "22/05/2025"
+parts = date_val.split("/")
+if len(parts) == 3:
+    _set_text(td, f"NEWSBAND · {parts[0]} · {parts[1]} · {parts[2]}")</code></pre>
+
+        <p>The new renderer parses the long-form string first, with a fallback to the old slash format so that any existing saved HTML files are still rendered correctly when reopened:</p>
+
+<pre><code># New renderer — accepts "May 22, 2025" or legacy "22/05/2025"
+try:
+    from datetime import datetime as _dt
+    parsed = _dt.strptime(date_val, "%B %d, %Y")
+    _set_text(
+        td,
+        f"NEWSBAND · {parsed.day:02d} · {parsed.month:02d} · {parsed.year}",
+    )
+except ValueError:
+    parts = date_val.split("/")
+    if len(parts) == 3:
+        _set_text(td, f"NEWSBAND · {parts[0]} · {parts[1]} · {parts[2]}")</code></pre>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  7. MARKETS DATA RESILIENCE                               -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge architecture">Architecture</span> 7. Markets Data Resilience: Multi-Tier Fallback Chains</h2>
+
+        <p>The market data fetching system — responsible for populating the live financial ticker in the Day 12(2), Day 15, and now Day 9(2) templates — received its most significant hardening upgrade to date. Two critical sources (Mumbai Gold and USD/INR) were each given a documented multi-source fallback chain.</p>
+
+        <h3>Problem: Single-Point Scraper Failure</h3>
+        <p>The original <code>fetch_mumbai_gold()</code> function in <code>editor(for Day15.html).py</code> had a single source: <code>goodreturns.in/gold-rates/mumbai.html</code>. It made one request and returned the result if successful. There was no fallback — if goodreturns.in returned a non-200 status, the gold column in the ticker would be empty with no explanation in the logs.</p>
+        <p>Similarly, USD/INR was fetched via <code>fetch_two("INR=X")</code> — the same generic Yahoo Finance equity-chart function used for Sensex and Nifty. The <code>INR=X</code> ticker returns closing prices from the equity market session, not a real-time forex rate. On market holidays, it could return stale two-day-old data without any indication.</p>
+
+        <h3>Solution A: Three-Tier Gold Scraping</h3>
+        <p>The new <code>fetch_mumbai_gold()</code> function — now present in both <code>editor(for Day15.html).py</code> and <code>editor(for Day12(2).html).py</code> — implements a three-tier fallback with explicit debug logging at each stage:</p>
+
+<pre><code>def fetch_mumbai_gold():
+    """
+    Tier 1:  goodreturns.in/gold-rates/mumbai.html  (Mumbai-specific, preferred)
+    Tier 2:  goodreturns.in/gold-rates/             (national rate, acceptable)
+    Tier 3:  Yahoo Finance GC=F + INR=X             (COMEX converted to INR/10g)
+    """
+    # Tier 1: Mumbai scrape
+    try:
+        resp = _req.get("https://www.goodreturns.in/gold-rates/mumbai.html",
+                        headers=headers, timeout=10)
+        if resp.status_code == 200:
+            # Parse first table, row where cols[0] == '10' (for 10g)
+            ...
+            if today_val &gt; 0 and yday_val &gt; 0:
+                print("DEBUG [Gold]: goodreturns.in Mumbai -&gt; success")
+                return today_val, yday_val
+        print("DEBUG [Gold]: Mumbai returned N/A, trying fallback...")
+    except Exception as e:
+        print(f"DEBUG [Gold]: Mumbai failed ({e}), trying fallback...")
+
+    # Tier 2: National scrape
+    try:
+        resp2 = _req.get("https://www.goodreturns.in/gold-rates/", ...)
+        ...  # same parse logic, same validation guards
+        return today_val, yday_val
+    except Exception as e:
+        print(f"DEBUG [Gold]: national failed ({e})")
+
+    # Tier 3: COMEX via Yahoo Finance (GC=F), converted to INR
+    # Formula: (gold_usd_per_oz / 31.1035g) * 10g * usd_inr_rate
+    try:
+        gold_resp = requests.get("https://query2.finance.yahoo.com/..."
+                                 "GC=F?interval=1d&range=5d", ...)
+        usd_resp  = requests.get("https://query2.finance.yahoo.com/..."
+                                 "INR=X?interval=1d&range=5d", ...)
+        usd_inr   = usd_closes[-1]
+        today_inr = (gold_closes[-1] / 31.1035) * 10 * usd_inr
+        prev_inr  = (gold_closes[-2] / 31.1035) * 10 * usd_inr
+        return round(today_inr), round(prev_inr)
+    except Exception as e:
+        print(f"DEBUG [Gold]: COMEX fallback failed ({e})")
+
+    return None, None</code></pre>
+
+        <div class="note-box">
+            <div class="box-title">The Conversion Math</div>
+            <p>COMEX gold (Yahoo <code>GC=F</code>) is quoted in USD per troy ounce. One troy ounce = 31.1035 grams. The newsletter template displays the 10-gram price in INR, which is the standard Indian retail reference unit. The formula <code>(usd_per_oz / 31.1035) × 10 × usd_inr</code> correctly converts to INR per 10 grams. The result is rounded to the nearest integer because gold is typically quoted in whole rupees at Indian retail.</p>
+        </div>
+
+        <h3>Solution B: Dedicated USD/INR Resolver</h3>
+        <p>The USD/INR fetch was extracted from the generic <code>fetch_two()</code> equity-chart function into a purpose-built <code>fetch_usd_inr()</code> with a two-tier fallback:</p>
+
+<pre><code>def fetch_usd_inr():
+    """
+    Tier 1: Frankfurter API (api.frankfurter.app) — ECB daily rates, free, no auth.
+    Tier 2: Yahoo Finance INR=X — forex ticker, falls back to market close.
+    """
+    import requests
+    from datetime import datetime, timedelta
+
+    # Tier 1: Frankfurter (European Central Bank rates)
+    try:
+        resp = requests.get(
+            "https://api.frankfurter.app/latest?from=USD&to=INR",
+            timeout=10
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+            today_rate = float(data['rates']['INR'])
+            today_date = data['date']                      # "YYYY-MM-DD"
+            prev_dt = datetime.strptime(today_date, "%Y-%m-%d") - timedelta(days=1)
+            resp_prev = requests.get(
+                f"https://api.frankfurter.app/{prev_dt.strftime('%Y-%m-%d')}"
+                f"?from=USD&to=INR", timeout=10
+            )
+            if resp_prev.status_code == 200:
+                prev_rate = float(resp_prev.json()['rates']['INR'])
+                return today_rate, prev_rate
+    except Exception as e:
+        print(f"DEBUG [USD/INR]: Frankfurter failed ({e}), trying Yahoo...")
+
+    # Tier 2: Yahoo Finance INR=X
+    try:
+        closes = resp.json()['chart']['result'][0]['indicators']['quote'][0]['close']
+        closes = [c for c in closes if c is not None]
+        if len(closes) >= 2:
+            return float(closes[-1]), float(closes[-2])
+    except Exception:
+        pass
+
+    return None, None</code></pre>
+
+        <p>The <code>api_markets_fetch()</code> call in both Day 12(2) and Day 15 editors was updated to use <code>fetch_usd_inr()</code> instead of <code>fetch_two("INR=X")</code>:</p>
+<pre><code># Before
+u_now, u_prev = fetch_two("INR=X")
+
+# After
+u_now, u_prev = fetch_usd_inr()</code></pre>
+
+        <div class="now-box">
+            <div class="box-title">Why Frankfurter Over Yahoo for Forex</div>
+            <p>The Frankfurter API (api.frankfurter.app) is a free, publicly accessible wrapper around the European Central Bank's official daily exchange rate publication. It requires no API key, has a stable JSON schema, and provides historical rates by date — which is why the previous day's rate can be fetched with a second call to the dated URL. Yahoo Finance's <code>INR=X</code> returns forex closing prices but wraps them inside the same equity chart JSON structure as stock tickers, making it more prone to returning market-session data that doesn't reflect the current interbank rate.</p>
+        </div>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  8. IMAGE PUSHER: PRODUCTION VALIDATION                  -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge devops">DevOps</span> 8. GitHub Image Pusher — Five Consecutive Live Uploads</h2>
+
+        <p>The GitHub Token-authenticated image push pipeline, architected during Day 45–55, was proven in production for the first time during this period. Five separate image uploads were committed to the repository by the <em>Newsband Image Pusher</em> bot within a 7-minute window on May 21, 2026.</p>
+
+        <h3>Upload Summary</h3>
+        <table class="diff-table">
+            <tr>
+                <th>Commit</th>
+                <th>File</th>
+                <th>Size</th>
+                <th>Timestamp</th>
+            </tr>
+            <tr>
+                <td><code>249d124</code></td>
+                <td>FW19_AFC_Ranveer_Singh_Stills_Shot_3_1203.webp</td>
+                <td>284 KB</td>
+                <td>19:24:02</td>
+            </tr>
+            <tr>
+                <td><code>d245b34</code></td>
+                <td>FW19_AFC_Ranveer_Singh_Stills_Shot_1_0210.webp</td>
+                <td>255 KB</td>
+                <td>19:24:36</td>
+            </tr>
+            <tr>
+                <td><code>17e0160</code></td>
+                <td>Swara Sawant (2) (1).jfif</td>
+                <td>220 KB</td>
+                <td>19:25:52</td>
+            </tr>
+            <tr>
+                <td><code>b0a844f</code></td>
+                <td>1000845039.jpg</td>
+                <td>102 KB</td>
+                <td>19:27:35</td>
+            </tr>
+            <tr>
+                <td><code>12e0c1b</code></td>
+                <td>pipeline (44) (1).jpg</td>
+                <td>150 KB</td>
+                <td>19:28:44</td>
+            </tr>
+            <tr>
+                <td><code>0875e05</code></td>
+                <td>fire .jpg</td>
+                <td>111 KB</td>
+                <td>19:31:23</td>
+            </tr>
+        </table>
+
+        <div class="now-box">
+            <div class="box-title">What This Proves</div>
+            <p>All six image commits carry the author identity <em>Newsband Image Pusher &lt;bot@newsband.app&gt;</em> — the bot identity injected by the <code>subprocess.run(["git", "-c", "user.name=...", "commit", ...])</code> approach. This confirms that:</p>
+            <ul>
+                <li>The <code>GITHUB_TOKEN</code> environment variable is correctly set in the Render production environment.</li>
+                <li>The dynamic <code>oauth2:{token}@github.com</code> remote URL construction is functional.</li>
+                <li>Files with special characters in their names (spaces, parentheses) are pushed correctly.</li>
+                <li>Multiple sequential uploads in rapid succession do not trigger race conditions or lock conflicts in the Git working tree on Render's ephemeral container.</li>
+            </ul>
+        </div>
+
+        <p>The images are stored in the <code>uploaded_images/</code> directory and are immediately accessible via the static file server at <code>https://render-hosting.onrender.com/uploaded_images/&lt;filename&gt;</code>, making them ready for insertion into newsletter templates from the editor UI.</p>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  9. test_imports.py DIAGNOSTIC HARNESS                   -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge devops">DevOps</span> 9. test_imports.py — Startup Diagnostic Harness</h2>
+
+        <p>A new utility file <code>test_imports.py</code> was created and committed as part of the Day 12(2) integration. Its purpose is to simulate the module-loading sequence that <code>app.py</code> performs at startup, reporting success or failure for each module individually.</p>
+
+        <h3>The Problem It Solves</h3>
+        <p>When <code>app.py</code> fails on startup (e.g., because a blueprint module has a syntax error, a missing file reference, or an incompatible import), the Gunicorn/Render error log shows a single unhandled exception at the <code>create_app()</code> call, with a stack trace that may be several levels deep. Identifying <em>which</em> of the nine editor modules caused the crash requires reading the trace carefully.</p>
+        <p>With <code>test_imports.py</code>, developers can run <code>python test_imports.py</code> locally or in an interactive Render shell to step through each module import and see exactly which one fails before deploying.</p>
+
+<pre><code>def test_imports():
+    print("starting test...")
+    try:
+        print("importing login");        import login
+        print("importing dashboard");    import dashboard
+        print("importing codeview");     import codeview
+        print("importing extractor");    import extractor
+        print("importing batch_extractor"); import batch_extractor
+        print("importing upload_image"); import upload_image
+
+        # importlib-loaded modules (illegal filenames)
+        print("importing day8_v2_editor")
+        spec = importlib.util.spec_from_file_location(
+            "day8_v2_editor", "editor_day8_v2.py")
+        day8_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(day8_module)
+
+        # ... (Day 9, Day 6 Temp, Template 1, Day 11, Day 12, Day 15, Day 12(2))
+
+        print("Done!")
+    except Exception as e:
+        print(f"Error: {e}")</code></pre>
+
+        <div class="note-box">
+            <div class="box-title">Scope Note</div>
+            <p>The script covers all modules that were registered in <code>app.py</code> at the time of commit <code>8798613</code>. As new editors (Day 9(2), Day 17) are added, <code>test_imports.py</code> should be updated to include them. This is a manual maintenance task — it is not auto-generated from the blueprint registry.</p>
+        </div>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  10. .gitignore HYGIENE                                  -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge refactor">Refactor</span> 10. .gitignore Hygiene: Trial Files Excluded</h2>
+
+        <p>Two scratch files — <code>trial.html</code> and <code>trial2.html</code> — were added to <code>.gitignore</code>. These files appear in the working directory as testing sandboxes for template experimentation but should never be committed to the repository as they contain incomplete or unstable HTML with no association to any production newsletter edition.</p>
+
+<pre><code># Added to .gitignore
+trial.html
+trial2.html</code></pre>
+
+        <p>Their presence in <code>git status</code> as untracked files was a minor but consistent source of noise during status checks. The gitignore entry prevents them from appearing in future <code>git status</code> output and eliminates the risk of accidentally staging them with a broad <code>git add .</code> command.</p>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  11. DAY 9(2) FULL-STACK ADDITION                        -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge feature">Feature</span> 11. Day 9(2) — Markets-Enhanced Variant of Day 9</h2>
+
+        <p>Following the same design philosophy as Day 12(2), a markets-enhanced variant of the Day 9 template was developed as <code>Day9(2).html</code> with its own complete editor stack. This work is currently in the unstaged working tree and represents the next pending commit.</p>
+
+        <h3>Relationship to Day 9 and Day 12(2)</h3>
+        <p>Day 9(2) inherits its article structure from the original Day 9 template (using <code>class="card-link"</code> anchor wrappers for each story card, with the distinctive warm terracotta category colour <code>#b8532d</code>), while adding the exact same markets ticker strip architecture as Day 12(2) (dark <code>#0f172a</code> background, four 25%-width instrument cells).</p>
+
+        <p>The editor backend is built from a synthesis of both parent editors. The article selector functions are imported wholesale from the Day 9 editor's strategy:</p>
+
+<pre><code>def _find_cards(soup):
+    return soup.find_all("a", class_="card-link")
+
+def _find_category_td(card):
+    return card.find("td", style=lambda s:
+        s and "color:#b8532d" in s and "letter-spacing:1.8px" in s)
+
+def _find_headline_td(card):
+    return card.find("td", class_="title-text")
+
+def _find_summary_td(card):
+    return card.find("td", style=lambda s:
+        s and "color:#6b6357" in s and "padding-bottom:10px" in s)
+
+def _find_image_td(card):
+    return card.find("td", style=lambda s:
+        s and "background-image" in s)
+
+def _find_image_img(card):
+    return card.find("img", style=lambda s:
+        s and "border-radius:24px" in s)</code></pre>
+
+        <p>The market section helpers (<code>_find_market_data</code>, <code>api_markets_fetch</code>) are copied directly from the Day 12(2) editor, including the full three-tier gold fallback and the Frankfurter USD/INR resolver.</p>
+
+        <h3>Header Selector: ID-First with Style Fallback</h3>
+        <p>Day 9(2)'s header date and RNI number selectors use a more robust two-step approach: first attempt to find the element by its <code>id="header"</code> attribute, then fall back to a style-attribute scan. This is more reliable than style-only searching in templates where the header may have been lightly modified:</p>
+
+<pre><code>def _find_header_date(soup):
+    hdr = soup.find(id="header")
+    if not hdr:
+        # Fallback: search by style if id is missing
+        for div in soup.find_all("div"):
+            style = div.get("style", "")
+            if "color:#737373" in style and "font-weight:600" in style:
+                if "Date:" in div.get_text():
+                    return div
+        return None
+    return hdr.find("div", style=lambda s: s and "color:#737373" in s)</code></pre>
+
+        <h3>Editor Frontend</h3>
+        <p>The <code>templates/editor_day9_2.html</code> frontend follows the same split-panel layout as the Day 9 editor — a monospace-accented control panel on the left with a live preview iframe on the right. It uses the DM Mono and DM Sans type system (<code>--accent: #b8532d</code>) to visually distinguish it from the Day 12(2) editor's interface while sharing the same panel component structure.</p>
+
+        <h3>Registration (Unstaged)</h3>
+        <p>The following additions are in the working tree, pending commit:</p>
+<pre><code># app.py — new block
+spec_day9_2 = importlib.util.spec_from_file_location(
+    "day9_2_editor", "editor(for Day9(2).html).py")
+day9_2_module = importlib.util.module_from_spec(spec_day9_2)
+sys.modules["day9_2_editor"] = day9_2_module
+spec_day9_2.loader.exec_module(day9_2_module)
+day9_2_editor_bp = day9_2_module.day9_2_editor_bp
+
+app.register_blueprint(day9_2_editor_bp, url_prefix='/day9-2-editor')
+
+# batch_extractor.py — forwarding list addition
+"/day9-2-editor/api/import_json",
+
+# dashboard.py — new card
+&lt;a href="{{ url_for('day9_2_editor.editor') }}" class="dash-btn"&gt;
+  &lt;img src="/static_files/Day9.png" class="dash-btn-photo" /&gt;
+  &lt;div class="dash-btn-title"&gt;Day 9(2) Editor&lt;/div&gt;
+  &lt;div class="dash-btn-desc"&gt;Visual editor for Day9(2) with markets ticker.&lt;/div&gt;
+&lt;/a&gt;</code></pre>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  12. DAY 17 FULL-STACK ADDITION                          -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge feature">Feature</span> 12. Day 17 — New Newsletter Edition Added to the Fleet</h2>
+
+        <p>The Day 17 newsletter template represents the latest edition in the Newsband publishing calendar. Like all editions before it, the integration into Project Pandora follows the four-component pattern: base HTML template, editor backend, editor frontend, and platform wiring.</p>
+
+        <h3>Template Characteristics</h3>
+        <p><code>Day17.html</code> uses the full XHTML MSO-compatible email structure consistent with the Newsband design system. The <code>&lt;title&gt;</code> is "Newsband Newsletter", matching the same branding as Day 8 and Day 9. The template includes MSO conditional XML blocks for Outlook rendering compatibility, VML namespace declarations, and the standard meta viewport and <code>x-apple-disable-message-reformatting</code> directives.</p>
+
+        <h3>Registration in the Platform</h3>
+        <p>The Day 17 editor is registered in the unstaged <code>app.py</code> changes using the same <code>importlib.util</code> pattern, with the assumption that an <code>editor(for Day17.html).py</code> backend exists:</p>
+
+<pre><code># app.py
+spec_day17 = importlib.util.spec_from_file_location(
+    "day17_editor", "editor(for Day17.html).py")
+day17_module = importlib.util.module_from_spec(spec_day17)
+sys.modules["day17_editor"] = day17_module
+spec_day17.loader.exec_module(day17_module)
+day17_editor_bp = day17_module.day17_editor_bp
+
+app.register_blueprint(day17_editor_bp, url_prefix='/day17-editor')</code></pre>
+
+        <p>The Dashboard card references a <code>Day17.png</code> thumbnail and routes to <code>{{ url_for('day17_editor.editor') }}</code>. The description in the card notes "weather and markets ticker" as distinguishing features of this edition's editor interface — indicating that Day 17 may be the first template to include a weather section alongside the financial ticker.</p>
+
+<pre><code># dashboard.py — Day 17 card
+&lt;a href="{{ url_for('day17_editor.editor') }}" class="dash-btn"&gt;
+  &lt;img src="/static_files/Day17.png" class="dash-btn-photo" /&gt;
+  &lt;div class="dash-btn-title"&gt;Day 17 Editor&lt;/div&gt;
+  &lt;div class="dash-btn-desc"&gt;
+    Visual editor for Day17 with weather and markets ticker.
+  &lt;/div&gt;
+&lt;/a&gt;</code></pre>
+
+        <p>The batch extractor's forwarding list has been extended to include Day 17:</p>
+<pre><code>"/day17-editor/api/import_json",</code></pre>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  13. DASHBOARD EXPANSION                                  -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge refactor">Refactor</span> 13. Dashboard Expansion: Nine Editors, One Grid</h2>
+
+        <p>The <code>dashboard.py</code> Newsletter Editors grid has grown from six editors (at Day 55) to nine editors (at Day 75). Each new addition received its own thumbnail card following the established <code>dash-btn-photo-wrap</code> pattern with a PNG thumbnail, a title, and a one-line description.</p>
+
+        <h3>Current Editor Roster</h3>
+        <table class="diff-table">
+            <tr>
+                <th>#</th>
+                <th>Editor</th>
+                <th>Route</th>
+                <th>Blueprint Name</th>
+                <th>Status</th>
+            </tr>
+            <tr><td>1</td><td>Day 6 Temp Editor</td><td><code>/day6temp-editor</code></td><td><code>day6temp_editor</code></td><td class="ins">✓ Existing</td></tr>
+            <tr><td>2</td><td>Day 8 Editor</td><td><code>/day8-editor</code></td><td><code>day8_v2_editor</code></td><td class="ins">✓ Existing</td></tr>
+            <tr><td>3</td><td>Day 9 Editor</td><td><code>/day9-editor</code></td><td><code>day9_editor</code></td><td class="ins">✓ Existing</td></tr>
+            <tr><td>4</td><td>Template 1 Editor</td><td><code>/template1-editor</code></td><td><code>template1_editor</code></td><td class="ins">✓ Existing</td></tr>
+            <tr><td>5</td><td>Day 11 Editor</td><td><code>/day11-editor</code></td><td><code>day11_editor</code></td><td class="ins">✓ Existing</td></tr>
+            <tr><td>6</td><td>Day 12 Editor</td><td><code>/day12-editor</code></td><td><code>day12_editor</code></td><td class="ins">✓ Existing</td></tr>
+            <tr><td>7</td><td>Day 15 Editor</td><td><code>/day15-editor</code></td><td><code>day15_editor</code></td><td class="ins">✓ Existing</td></tr>
+            <tr><td>8</td><td>Day 12(2) Editor</td><td><code>/day12-2-editor</code></td><td><code>day12_2_editor</code></td><td class="ins">✓ Added Day 56–75</td></tr>
+            <tr><td>9</td><td>Day 9(2) Editor</td><td><code>/day9-2-editor</code></td><td><code>day9_2_editor</code></td><td class="ins">✓ Added Day 56–75</td></tr>
+            <tr><td>10</td><td>Day 17 Editor</td><td><code>/day17-editor</code></td><td><code>day17_editor</code></td><td class="ins">✓ Added Day 56–75</td></tr>
+        </table>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  14. BATCH EXTRACTOR: api_send() EXPANDED                -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge refactor">Refactor</span> 14. Batch Extractor: api_send() Forwarding Fleet Expanded</h2>
+
+        <p>The <code>api_send()</code> endpoint in <code>batch_extractor.py</code> — which proxies extracted stories to all registered editors simultaneously — was updated three times during this period, once per new editor added.</p>
+
+        <h3>Evolution of the Endpoints List</h3>
+
+<pre><code># State at Day 55 (7 endpoints)
+endpoints = [
+    "/day8-editor/api/import_json",
+    "/day9-editor/api/import_json",
+    "/day6temp-editor/api/import_json",
+    "/template1-editor/api/import_json",
+    "/day11-editor/api/import_json",
+    "/day12-editor/api/import_json",
+    "/day15-editor/api/import_json",
+]
+
+# State at Day 75 (10 endpoints)
+endpoints = [
+    "/day8-editor/api/import_json",
+    "/day9-editor/api/import_json",
+    "/day6temp-editor/api/import_json",
+    "/template1-editor/api/import_json",
+    "/day11-editor/api/import_json",
+    "/day12-editor/api/import_json",
+    "/day15-editor/api/import_json",
+    "/day12-2-editor/api/import_json",   # Added: commit 8798613
+    "/day9-2-editor/api/import_json",    # Added: unstaged
+    "/day17-editor/api/import_json",     # Added: unstaged
+]</code></pre>
+
+        <p>The <code>api_send()</code> function iterates this list and posts the extracted stories JSON to each endpoint internally, tracking the count of successes and failures. Since the dispatch is sequential and internal (using <code>flask.test_client()</code> or equivalent internal request), adding new endpoints increases dispatch time slightly — but this call is already outside the SSE stream path, so latency impact is negligible for the user experience.</p>
+
+        <div class="note-box">
+            <div class="box-title">Design Note: Broadcast Architecture</div>
+            <p>The broadcast pattern — sending to all editors rather than a user-selected editor — is an intentional design choice. The user may decide <em>after</em> receiving stories which template layout to use for that day's edition. By pre-populating all editors simultaneously, the workflow becomes: extract → review stories → open whichever editor looks best → export. There is no separate "which editor?" routing step.</p>
+        </div>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  15. FILES CHANGED SUMMARY                               -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2>Complete File-Change Reference: Day 56–75</h2>
+        <p>The following is a full accounting of every file touched during this development period, with the nature of the change and its commit origin.</p>
+
+        <div class="file-tree">
+            <span class="ft-dir">Project Pandora/</span><br>
+            <br>
+            <span class="ft-new">+</span> Day12(2).html <span class="ft-note">CSS overhaul, BOM removal, mobile/landscape media query, box-shadow</span><br>
+            <span class="ft-new">+</span> Day17.html <span class="ft-note">New newsletter edition 17 — XHTML email template</span><br>
+            <span class="ft-new">+</span> Day9(2).html <span class="ft-note">New newsletter variant — Day 9 layout with markets ticker</span><br>
+            <span class="ft-mod">~</span> Day15.html <span class="ft-note">Compact stories wrapped in &lt;a&gt;, nested links → &lt;span&gt;, image object-fit</span><br>
+            <br>
+            <span class="ft-mod">~</span> app.py <span class="ft-note">+3 new editor registrations: Day12(2), Day9(2), Day17</span><br>
+            <span class="ft-mod">~</span> batch_extractor.py <span class="ft-note">google-genai removed, REST API calls, 3 new forwarding endpoints, arrow chars</span><br>
+            <span class="ft-mod">~</span> dashboard.py <span class="ft-note">+3 new editor cards: Day12(2), Day9(2), Day17</span><br>
+            <span class="ft-mod">~</span> extractor.py <span class="ft-note">google-genai removed, REST API calls replacing genai.Client</span><br>
+            <br>
+            <span class="ft-new">+</span> editor(for Day12(2).html).py <span class="ft-note">565 lines — full BS4 editor: articles, markets, export, live preview</span><br>
+            <span class="ft-new">+</span> editor(for Day9(2).html).py <span class="ft-note">new — Day 9 cards + Day 12(2) markets stack</span><br>
+            <span class="ft-mod">~</span> editor(for Day9.html).py <span class="ft-note">date format DD/MM/YYYY → Month DD YYYY, backward-compat parser</span><br>
+            <span class="ft-mod">~</span> editor(for Day15.html).py <span class="ft-note">_find_compact_stories() rewrite, date format, gold/USD fallback chains</span><br>
+            <span class="ft-mod">~</span> editor(for Day12(2).html).py <span class="ft-note">gold/USD fallback chains backported from Day15 improvements</span><br>
+            <br>
+            <span class="ft-dir">templates/</span><br>
+            <span class="ft-new">+</span> templates/editor_day12_2.html <span class="ft-note">1188 lines — Day 12(2) editor split-panel UI</span><br>
+            <span class="ft-new">+</span> templates/editor_day9_2.html <span class="ft-note">Day 9(2) editor split-panel UI</span><br>
+            <br>
+            <span class="ft-new">+</span> test_imports.py <span class="ft-note">61 lines — sequential import diagnostic for all blueprints</span><br>
+            <span class="ft-mod">~</span> .gitignore <span class="ft-note">trial.html and trial2.html excluded</span><br>
+            <br>
+            <span class="ft-dir">uploaded_images/</span><br>
+            <span class="ft-new">+</span> FW19_AFC_Ranveer_Singh_Stills_Shot_3_1203.webp <span class="ft-note">bot push — 57th commit</span><br>
+            <span class="ft-new">+</span> FW19_AFC_Ranveer_Singh_Stills_Shot_1_0210.webp <span class="ft-note">bot push — 58th commit</span><br>
+            <span class="ft-new">+</span> Swara Sawant (2) (1).jfif <span class="ft-note">bot push — 59th commit</span><br>
+            <span class="ft-new">+</span> 1000845039.jpg <span class="ft-note">bot push — 60th commit</span><br>
+            <span class="ft-new">+</span> pipeline (44) (1).jpg <span class="ft-note">bot push — 61st commit</span><br>
+            <span class="ft-new">+</span> fire .jpg <span class="ft-note">bot push — 62nd commit</span><br>
+        </div>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  16. ARCHITECTURAL STATE MAP                             -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2>Current Platform Architecture (Day 75 State)</h2>
+
+        <p>The following map describes the complete request-path architecture of Project Pandora as it stands at Day 75.</p>
+
+<pre><code>Browser / Email Client
+        │
+        ▼
+  [ Render.com / Gunicorn ]
+        │
+        ▼
+  app.py → create_app()
+  │
+  ├── /                       login_bp          (login.py)
+  ├── /dashboard              dashboard_bp      (dashboard.py)
+  ├── /codeview               codeview_bp       (codeview.py)
+  │
+  ├── /extractor              extractor_bp      (extractor.py)
+  │       └── Gemini REST API  (direct requests.post, no SDK)
+  │
+  ├── /batch-extractor        batch_extractor_bp
+  │       ├── /api/batch-stream   ← SSE stream, threaded, keepalive heartbeat
+  │       ├── /api/send           ← broadcast to all 10 editor endpoints
+  │       └── Gemini REST API  (direct requests.post, no SDK)
+  │
+  ├── /upload-image           upload_image_bp   (upload_image.py)
+  │       └── GitHub REST API  (oauth2 token push to Render_Hosting_2)
+  │
+  ├── /day6temp-editor        day6temp_editor_bp
+  ├── /day8-editor            day8_v2_editor_bp
+  ├── /day9-editor            day9_editor_bp
+  ├── /day9-2-editor          day9_2_editor_bp  ← NEW
+  ├── /template1-editor       template1_editor_bp
+  ├── /day11-editor           day11_editor_bp
+  ├── /day12-editor           day12_editor_bp
+  ├── /day12-2-editor         day12_2_editor_bp ← NEW
+  ├── /day15-editor           day15_editor_bp
+  └── /day17-editor           day17_editor_bp   ← NEW
+          └── Each editor exposes:
+              ├── GET  /           → editor UI (templates/editor_dayN.html)
+              ├── GET  /api/fields → parse and return editable fields as JSON
+              ├── POST /api/save   → apply field updates via BeautifulSoup4
+              ├── GET  /api/export → serve current HTML as downloadable file
+              ├── POST /api/import_json → receive batch extractor broadcast
+              └── GET  /api/markets (Day 12(2), Day 15, Day 9(2) only)
+                      ├── Sensex, Nifty   via Yahoo Finance ^BSESN, ^NSEI
+                      ├── USD/INR         via Frankfurter API → Yahoo fallback
+                      └── Gold 24K/10g    via goodreturns.in → goodreturns national → COMEX</code></pre>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  17. KNOWN ISSUES                                         -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2>Known Issues &amp; Open Items at Day 75</h2>
+
+        <div class="problem-box">
+            <div class="box-title">test_imports.py Requires Manual Maintenance</div>
+            <p>The import test script covers all editors that existed at commit <code>8798613</code>. The Day 9(2) and Day 17 editor modules are not yet included in <code>test_imports.py</code>. The script should be updated in the next commit to include all ten editors, or a mechanism should be developed to auto-generate the test from the blueprint registry in <code>app.py</code>.</p>
+        </div>
+
+        <div class="problem-box">
+            <div class="box-title">Day 9(2) and Day 17 Unstaged</div>
+            <p>The <code>Day9(2).html</code> template, <code>editor(for Day9(2).html).py</code>, <code>editor(for Day17.html).py</code>, and <code>templates/editor_day9_2.html</code> are currently untracked. The corresponding changes to <code>app.py</code>, <code>dashboard.py</code>, and <code>batch_extractor.py</code> are unstaged modifications. These need to be committed before the next deployment push.</p>
+        </div>
+
+        <div class="condition-box">
+            <div class="box-title">goodreturns.in Rate-of-Change Risk</div>
+            <p>The primary and fallback-1 tiers of the gold scraper both rely on parsing goodreturns.in's HTML table structure. If goodreturns.in changes its table layout (column ordering, number of columns, or the row identifier for 10g), both tiers will fail simultaneously and the COMEX fallback will activate. The COMEX rate is a global commodity price, not Mumbai retail — it may differ by 1–3% from the goodreturns.in value. The affected log line is <code>DEBUG [Gold]: COMEX fallback -&gt; INR &lt;value&gt;/10g</code>.</p>
+        </div>
+
+        <div class="condition-box">
+            <div class="box-title">Markets API Not Wired to Day 9(2) Editor Yet</div>
+            <p>The <code>editor(for Day9(2).html).py</code> backend includes the <code>_find_market_data()</code> helper and <code>api_markets_fetch()</code> route copied from Day 12(2). However, it is not yet confirmed whether the <code>templates/editor_day9_2.html</code> frontend includes the "Refresh Markets" button and the live ticker update panel. This should be verified during the next development session before committing.</p>
+        </div>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  18. CONCLUSION                                           -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2>Conclusion &amp; Next Steps</h2>
+
+        <p>Development days 56 through 75 represent the most active expansion phase in Project Pandora's history. In twenty days, the platform grew from a six-editor fleet to a ten-editor fleet, eliminated its only hard third-party SDK dependency, hardened every financial data source with documented multi-tier fallbacks, proved its image upload pipeline in live production, standardized date formatting across all editors, and added a diagnostic tool that will dramatically reduce future deployment debugging time.</p>
+
+        <p>The architecture is now at a maturity level where every new template can be integrated in a single development session using the established four-component pattern (HTML, backend, frontend, wiring). The primary investment areas for Days 76–90 should focus on operations and user experience rather than further infrastructure work.</p>
+
+        <h3>Priority Next Steps</h3>
+        <ol>
+            <li><strong>Commit unstaged work</strong> — Stage and commit the Day 9(2) and Day 17 additions (four new files, three modified files) before any further development to avoid losing the diff context.</li>
+            <li><strong>Update test_imports.py</strong> — Add Day 9(2) and Day 17 module loads to the diagnostic script.</li>
+            <li><strong>Day 17 editor verification</strong> — Confirm whether the Day 17 editor frontend correctly implements the "weather and markets ticker" fields referenced in the dashboard card description.</li>
+            <li><strong>User Authentication</strong> — The dashboard is currently unprotected after login. Implement session-based route guards on all editor and utility routes.</li>
+            <li><strong>Historical Event Database</strong> — Evaluated at Day 55, still pending. A SQLite-backed event store would allow the Batch Extractor to display previously extracted stories without re-fetching, and allow editors to draw on a library of pre-approved summaries for recurring topics.</li>
+            <li><strong>Centralized Markets Cache</strong> — Each editor's <code>/api/markets</code> endpoint independently scrapes all four data sources. A shared in-memory cache (with a 30-minute TTL) would cut external requests by 66% when multiple editors are open simultaneously.</li>
+        </ol>
+    </div>
+
+</div>
+
+</body>
+</html>

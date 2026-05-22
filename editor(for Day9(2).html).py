@@ -1,10 +1,10 @@
 """
-Newsband Newsletter Editor — Day12(2) Flask Backend
+Newsband Newsletter Editor — Day9(2) Flask Backend
 Uses BeautifulSoup4 for controlled, field-level HTML editing.
 Footer, layout structure, CSS, and logo are strictly locked.
 
-Based on editor(for Day12.html).py with market section support
-adapted from editor(for Day15.html).py.
+Based on editor(for Day9.html).py with market section support
+adapted from editor(for Day12(2).html).py.
 """
 
 import io
@@ -12,12 +12,12 @@ import re
 from flask import Blueprint, request, jsonify, render_template, send_file, Response
 from bs4 import BeautifulSoup, NavigableString
 
-day12_2_editor_bp = Blueprint('day12_2_editor', __name__)
+day9_2_editor_bp = Blueprint('day9_2_editor', __name__)
 
 # ── Load base template once at startup ────────────────────────────────────────
-with open("Day12(2).html", "r", encoding="utf-8") as f:
+with open("Day9(2).html", "r", encoding="utf-8") as f:
     BASE_HTML = f.read()
-    print(f"DEBUG [Day12_2]: BASE_HTML length: {len(BASE_HTML)}")
+    print(f"DEBUG [Day9_2]: BASE_HTML length: {len(BASE_HTML)}")
 
 _current_html = BASE_HTML   # mutable working copy
 
@@ -31,93 +31,70 @@ def _set_text(tag, text: str):
 
 
 def _find_header_date(soup):
-    """Find the date div inside the header (font-weight:600; color:#737373)."""
-    for div in soup.find_all("div"):
-        style = div.get("style", "")
-        if "color:#737373" in style and "font-weight:600" in style:
-            text = div.get_text()
-            if "Date:" in text:
-                return div
-    return None
+    hdr = soup.find(id="header")
+    if not hdr:
+        # Fallback: search by style
+        for div in soup.find_all("div"):
+            style = div.get("style", "")
+            if "color:#737373" in style and "font-weight:600" in style:
+                text = div.get_text()
+                if "Date:" in text:
+                    return div
+        return None
+    return hdr.find("div", style=lambda s: s and "color:#737373" in s)
 
 
 def _find_header_rni(soup):
-    """Find the RNI div inside the header (color:#888888)."""
-    for div in soup.find_all("div"):
-        style = div.get("style", "")
-        if "color:#888888" in style and "font-size:9px" in style:
-            text = div.get_text()
-            if "RNI:" in text:
-                return div
-    return None
+    hdr = soup.find(id="header")
+    if not hdr:
+        # Fallback: search by style
+        for div in soup.find_all("div"):
+            style = div.get("style", "")
+            if "color:#888888" in style and "font-size:9px" in style:
+                text = div.get_text()
+                if "RNI:" in text:
+                    return div
+        return None
+    return hdr.find("div", style=lambda s: s and "color:#888888" in s)
 
 
-def _find_articles(soup):
-    """
-    Return a list of article containers. Day12(2) has 5 articles:
-      [0] Featured article   — direct <a> child wrapping a full table
-      [1] Article 1           — horizontal card (image left, text right)
-      [2] Article 2           — horizontal card
-      [3] Left grid card      — vertical card in two-column grid
-      [4] Right grid card     — vertical card in two-column grid
-    Each article is wrapped in an <a> tag with style containing
-    "text-decoration:none" and "display:block".
-    """
-    articles = []
-    for a_tag in soup.find_all("a"):
-        style = a_tag.get("style", "")
-        if "text-decoration:none" in style and "display:block" in style:
-            # Skip footer links (social icons, website, etc.)
-            parent_td = a_tag.find_parent("td")
-            if parent_td:
-                parent_style = parent_td.get("style", "")
-                if "background-color:#0a0a0a" in parent_style:
-                    continue
-            articles.append(a_tag)
-    return articles
+def _find_cards(soup):
+    return soup.find_all("a", class_="card-link")
 
 
-def _find_category(article_a):
-    """Find category <p> tag. Category paragraphs have letter-spacing:1.5px and text-transform:uppercase."""
-    for p in article_a.find_all("p"):
-        style = p.get("style", "")
-        if "letter-spacing:1.5px" in style and "text-transform:uppercase" in style:
-            return p
-    return None
+def _find_category_td(card):
+    return card.find(
+        "td",
+        style=lambda s: s and "color:#b8532d" in s and "letter-spacing:1.8px" in s,
+    )
 
 
-def _find_headline(article_a):
-    """Find headline tag — could be h1, h2, or h3."""
-    for tag_name in ["h1", "h2", "h3"]:
-        tag = article_a.find(tag_name)
-        if tag:
-            return tag
-    return None
+def _find_headline_td(card):
+    return card.find("td", class_="title-text")
 
 
-def _find_summary(article_a):
-    """Find the summary paragraph — text-align:justify, color:#555555."""
-    for p in article_a.find_all("p"):
-        style = p.get("style", "")
-        if "text-align:justify" in style and "color:#555555" in style:
-            return p
-    return None
+def _find_summary_td(card):
+    return card.find(
+        "td",
+        style=lambda s: s and "color:#6b6357" in s and "padding-bottom:10px" in s,
+    )
 
 
-def _find_image(article_a):
-    """Find the main <img> tag in the article (not button icons)."""
-    for img in article_a.find_all("img"):
-        style = img.get("style", "")
-        if "border-radius" in style and "width:100%" in style:
-            return img
-    return None
+def _find_image_td(card):
+    return card.find("td", style=lambda s: s and "background-image" in s)
+
+
+def _find_image_img(card):
+    return card.find(
+        "img", style=lambda s: s and "border-radius:24px" in s
+    )
 
 
 # ── Market section helpers ────────────────────────────────────────────────────
 
 def _find_market_data(soup):
     """
-    Find the markets section data in Day12(2).html.
+    Find the markets section data in Day9(2).html.
     The market section is a 1×4 dark ticker strip (background-color:#0f172a).
     Returns list of 4 dicts (Sensex, Nifty, USD/INR, Gold).
     """
@@ -175,27 +152,26 @@ def parse_fields(html: str) -> dict:
 
     # Stories
     stories = []
-    articles = _find_articles(soup)
-    for i, article in enumerate(articles):
+    for i, card in enumerate(_find_cards(soup)):
         story = {"index": i}
 
-        story["link"] = article.get("href", "")
+        story["link"] = card.get("href", "")
 
-        cat = _find_category(article)
-        if cat:
-            story["category"] = cat.get_text().strip()
+        cat_td = _find_category_td(card)
+        if cat_td:
+            story["category"] = cat_td.get_text().replace("•", "").strip()
 
-        hl = _find_headline(article)
-        if hl:
-            story["headline"] = hl.get_text().strip()
+        hl_td = _find_headline_td(card)
+        if hl_td:
+            story["headline"] = hl_td.get_text().strip()
 
-        summ = _find_summary(article)
-        if summ:
-            story["summary"] = summ.get_text().strip()
+        sum_td = _find_summary_td(card)
+        if sum_td:
+            story["summary"] = sum_td.get_text().strip()
 
-        img = _find_image(article)
-        if img:
-            story["image"] = img.get("src", "")
+        img_tag = _find_image_img(card)
+        if img_tag:
+            story["image"] = img_tag.get("src", "")
 
         stories.append(story)
 
@@ -221,6 +197,30 @@ def update_html(html: str, data: dict) -> str:
         if date_div:
             _set_text(date_div, f"Date: {date_val}")
 
+        # Also update the outro date stamp (NEWSBAND · DD · MM · YYYY)
+        # BS4 decodes &middot; to the actual · character (\u00b7)
+        for td in soup.find_all("td"):
+            txt = td.string
+            if txt and "NEWSBAND" in txt and ("\u00b7" in txt or "·" in txt):
+                try:
+                    from datetime import datetime as _dt
+                    parsed = _dt.strptime(date_val, "%B %d, %Y")
+                    _set_text(
+                        td,
+                        f"NEWSBAND · {parsed.day:02d} · {parsed.month:02d} · {parsed.year}",
+                    )
+                except ValueError:
+                    parts = date_val.split("/")
+                    if len(parts) == 3:
+                        try:
+                            _set_text(
+                                td,
+                                f"NEWSBAND · {parts[0]} · {parts[1]} · {parts[2]}",
+                            )
+                        except Exception:
+                            pass
+                break
+
     # Header — RNI
     rni_val = (data.get("rni") or "").strip()
     if rni_val:
@@ -229,46 +229,56 @@ def update_html(html: str, data: dict) -> str:
             _set_text(rni_div, f"RNI: {rni_val}")
 
     # Stories
-    articles = _find_articles(soup)
+    cards = _find_cards(soup)
     for story_data in data.get("stories", []):
         idx = story_data.get("index", 0)
-        if idx >= len(articles):
+        if idx >= len(cards):
             continue
-        article = articles[idx]
+        card = cards[idx]
 
         # Link (href on the <a> tag)
         link = (story_data.get("link") or "").strip()
         if link:
-            article["href"] = link
+            card["href"] = link
 
         # Category
         cat = (story_data.get("category") or "").strip()
         if cat:
-            cat_tag = _find_category(article)
-            if cat_tag:
-                _set_text(cat_tag, cat.upper())
+            cat_td = _find_category_td(card)
+            if cat_td:
+                _set_text(cat_td, f"\u2022 {cat.upper()}")
 
         # Headline
         hl = (story_data.get("headline") or "").strip()
         if hl:
-            hl_tag = _find_headline(article)
-            if hl_tag:
-                _set_text(hl_tag, hl)
+            hl_td = _find_headline_td(card)
+            if hl_td:
+                _set_text(hl_td, hl)
 
         # Summary
         summ = (story_data.get("summary") or "").strip()
         if summ:
-            sum_tag = _find_summary(article)
-            if sum_tag:
-                _set_text(sum_tag, summ)
+            sum_td = _find_summary_td(card)
+            if sum_td:
+                _set_text(sum_td, summ)
 
-        # Image URL — update img src
+        # Image URL — update both background-image style and img src
         img_url = (story_data.get("image") or "").strip()
         if img_url:
+            # Validate: must look like a URL
             if img_url.startswith(("http://", "https://")):
-                img_tag = _find_image(article)
+                img_tag = _find_image_img(card)
                 if img_tag:
                     img_tag["src"] = img_url
+
+                bg_td = _find_image_td(card)
+                if bg_td:
+                    new_style = re.sub(
+                        r"background-image:url\('[^']*'\)",
+                        f"background-image:url('{img_url}')",
+                        bg_td["style"],
+                    )
+                    bg_td["style"] = new_style
 
     # Markets
     markets_data = data.get("markets", [])
@@ -311,17 +321,17 @@ def update_html(html: str, data: dict) -> str:
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 
-@day12_2_editor_bp.route("/")
+@day9_2_editor_bp.route("/")
 def editor():
-    return render_template("editor_day12_2.html", api_prefix="/day12-2-editor")
+    return render_template("editor_day9_2.html", api_prefix="/day9-2-editor")
 
 
-@day12_2_editor_bp.route("/api/fields")
+@day9_2_editor_bp.route("/api/fields")
 def api_fields():
     return jsonify(parse_fields(_current_html))
 
 
-@day12_2_editor_bp.route("/api/update", methods=["POST"])
+@day9_2_editor_bp.route("/api/update", methods=["POST"])
 def api_update():
     global _current_html
     data = request.get_json(silent=True)
@@ -331,23 +341,23 @@ def api_update():
     return jsonify({"success": True, "html": _current_html})
 
 
-@day12_2_editor_bp.route("/api/preview")
+@day9_2_editor_bp.route("/api/preview")
 def api_preview():
     return Response(_current_html, mimetype="text/html; charset=utf-8")
 
 
-@day12_2_editor_bp.route("/api/export")
+@day9_2_editor_bp.route("/api/export")
 def api_export():
     buf = io.BytesIO(_current_html.encode("utf-8"))
     return send_file(
         buf,
         as_attachment=True,
-        download_name="newsband_day12_2_newsletter.html",
+        download_name="newsband_day9_2_newsletter.html",
         mimetype="text/html",
     )
 
 
-@day12_2_editor_bp.route("/api/markets/fetch")
+@day9_2_editor_bp.route("/api/markets/fetch")
 def api_markets_fetch():
     """
     Fetch live market data from Yahoo Finance + gold from goodreturns.in
@@ -357,17 +367,15 @@ def api_markets_fetch():
         def fetch_mumbai_gold():
             """
             Fetch Mumbai 24K gold price with multiple fallback sources.
-            Primary:   goodreturns.in (Mumbai)
-            Fallback1: goodreturns.in (national)
+            Primary:   goodreturns.in
+            Fallback1: goodreturns.in gold-rates page (national)
             Fallback2: Yahoo Finance GC=F (COMEX gold) converted to INR/10g
             """
-            import os
             import requests as _req
             from bs4 import BeautifulSoup as _BS
-            from datetime import datetime, timedelta
             headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"}
 
-            # ── Primary: goodreturns.in (Mumbai) ──────────────────────────────
+            # ── Primary: goodreturns.in ──────────────────────────────────────
             try:
                 url = "https://www.goodreturns.in/gold-rates/mumbai.html"
                 resp = _req.get(url, headers=headers, timeout=10)
@@ -381,7 +389,6 @@ def api_markets_fetch():
                             if len(cols) >= 3 and cols[0] == '10':
                                 today_str = cols[1].replace('₹', '').replace(',', '').strip()
                                 yday_str = cols[2].replace('₹', '').replace(',', '').strip()
-                                # Check for N/A or empty values
                                 if today_str and today_str != 'N/A' and yday_str and yday_str != 'N/A':
                                     today_val = float(today_str)
                                     yday_val = float(yday_str)
@@ -392,7 +399,7 @@ def api_markets_fetch():
             except Exception as e:
                 print(f"DEBUG [Gold]: goodreturns.in failed ({e}), trying fallback...")
 
-            # ── Fallback 2: goodreturns.in gold-rates page (national) ────────
+            # ── Fallback 1: goodreturns.in gold-rates page (national) ────────
             try:
                 url2 = "https://www.goodreturns.in/gold-rates/"
                 resp2 = _req.get(url2, headers=headers, timeout=10)
@@ -415,13 +422,9 @@ def api_markets_fetch():
             except Exception as e:
                 print(f"DEBUG [Gold]: goodreturns.in (national) fallback failed ({e})")
 
-            # ── Fallback 3: Yahoo Finance GC=F (COMEX gold, USD/troy oz) ─────
-            # Convert to INR per 10 grams:
-            #   1 troy oz = 31.1035 grams
-            #   price_inr_per_10g = (gold_usd / 31.1035) * 10 * usd_inr
+            # ── Fallback 2: Yahoo Finance GC=F (COMEX gold, USD/troy oz) ─────
             try:
                 import requests
-                # Get gold price in USD
                 gold_url = "https://query2.finance.yahoo.com/v8/finance/chart/GC=F?interval=1d&range=5d"
                 gold_resp = requests.get(gold_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
                 if gold_resp.status_code == 200:
@@ -430,7 +433,6 @@ def api_markets_fetch():
                     gold_closes = gold_result['indicators']['quote'][0]['close']
                     valid_gold = [c for c in gold_closes if c is not None]
 
-                    # Get USD/INR rate
                     usd_url = "https://query2.finance.yahoo.com/v8/finance/chart/INR=X?interval=1d&range=5d"
                     usd_resp = requests.get(usd_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
                     usd_data = usd_resp.json()
@@ -442,7 +444,6 @@ def api_markets_fetch():
                         usd_inr = valid_usd[-1]
                         gold_today_usd = valid_gold[-1]
                         gold_prev_usd = valid_gold[-2]
-                        # Convert: USD per troy oz -> INR per 10g
                         today_inr = (gold_today_usd / 31.1035) * 10 * usd_inr
                         prev_inr = (gold_prev_usd / 31.1035) * 10 * usd_inr
                         print(f"DEBUG [Gold]: Yahoo Finance COMEX fallback -> INR {today_inr:.0f}/10g")
@@ -531,14 +532,14 @@ def api_markets_fetch():
         return jsonify({"error": str(e)}), 500
 
 
-@day12_2_editor_bp.route("/api/reset", methods=["POST"])
+@day9_2_editor_bp.route("/api/reset", methods=["POST"])
 def api_reset():
     global _current_html
     _current_html = BASE_HTML
     return jsonify({"success": True})
 
 
-@day12_2_editor_bp.route("/api/import_json", methods=["POST"])
+@day9_2_editor_bp.route("/api/import_json", methods=["POST"])
 def api_import_json():
     """
     Accept a JSON body matching the stories schema and apply it.
@@ -563,5 +564,5 @@ def api_import_json():
 if __name__ == "__main__":
     from flask import Flask
     test_app = Flask(__name__, template_folder=".")
-    test_app.register_blueprint(day12_2_editor_bp)
+    test_app.register_blueprint(day9_2_editor_bp)
     test_app.run(debug=True, host="0.0.0.0", port=5000)
