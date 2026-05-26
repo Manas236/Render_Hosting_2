@@ -150,80 +150,37 @@ def _find_s4_s5(soup):
 
 def _find_weather_data(soup):
     weather = {}
-    
-    # Try new format first (using class names)
-    loc_tag = soup.find(class_="weather-loc")
-    if loc_tag:
-        weather["location"] = loc_tag.get_text().strip()
-        
-        desc_today = soup.find(class_="weather-desc-today")
-        if desc_today:
-            weather["today_desc"] = desc_today.get_text().strip()
-            
-        high_today = soup.find(class_="weather-high-today")
-        if high_today:
-            match = re.search(r'\d+', high_today.get_text())
-            if match:
-                weather["today_high"] = match.group()
-                
-        low_today = soup.find(class_="weather-low-today")
-        if low_today:
-            match = re.search(r'\d+', low_today.get_text())
-            if match:
-                weather["today_low"] = match.group()
-                
-        desc_tomorrow = soup.find(class_="weather-desc-tomorrow")
-        if desc_tomorrow:
-            weather["tomorrow_desc"] = desc_tomorrow.get_text().strip()
-            
-        high_tomorrow = soup.find(class_="weather-high-tomorrow")
-        if high_tomorrow:
-            match = re.search(r'\d+', high_tomorrow.get_text())
-            if match:
-                weather["tomorrow_high"] = match.group()
-                
-        low_tomorrow = soup.find(class_="weather-low-tomorrow")
-        if low_tomorrow:
-            match = re.search(r'\d+', low_tomorrow.get_text())
-            if match:
-                weather["tomorrow_low"] = match.group()
-                
-        return weather
 
-    # Fallback to old format
-    weather_container = None
+    # Description / temps via class attributes
+    desc_today = soup.find(class_="weather-desc-today")
+    if desc_today:
+        weather["today_desc"] = desc_today.get_text().strip()
+
+    high_today = soup.find(class_="weather-high-today")
+    if high_today:
+        m = re.search(r'\d+', high_today.get_text())
+        if m:
+            weather["today_high"] = m.group()
+
+    low_today = soup.find(class_="weather-low-today")
+    if low_today:
+        m = re.search(r'\d+', low_today.get_text())
+        if m:
+            weather["today_low"] = m.group()
+
+    # Location: find weather container, read the "Location · Today's Forecast" paragraph
     for tag in soup.find_all(["table", "td"]):
         style_val = tag.get("style", "")
-        if "background-color: #fdf8ef" in style_val or "background-color:#fdf8ef" in style_val or tag.get("bgcolor") == "#fdf8ef":
-            weather_container = tag
+        if "background-color: #fdf8ef" in style_val or tag.get("bgcolor") == "#fdf8ef":
+            for p in tag.find_all("p"):
+                text = p.get_text().strip()
+                if "·" in text:
+                    parts = re.split(r'\s*[·]\s*', text)
+                    weather["location"] = parts[0].strip()
+                    break
             break
-            
-    if weather_container:
-        p_tags = weather_container.find_all("p")
-        if len(p_tags) >= 2:
-            loc_text = p_tags[0].get_text().strip()
-            parts = re.split(r'\s*[\u00b7·]\s*', loc_text)
-            if parts:
-                weather["location"] = parts[0].strip()
-            else:
-                weather["location"] = loc_text
-            weather["today_desc"] = p_tags[1].get_text().strip()
-            weather["tomorrow_desc"] = ""
-            
-        spans = weather_container.find_all("span")
-        for span in spans:
-            style = span.get("style", "")
-            if "color: #c8102e" in style or "color:#c8102e" in style:
-                match = re.search(r'\d+', span.get_text())
-                if match:
-                    weather["today_high"] = match.group()
-                    weather["tomorrow_high"] = ""
-            elif "color: #1e40af" in style or "color:#1e40af" in style:
-                match = re.search(r'\d+', span.get_text())
-                if match:
-                    weather["today_low"] = match.group()
-                    weather["tomorrow_low"] = ""
-                    
+
+    weather.setdefault("location", "Navi Mumbai")
     return weather
 
 
@@ -232,17 +189,37 @@ def _find_market_data(soup):
     stat_cells = soup.find_all("td", class_="ticker-cell")
     for cell in stat_cells:
         p_tags = cell.find_all("p")
-        span = cell.find("span")
-        if len(p_tags) >= 3 and span:
-            style = span.get("style", "")
+        pct_span = cell.find("span", class_="mkt-pct")
+        if len(p_tags) >= 3 and pct_span:
+            style = pct_span.get("style", "")
+            pct_text = pct_span.get_text().strip()
+            positive = "color: #16a34a" in style or "▲" in pct_text
+            pct_num = re.sub(r'[▲▼%+\-−\s]', '', pct_text)
             market = {
                 "label": p_tags[0].get_text().strip(),
                 "value": p_tags[2].get_text().strip(),
-                "change": span.get_text().strip(),
-                "positive": "color: #16a34a" in style or "color:#16a34a" in style or "▲" in span.get_text()
+                "pct": pct_num,
+                "positive": positive,
             }
             markets.append(market)
     return markets
+
+
+def _format_abs_change(label: str, value_str: str, pct_float: float, positive: bool) -> str:
+    sign = "+" if positive else "−"
+    clean = value_str.replace("₹", "").replace("₹", "").replace(",", "").strip()
+    try:
+        value_num = float(clean)
+    except Exception:
+        return "N/A"
+    abs_change = value_num * pct_float / 100
+    label_lower = label.lower()
+    if "gold" in label_lower:
+        return f"{sign}₹{int(round(abs_change))}"
+    elif "usd" in label_lower or "/" in label:
+        return f"{sign}{abs(abs_change):.2f}"
+    else:
+        return f"{sign}{int(round(abs_change))} pts"
 
 
 # ── Parse: extract current editable fields ────────────────────────────────────
@@ -443,7 +420,7 @@ def update_html(html: str, data: dict) -> str:
         weather_container = None
         for tag in soup.find_all("table"):
             style_val = tag.get("style", "")
-            if "background-color: #fdf8ef" in style_val or "background-color:#fdf8ef" in style_val or tag.get("bgcolor") == "#fdf8ef":
+            if "background-color: #fdf8ef" in style_val or tag.get("bgcolor") == "#fdf8ef":
                 weather_container = tag
                 break
         if weather_container:
@@ -451,44 +428,29 @@ def update_html(html: str, data: dict) -> str:
             t_desc = (weather_data.get("today_desc") or "").strip()
             t_high = (weather_data.get("today_high") or "").strip()
             t_low = (weather_data.get("today_low") or "").strip()
-            tm_desc = (weather_data.get("tomorrow_desc") or "").strip()
-            tm_high = (weather_data.get("tomorrow_high") or "").strip()
-            tm_low = (weather_data.get("tomorrow_low") or "").strip()
-            
+
             new_tr_html = f"""
                                             <tr>
-                                                <!-- Location + Icon Column -->
-                                                <td width="140" style="padding: 14px 12px 14px 18px; vertical-align: middle; border-right: 1px solid #f0e4cb; width: 140px;" valign="middle">
-                                                    <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                                                <td style="padding: 14px 14px 14px 18px; vertical-align: middle;" valign="middle">
+                                                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
                                                         <tr>
-                                                            <td style="font-size: 28px; line-height: 28px; padding-right: 10px; text-align: center;" valign="middle">&#9925;</td>
-                                                            <td valign="middle">
-                                                                <p class="weather-loc" style="margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: bold; color: #b8860b; letter-spacing: 1px; text-transform: uppercase; line-height: 14px;">{loc}</p>
+                                                            <td style="font-size: 30px; line-height: 30px; padding-right: 12px; vertical-align: middle; width: 38px;" valign="middle" width="38">&#9925;</td>
+                                                            <td style="vertical-align: middle;" valign="middle">
+                                                                <p style="margin: 0 0 3px 0; font-family: Arial, Helvetica, sans-serif; font-size: 9px; font-weight: bold; color: #b8860b; letter-spacing: 1.5px; text-transform: uppercase; line-height: 13px;">{loc} &#183; Today's Forecast</p>
+                                                                <p class="weather-desc-today" style="margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #6b5c3e; line-height: 17px;">{t_desc}</p>
+                                                            </td>
+                                                            <td style="vertical-align: middle; text-align: right; padding-left: 16px; white-space: nowrap;" valign="middle" align="right">
+                                                                <p style="margin: 0 0 2px 0; font-family: Arial, Helvetica, sans-serif; font-size: 8px; font-weight: bold; letter-spacing: 2px; color: #b8860b; text-transform: uppercase; line-height: 11px; text-align: right;">Expected</p>
+                                                                <p style="margin: 0 0 2px 0; line-height: 22px; text-align: right;">
+                                                                    <span class="weather-high-today" style="font-family: 'Courier New', Courier, monospace; font-size: 18px; font-weight: bold; color: #c8102e;">{t_high}&#176;</span>
+                                                                    <span style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #aaaaaa;"> / </span>
+                                                                    <span class="weather-low-today" style="font-family: 'Courier New', Courier, monospace; font-size: 18px; font-weight: bold; color: #1e40af;">{t_low}&#176;</span>
+                                                                    <span style="font-family: Arial, Helvetica, sans-serif; font-size: 9px; color: #999999;"> c</span>
+                                                                </p>
+                                                                <p style="margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 8px; color: #c4a85a; letter-spacing: 1px; text-align: right; line-height: 11px;">High &#183; Low</p>
                                                             </td>
                                                         </tr>
                                                     </table>
-                                                </td>
-                                                <!-- Today's Forecast Column -->
-                                                <td style="padding: 14px 16px; vertical-align: middle; border-right: 1px solid #f0e4cb;" valign="middle">
-                                                    <p style="margin: 0 0 2px 0; font-family: Arial, Helvetica, sans-serif; font-size: 9px; font-weight: bold; color: #b8860b; letter-spacing: 1px; text-transform: uppercase; line-height: 12px;">Today's Forecast</p>
-                                                    <p class="weather-desc-today" style="margin: 0 0 4px 0; font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #6b5c3e; line-height: 16px;">{t_desc}</p>
-                                                    <p style="margin: 0; line-height: 18px;">
-                                                        <span class="weather-high-today" style="font-family: 'Courier New', Courier, monospace; font-size: 16px; font-weight: bold; color: #c8102e;">{t_high}&#176;</span>
-                                                        <span style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; color: #aaaaaa;"> / </span>
-                                                        <span class="weather-low-today" style="font-family: 'Courier New', Courier, monospace; font-size: 16px; font-weight: bold; color: #1e40af;">{t_low}&#176;</span>
-                                                        <span style="font-family: Arial, Helvetica, sans-serif; font-size: 9px; color: #999999;">C</span>
-                                                    </p>
-                                                </td>
-                                                <!-- Tomorrow's Forecast Column -->
-                                                <td style="padding: 14px 16px; vertical-align: middle;" valign="middle">
-                                                    <p style="margin: 0 0 2px 0; font-family: Arial, Helvetica, sans-serif; font-size: 9px; font-weight: bold; color: #b8860b; letter-spacing: 1px; text-transform: uppercase; line-height: 12px;">Tomorrow's Forecast</p>
-                                                    <p class="weather-desc-tomorrow" style="margin: 0 0 4px 0; font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #6b5c3e; line-height: 16px;">{tm_desc}</p>
-                                                    <p style="margin: 0; line-height: 18px;">
-                                                        <span class="weather-high-tomorrow" style="font-family: 'Courier New', Courier, monospace; font-size: 16px; font-weight: bold; color: #c8102e;">{tm_high}&#176;</span>
-                                                        <span style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; color: #aaaaaa;"> / </span>
-                                                        <span class="weather-low-tomorrow" style="font-family: 'Courier New', Courier, monospace; font-size: 16px; font-weight: bold; color: #1e40af;">{tm_low}&#176;</span>
-                                                        <span style="font-family: Arial, Helvetica, sans-serif; font-size: 9px; color: #999999;">C</span>
-                                                    </p>
                                                 </td>
                                             </tr>
             """
@@ -505,40 +467,50 @@ def update_html(html: str, data: dict) -> str:
                 break
             cell = stat_cells[i]
             p_tags = cell.find_all("p")
-            if len(p_tags) >= 3:
-                label = (mkt.get("label") or "").strip()
-                if label:
-                    _set_text(p_tags[0], label)
-                value = (mkt.get("value") or "").strip()
-                if value:
-                    _set_text(p_tags[2], value)
-                
-                # change span
-                span = cell.find("span")
-                if span:
-                    change = (mkt.get("change") or "").strip()
-                    change_clean = change.replace("▲", "").replace("▼", "").strip()
-                    positive = mkt.get("positive", True)
-                    arrow = "▲" if positive else "▼"
-                    _set_text(span, f"{arrow} {change_clean}")
-                    
-                    color = "#16a34a" if positive else "#dc2626"
-                    bg_color = "#edfcf2" if positive else "#fef2f2"
-                    
-                    span_style = span.get("style", "")
-                    span_style_new = re.sub(r'color:\s*#[0-9a-fA-F]{6}', f'color: {color}', span_style)
-                    if f'color: {color}' not in span_style_new:
-                        span_style_new += f"; color: {color};"
-                    span["style"] = span_style_new
-                    
-                    parent_td = span.find_parent("td")
-                    if parent_td:
-                        parent_td["bgcolor"] = bg_color
-                        td_style = parent_td.get("style", "")
-                        td_style_new = re.sub(r'background-color:\s*#[0-9a-fA-F]{6}', f'background-color: {bg_color}', td_style)
-                        if f'background-color: {bg_color}' not in td_style_new:
-                            td_style_new += f"; background-color: {bg_color};"
-                        parent_td["style"] = td_style_new
+            if len(p_tags) < 3:
+                continue
+
+            label = (mkt.get("label") or "").strip()
+            if label:
+                _set_text(p_tags[0], label)
+            value = (mkt.get("value") or "").strip()
+            if value:
+                _set_text(p_tags[2], value)
+
+            pct_raw = (mkt.get("pct") or "").strip().replace("%", "")
+            positive = mkt.get("positive", True)
+            arrow = "▲" if positive else "▼"
+            color = "#16a34a" if positive else "#dc2626"
+            bg_color = "#edfcf2" if positive else "#fef2f2"
+
+            def _apply_badge(span):
+                if not span:
+                    return
+                new_style = re.sub(r'color:\s*#[0-9a-fA-F]{6}', f'color: {color}', span.get("style", ""))
+                span["style"] = new_style
+                parent_td = span.find_parent("td")
+                if parent_td:
+                    parent_td["bgcolor"] = bg_color
+                    parent_td["style"] = re.sub(
+                        r'background-color:\s*#[0-9a-fA-F]{6}',
+                        f'background-color: {bg_color}',
+                        parent_td.get("style", "")
+                    )
+
+            pct_span = cell.find("span", class_="mkt-pct")
+            if pct_span and pct_raw:
+                _set_text(pct_span, f"{arrow} {pct_raw}%")
+                _apply_badge(pct_span)
+
+            abs_span = cell.find("span", class_="mkt-abs")
+            if abs_span and pct_raw:
+                try:
+                    pct_float = float(pct_raw)
+                except ValueError:
+                    pct_float = 0.0
+                abs_text = _format_abs_change(label or p_tags[0].get_text().strip(), value or p_tags[2].get_text().strip(), pct_float, positive)
+                _set_text(abs_span, abs_text)
+                _apply_badge(abs_span)
 
     return str(soup)
 
@@ -817,26 +789,23 @@ def api_markets_fetch():
                 pass
             return None, None
 
-        def build_entry(now, prev, label, value_fmt, chg_dec=2):
+        def build_entry(now, prev, label, value_fmt):
             if now is None or prev is None:
-                return {"label": label, "value": "N/A", "change": "N/A", "positive": True}
+                return {"label": label, "value": "N/A", "pct": "0.00", "positive": True}
             chg = now - prev
             pct = (chg / prev) * 100
-            arrow = "▲" if chg >= 0 else "▼"
-            sign = "+" if pct >= 0 else "−"
-            chg_str = f"{arrow} {abs(chg):,.{chg_dec}f}  ({sign}{abs(pct):.2f}%)"
-            return {"label": label, "value": value_fmt(now), "change": chg_str, "positive": chg >= 0}
+            return {"label": label, "value": value_fmt(now), "pct": f"{abs(pct):.2f}", "positive": chg >= 0}
 
-        s_now, s_prev = fetch_two("^BSESN")
         n_now, n_prev = fetch_two("^NSEI")
+        s_now, s_prev = fetch_two("^BSESN")
         u_now, u_prev = fetch_usd_inr()
         g_now, g_prev = fetch_mumbai_gold()
 
         markets = [
-            build_entry(s_now, s_prev, "Sensex",        lambda v: f"{int(round(v)):,}"),
-            build_entry(n_now, n_prev, "Nifty 50",       lambda v: f"{int(round(v)):,}"),
-            build_entry(u_now, u_prev, "USD / INR",      lambda v: f"{v:.2f}"),
-            build_entry(g_now, g_prev, "Gold 24K (Mumbai) ₹/10g", lambda v: f"{int(round(v)):,}", chg_dec=0),
+            build_entry(n_now, n_prev, "Nifty 50",  lambda v: f"{v:,.2f}"),
+            build_entry(s_now, s_prev, "Sensex",     lambda v: f"{int(round(v)):,}"),
+            build_entry(u_now, u_prev, "USD / INR",  lambda v: f"{v:.2f}"),
+            build_entry(g_now, g_prev, "Gold 24K",   lambda v: f"₹{int(round(v)):,}"),
         ]
         return jsonify({"markets": markets})
     except Exception as e:
