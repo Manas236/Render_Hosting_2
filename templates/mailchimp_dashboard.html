@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Campaign Analytics — Newsband</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #f3f4f6;
+      --surface:  #ffffff;
+      --surface2: #f9fafb;
+      --border:   #e5e7eb;
+      --border2:  #d1d5db;
+      --text:     #111827;
+      --muted:    #6b7280;
+      --subtle:   #9ca3af;
+      --accent:   #c8102e;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ── Top bar ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(243,244,246,0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 54px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .back-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--muted); text-decoration: none; font-size: 13px;
+      transition: color 0.15s;
+    }
+    .back-link:hover { color: var(--text); }
+    .sep { width: 1px; height: 18px; background: var(--border2); }
+    .topbar-title { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; color: var(--text); }
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+
+    .date-input {
+      background: var(--surface); border: 1px solid var(--border2);
+      color: var(--text); padding: 5px 12px; font-size: 13px;
+      border-radius: 7px; outline: none; cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .date-input:hover, .date-input:focus { border-color: var(--muted); }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 14px; font-size: 13px; font-weight: 500;
+      border-radius: 7px; border: 1px solid var(--border2);
+      background: var(--surface); color: var(--text);
+      cursor: pointer; transition: background 0.15s, border-color 0.15s; outline: none;
+    }
+    .btn:hover { background: var(--bg); border-color: var(--muted); }
+    .btn:active { transform: scale(0.97); }
+    .btn-accent { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn-accent:hover { background: #a50d26; border-color: #a50d26; }
+    .btn-accent:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ── Error banner ── */
+    #errorBanner {
+      display: none;
+      margin: 16px 28px 0;
+      padding: 11px 16px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      color: #dc2626;
+      font-size: 13px;
+      align-items: center; gap: 8px;
+    }
+    #errorBanner.show { display: flex; }
+
+    /* ── Main ── */
+    .main { padding: 24px 28px; max-width: 1440px; margin: 0 auto; }
+
+    /* ── Date header ── */
+    .date-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .date-label {
+      font-size: 13px; font-weight: 500; color: var(--muted);
+    }
+    .date-label strong { color: var(--text); font-weight: 600; }
+    .campaign-badge {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--muted);
+      background: var(--surface); border: 1px solid var(--border2);
+      padding: 3px 11px; border-radius: 100px;
+    }
+
+    /* ── Summary strip (mirrors terminal output) ── */
+    .summary-strip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 28px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+    }
+    .summary-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 4px 24px;
+      border-right: 1px solid var(--border);
+    }
+    .summary-item:first-child { padding-left: 0; }
+    .summary-item:last-child  { padding-right: 0; border-right: none; }
+    .s-label {
+      font-size: 12px; font-weight: 500; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+    .s-val {
+      font-size: 1.9rem; font-weight: 700; letter-spacing: -0.03em;
+      color: var(--text); line-height: 1;
+    }
+    .s-rate {
+      font-size: 12px; font-weight: 600; margin-top: 2px;
+    }
+
+    @media (max-width: 900px) {
+      .summary-strip { flex-wrap: wrap; }
+      .summary-item { flex: 1 1 40%; border-right: none; border-bottom: 1px solid var(--border); padding: 12px 0; }
+      .summary-item:last-child { border-bottom: none; }
+    }
+
+    /* ── Charts ── */
+    .charts-row {
+      display: grid; grid-template-columns: 340px 1fr;
+      gap: 12px; margin-bottom: 20px;
+    }
+    @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
+
+    .chart-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 20px 22px;
+    }
+    .chart-title {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--muted); margin-bottom: 16px;
+    }
+    .doughnut-wrap {
+      display: flex; align-items: center; justify-content: center;
+      height: 260px;
+    }
+    #barWrap { position: relative; }
+
+    /* ── Table ── */
+    .table-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden;
+    }
+    .table-top {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px; border-bottom: 1px solid var(--border);
+    }
+    .table-title {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--muted);
+    }
+    .table-count { font-size: 12px; color: var(--muted); }
+    .table-wrap { overflow-x: auto; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      text-align: left; padding: 9px 20px;
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap; cursor: pointer; user-select: none;
+      transition: color 0.15s; background: var(--surface2);
+    }
+    th:hover { color: var(--text); }
+    th.active { color: var(--text); }
+    td {
+      padding: 11px 20px; border-bottom: 1px solid var(--border);
+      color: var(--text); white-space: nowrap;
+    }
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--surface2); }
+
+    .td-subject {
+      max-width: 300px; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+      font-weight: 500;
+    }
+    .td-mono { font-family: 'SF Mono','Fira Code',monospace; font-size: 12px; color: var(--muted); }
+
+    .chip {
+      display: inline-flex; align-items: center;
+      padding: 2px 9px; border-radius: 100px;
+      font-size: 12px; font-weight: 600;
+      font-family: 'SF Mono','Fira Code',monospace;
+    }
+    .chip-open   { background: #dbeafe; color: #1d4ed8; }
+    .chip-click  { background: #dcfce7; color: #15803d; }
+    .chip-bounce { background: #fee2e2; color: #dc2626; }
+    .chip-unsub  { background: #fef9c3; color: #b45309; }
+
+    /* ── Skeleton shimmer ── */
+    .sk {
+      background: linear-gradient(90deg, var(--border) 25%, var(--surface2) 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 4px;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .sk-line { height: 13px; border-radius: 4px; }
+    .sk-num  { height: 30px; border-radius: 4px; }
+
+    /* ── Empty state ── */
+    #emptyState {
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 80px 24px; color: var(--muted); text-align: center; gap: 8px;
+    }
+    #emptyState.show { display: flex; }
+    .empty-icon { font-size: 2.8rem; margin-bottom: 4px; }
+    .empty-h { font-size: 16px; font-weight: 600; color: var(--subtle); }
+    .empty-p { font-size: 13px; }
+
+    #dashContent { display: none; }
+
+    /* ── Copyable summary block ── */
+    .copy-block {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 22px;
+      margin-bottom: 20px;
+    }
+    .copy-pre {
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 13.5px;
+      line-height: 1.9;
+      color: var(--text);
+      white-space: pre;
+      user-select: all;
+      cursor: text;
+    }
+    .copy-btn {
+      position: absolute;
+      top: 14px; right: 14px;
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 12px;
+      font-size: 12px; font-weight: 500;
+      border-radius: 6px;
+      border: 1px solid var(--border2);
+      background: var(--surface2);
+      color: var(--muted);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      outline: none;
+    }
+    .copy-btn:hover { background: var(--border); color: var(--text); border-color: var(--muted); }
+    .copy-btn.copied { background: #dcfce7; border-color: #86efac; color: #15803d; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="/dashboard" class="back-link">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Dashboard
+    </a>
+    <div class="sep"></div>
+    <span class="topbar-title">Campaign Analytics</span>
+  </div>
+  <div class="topbar-right">
+    <input type="date" id="datePicker" class="date-input"/>
+    <button class="btn btn-accent" id="refreshBtn" onclick="doRefresh()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+      Refresh
+    </button>
+  </div>
+</div>
+
+<div id="errorBanner">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  <span id="errorMsg"></span>
+</div>
+
+<div class="main">
+  <div id="emptyState">
+    <div class="empty-icon">📭</div>
+    <div class="empty-h">No campaigns found</div>
+    <p class="empty-p" id="emptyMsg"></p>
+  </div>
+
+  <div id="dashContent">
+
+    <!-- Date line -->
+    <div class="date-header">
+      <div class="date-label">Campaigns sent on <strong id="reportDate">—</strong></div>
+      <div class="campaign-badge" id="tableCount">—</div>
+    </div>
+
+    <!-- Copyable plain-text summary -->
+    <div class="copy-block">
+      <pre id="copyText" class="copy-pre">—</pre>
+      <button class="copy-btn" id="copyBtn" onclick="copyToClipboard()">
+        <svg id="copyIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span id="copyLabel">Copy</span>
+      </button>
+    </div>
+
+    <!-- Summary strip — the 5 key totals, prominent -->
+    <div class="summary-strip" id="summaryStrip">
+      <div class="summary-item">
+        <div class="s-label">Total mails sent</div>
+        <div class="s-val" id="s-sent">—</div>
+        <div class="s-rate" style="color:var(--muted)">&nbsp;</div>
+      </div>
+      <div class="summary-item">
+        <div class="s-label">Total mails opened</div>
+        <div class="s-val" id="s-opens">—</div>
+        <div class="s-rate" style="color:#1d4ed8" id="s-open-rate">&nbsp;</div>
+      </div>
+      <div class="summary-item">
+        <div class="s-label">Total mails clicked</div>
+        <div class="s-val" id="s-clicks">—</div>
+        <div class="s-rate" style="color:#15803d" id="s-click-rate">&nbsp;</div>
+      </div>
+      <div class="summary-item">
+        <div class="s-label">Total mails bounced</div>
+        <div class="s-val" id="s-bounces">—</div>
+        <div class="s-rate" style="color:#dc2626" id="s-bounce-rate">&nbsp;</div>
+      </div>
+      <div class="summary-item">
+        <div class="s-label">Unsubscribers</div>
+        <div class="s-val" id="s-unsubs">—</div>
+        <div class="s-rate" style="color:#b45309" id="s-unsub-rate">&nbsp;</div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Engagement Breakdown</div>
+        <div class="doughnut-wrap">
+          <canvas id="doughnutChart" width="260" height="260"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Open Rate vs Click Rate — Per Campaign</div>
+        <div id="barWrap"><canvas id="barChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-card">
+      <div class="table-top">
+        <div class="table-title">Per-campaign breakdown</div>
+        <div class="table-count" id="tableCountDetail">—</div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th data-key="subject">Subject</th>
+              <th data-key="send_time">Sent At</th>
+              <th data-key="emails_sent">Sent</th>
+              <th data-key="open_rate">Open Rate</th>
+              <th data-key="click_rate">Click Rate</th>
+              <th data-key="bounce_rate">Bounce Rate</th>
+              <th data-key="unsub_rate">Unsub Rate</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  let _data = [];
+  let _sortKey = 'emails_sent';
+  let _sortDir = -1;
+  let _dChart = null;
+  let _bChart = null;
+
+  // ── Init ──────────────────────────────────────
+  const picker = document.getElementById('datePicker');
+  const today = new Date().toISOString().slice(0, 10);
+  picker.value = today;
+  picker.max = today;
+  picker.addEventListener('change', () => fetchStats(picker.value));
+
+  document.querySelectorAll('th[data-key]').forEach(th => {
+    th.addEventListener('click', () => {
+      const k = th.dataset.key;
+      if (_sortKey === k) _sortDir *= -1; else { _sortKey = k; _sortDir = -1; }
+      document.querySelectorAll('th[data-key]').forEach(t => t.classList.remove('active'));
+      th.classList.add('active');
+      renderTableRows();
+    });
+  });
+  document.querySelector(`th[data-key="${_sortKey}"]`).classList.add('active');
+
+  fetchStats();  // initial load — API applies fallback (today → yesterday → day before)
+
+  // ── Fetch ─────────────────────────────────────
+  async function fetchStats(date) {
+    setLoading(true);
+    hideError();
+    hideEmpty();
+
+    const url = date ? `/mailchimp/api/stats?date=${encodeURIComponent(date)}` : '/mailchimp/api/stats';
+    try {
+      const res = await fetch(url);
+      const json = await res.json();
+      if (!res.ok) { showError(json.error || `HTTP ${res.status}`); return; }
+
+      if (json.empty || !json.campaigns.length) {
+        const c = json.checked_dates || [date || today];
+        showEmpty(`No campaigns found between ${c[c.length - 1]} and ${c[0]}.`);
+        return;
+      }
+
+      if (json.report_date) picker.value = json.report_date;
+      renderAll(json);
+    } catch (_) {
+      showError('Network error — could not reach the server.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function doRefresh() {
+    fetchStats(picker.value !== today ? picker.value : undefined);
+  }
+
+  // ── Render ────────────────────────────────────
+  function renderAll(json) {
+    document.getElementById('dashContent').style.display = 'block';
+    document.getElementById('reportDate').textContent = fmtDate(json.report_date);
+    const cc = json.campaigns.length;
+    const label = `${cc} campaign${cc !== 1 ? 's' : ''}`;
+    document.getElementById('tableCount').textContent = label;
+    document.getElementById('tableCountDetail').textContent = label;
+
+    renderSummary(json.totals);
+    renderDoughnut(json.totals);
+    renderBar(json.campaigns);
+    _data = json.campaigns;
+    renderTableRows();
+  }
+
+  function renderSummary(t) {
+    document.getElementById('s-sent').textContent    = num(t.sent);
+    document.getElementById('s-opens').textContent   = num(t.opens);
+    document.getElementById('s-clicks').textContent  = num(t.clicks);
+    document.getElementById('s-bounces').textContent = num(t.bounces);
+    document.getElementById('s-unsubs').textContent  = num(t.unsubscribes);
+
+    document.getElementById('s-open-rate').textContent   = t.open_rate   + '% of sent';
+    document.getElementById('s-click-rate').textContent  = t.click_rate  + '% of sent';
+    document.getElementById('s-bounce-rate').textContent = t.bounce_rate + '% of sent';
+    document.getElementById('s-unsub-rate').textContent  = t.unsub_rate  + '% of sent';
+
+    // Plain-text block — matches terminal output exactly
+    const date = document.getElementById('reportDate').textContent;
+    const pad = s => String(s).padStart(6, ' ');
+    document.getElementById('copyText').textContent =
+      `Campaigns sent on ${date}:\n\n` +
+      `Total mails sent:    ${pad(t.sent)}\n` +
+      `Total mails opened:  ${pad(t.opens)}\n` +
+      `Total mails clicked: ${pad(t.clicks)}\n` +
+      `Total mails bounced: ${pad(t.bounces)}\n` +
+      `Unsubscribers:       ${pad(t.unsubscribes)}`;
+  }
+
+  function copyToClipboard() {
+    const text = document.getElementById('copyText').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.classList.add('copied');
+      document.getElementById('copyLabel').textContent = 'Copied!';
+      document.getElementById('copyIcon').innerHTML =
+        '<polyline points="20 6 9 17 4 12"/>';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        document.getElementById('copyLabel').textContent = 'Copy';
+        document.getElementById('copyIcon').innerHTML =
+          '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>';
+      }, 2000);
+    });
+  }
+
+  function renderDoughnut(t) {
+    const untouched = Math.max(0, t.sent - t.opens - t.bounces - t.unsubscribes);
+    if (_dChart) _dChart.destroy();
+    _dChart = new Chart(document.getElementById('doughnutChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Opened', 'Clicked', 'Bounced', 'Unsubscribed', 'Untouched'],
+        datasets: [{
+          data: [t.opens, t.clicks, t.bounces, t.unsubscribes, untouched],
+          backgroundColor: ['#3b82f6','#22c55e','#ef4444','#f59e0b','#e5e7eb'],
+          borderColor: '#ffffff',
+          borderWidth: 2,
+          hoverBorderWidth: 3,
+        }]
+      },
+      options: {
+        responsive: false,
+        cutout: '64%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { color: '#6b7280', font: { size: 11 }, padding: 10, boxWidth: 10, boxHeight: 10 }
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx => ` ${ctx.label}: ${num(ctx.raw)}  (${pct(ctx.raw, t.sent)}%)`
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function renderBar(campaigns) {
+    if (!campaigns.length) return;
+    const h = Math.max(220, campaigns.length * 44 + 60);
+    document.getElementById('barWrap').style.height = h + 'px';
+
+    if (_bChart) _bChart.destroy();
+    _bChart = new Chart(document.getElementById('barChart'), {
+      type: 'bar',
+      data: {
+        labels: campaigns.map(c => trunc(c.subject || c.title, 32)),
+        datasets: [
+          { label: 'Open Rate %',  data: campaigns.map(c => c.open_rate),  backgroundColor: 'rgba(59,130,246,0.6)',  borderRadius: 4 },
+          { label: 'Click Rate %', data: campaigns.map(c => c.click_rate), backgroundColor: 'rgba(34,197,94,0.6)',   borderRadius: 4 },
+        ]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: '#6b7280', font: { size: 11 }, boxWidth: 12, boxHeight: 12 } },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw}%` } }
+        },
+        scales: {
+          x: { ticks: { color: '#6b7280', font:{size:11} }, grid: { color: '#f3f4f6' }, beginAtZero: true },
+          y: { ticks: { color: '#6b7280', font:{size:11} }, grid: { color: '#f3f4f6' } }
+        }
+      }
+    });
+  }
+
+  function renderTableRows() {
+    const sorted = [..._data].sort((a, b) => {
+      const av = a[_sortKey], bv = b[_sortKey];
+      return typeof av === 'string' ? av.localeCompare(bv) * _sortDir : (av - bv) * _sortDir;
+    });
+    document.getElementById('tableBody').innerHTML = sorted.map(c => `
+      <tr>
+        <td class="td-subject" title="${esc(c.subject)}">${esc(c.subject || '—')}</td>
+        <td class="td-mono">${fmtTime(c.send_time)}</td>
+        <td class="td-mono">${num(c.emails_sent)}</td>
+        <td><span class="chip chip-open">${c.open_rate}%</span></td>
+        <td><span class="chip chip-click">${c.click_rate}%</span></td>
+        <td><span class="chip chip-bounce">${c.bounce_rate}%</span></td>
+        <td><span class="chip chip-unsub">${c.unsub_rate}%</span></td>
+      </tr>
+    `).join('');
+  }
+
+  // ── Loading skeleton ──────────────────────────
+  function setLoading(on) {
+    document.getElementById('refreshBtn').disabled = on;
+    if (!on) return;
+
+    document.getElementById('dashContent').style.display = 'block';
+    document.getElementById('reportDate').textContent = '—';
+    document.getElementById('tableCount').textContent = '—';
+    document.getElementById('tableCountDetail').textContent = '—';
+    document.getElementById('copyText').textContent = '—';
+
+    ['s-sent','s-opens','s-clicks','s-bounces','s-unsubs'].forEach(id => {
+      document.getElementById(id).textContent = '—';
+    });
+    ['s-open-rate','s-click-rate','s-bounce-rate','s-unsub-rate'].forEach(id => {
+      document.getElementById(id).textContent = ' ';
+    });
+
+    document.getElementById('tableBody').innerHTML = Array(5).fill(0).map(() => `
+      <tr>
+        ${['72%','80px','48px','52px','52px','52px','52px'].map(w =>
+          `<td><div class="sk sk-line" style="width:${w}"></div></td>`).join('')}
+      </tr>`).join('');
+  }
+
+  // ── UI states ─────────────────────────────────
+  function showError(msg) {
+    document.getElementById('errorMsg').textContent = msg;
+    document.getElementById('errorBanner').classList.add('show');
+    document.getElementById('dashContent').style.display = 'none';
+  }
+  function hideError() { document.getElementById('errorBanner').classList.remove('show'); }
+
+  function showEmpty(msg) {
+    document.getElementById('emptyMsg').textContent = msg;
+    document.getElementById('emptyState').classList.add('show');
+    document.getElementById('dashContent').style.display = 'none';
+  }
+  function hideEmpty() { document.getElementById('emptyState').classList.remove('show'); }
+
+  // ── Helpers ───────────────────────────────────
+  const num = n => (typeof n === 'number' ? n.toLocaleString() : '—');
+  const pct = (p, t) => (t ? Math.round(p / t * 100) : 0);
+  const trunc = (s, n) => s && s.length > n ? s.slice(0, n) + '…' : (s || '');
+  const esc = s => s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : '';
+
+  function fmtDate(d) {
+    if (!d) return '—';
+    return new Date(d + 'T12:00:00').toLocaleDateString('en-US',
+      { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  function fmtTime(s) {
+    if (!s) return '—';
+    return new Date(s).toLocaleString('en-US',
+      { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
+  }
+</script>
+</body>
+</html>

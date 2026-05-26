@@ -735,49 +735,21 @@
                             oninput="scheduleUpdate()" />
                     </div>
                     
-                    <div style="display:flex; gap:16px; margin-top: 10px;">
-                        <!-- Today's Forecast Columns -->
-                        <div style="flex:1; border-right: 1px solid var(--border-soft); padding-right:12px;">
-                            <div style="font-weight: 600; font-size: 11px; margin-bottom: 8px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px;">Today's Forecast</div>
-                            <div class="field">
-                                <label>Condition</label>
-                                <input type="text" id="weatherTodayDesc" placeholder="e.g. Partly cloudy" autocomplete="off"
-                                    oninput="scheduleUpdate()" />
-                            </div>
-                            <div style="display:flex; gap:8px;">
-                                <div class="field" style="flex:1;">
-                                    <label>High (°C)</label>
-                                    <input type="number" id="weatherTodayHigh" placeholder="e.g. 36" autocomplete="off"
-                                        oninput="scheduleUpdate()" />
-                                </div>
-                                <div class="field" style="flex:1;">
-                                    <label>Low (°C)</label>
-                                    <input type="number" id="weatherTodayLow" placeholder="e.g. 30" autocomplete="off"
-                                        oninput="scheduleUpdate()" />
-                                </div>
-                            </div>
+                    <div class="field">
+                        <label>Condition</label>
+                        <input type="text" id="weatherTodayDesc" placeholder="e.g. Partly cloudy" autocomplete="off"
+                            oninput="scheduleUpdate()" />
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <div class="field" style="flex:1;">
+                            <label>High (°C)</label>
+                            <input type="number" id="weatherTodayHigh" placeholder="e.g. 36" autocomplete="off"
+                                oninput="scheduleUpdate()" />
                         </div>
-
-                        <!-- Tomorrow's Forecast Columns -->
-                        <div style="flex:1; padding-left:4px;">
-                            <div style="font-weight: 600; font-size: 11px; margin-bottom: 8px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px;">Tomorrow's Forecast</div>
-                            <div class="field">
-                                <label>Condition</label>
-                                <input type="text" id="weatherTomorrowDesc" placeholder="e.g. Sunny" autocomplete="off"
-                                    oninput="scheduleUpdate()" />
-                            </div>
-                            <div style="display:flex; gap:8px;">
-                                <div class="field" style="flex:1;">
-                                    <label>High (°C)</label>
-                                    <input type="number" id="weatherTomorrowHigh" placeholder="e.g. 35" autocomplete="off"
-                                        oninput="scheduleUpdate()" />
-                                </div>
-                                <div class="field" style="flex:1;">
-                                    <label>Low (°C)</label>
-                                    <input type="number" id="weatherTomorrowLow" placeholder="e.g. 30" autocomplete="off"
-                                        oninput="scheduleUpdate()" />
-                                </div>
-                            </div>
+                        <div class="field" style="flex:1;">
+                            <label>Low (°C)</label>
+                            <input type="number" id="weatherTodayLow" placeholder="e.g. 30" autocomplete="off"
+                                oninput="scheduleUpdate()" />
                         </div>
                     </div>
                 </div>
@@ -890,9 +862,6 @@
                 document.getElementById('weatherTodayDesc').value = data.weather.today_desc || '';
                 document.getElementById('weatherTodayHigh').value = data.weather.today_high || '';
                 document.getElementById('weatherTodayLow').value = data.weather.today_low || '';
-                document.getElementById('weatherTomorrowDesc').value = data.weather.tomorrow_desc || '';
-                document.getElementById('weatherTomorrowHigh').value = data.weather.tomorrow_high || '';
-                document.getElementById('weatherTomorrowLow').value = data.weather.tomorrow_low || '';
             }
 
             const ml = document.getElementById('marketsList');
@@ -1013,9 +982,6 @@
                     today_desc: val('weatherTodayDesc'),
                     today_high: val('weatherTodayHigh'),
                     today_low: val('weatherTodayLow'),
-                    tomorrow_desc: val('weatherTomorrowDesc'),
-                    tomorrow_high: val('weatherTomorrowHigh'),
-                    tomorrow_low: val('weatherTomorrowLow'),
                 },
                 stories,
                 markets: getMarketsData(),
@@ -1149,8 +1115,9 @@
                                oninput="scheduleUpdate()" autocomplete="off" style="font-size:12px;" />
                     </div>
                     <div class="field" style="flex:1; gap:3px;">
-                        <label style="font-size:8px;">Change</label>
-                        <input type="text" id="mkt${i}_change" value="${escAttr(mkt.change || '')}"
+                        <label style="font-size:8px;">% Change</label>
+                        <input type="number" id="mkt${i}_pct" value="${escAttr(mkt.pct || '')}"
+                               step="0.01" min="0" placeholder="e.g. 1.24"
                                oninput="scheduleUpdate()" autocomplete="off" style="font-size:12px;" />
                     </div>
                 </div>
@@ -1177,7 +1144,7 @@
                 markets.push({
                     label: document.getElementById(`mkt${i}_label`).value || '',
                     value: val(`mkt${i}_value`),
-                    change: val(`mkt${i}_change`),
+                    pct: val(`mkt${i}_pct`),
                     positive: document.getElementById(`mkt${i}_pos`).value === '1',
                 });
                 i++;
@@ -1229,9 +1196,6 @@
                 document.getElementById('weatherTodayDesc').value = data.today_desc || '';
                 document.getElementById('weatherTodayHigh').value = data.today_high || '';
                 document.getElementById('weatherTodayLow').value = data.today_low || '';
-                document.getElementById('weatherTomorrowDesc').value = data.tomorrow_desc || '';
-                document.getElementById('weatherTomorrowHigh').value = data.tomorrow_high || '';
-                document.getElementById('weatherTomorrowLow').value = data.tomorrow_low || '';
                 
                 await sendUpdate();
                 setStatus('saved', 'WEATHER UPDATED');
@@ -1289,12 +1253,13 @@
             scheduleUpdate();
         }
 
-        /* ── Boot ────────────────────────────────────────────────────────────────── */
-        loadFields();
-
-        /* ── Auto-sync initial state after 2 seconds ────────────────────────────── */
-        setTimeout(() => { sendUpdate(); }, 2000);
-    </script>
+        /* ── Boot ──────────────────────────────────────────────────────────────────────────────── */
+        (async () => {
+            await loadFields();
+            setAutoDate();
+            await fetchLiveWeather();
+        })();
+        </script>
 </body>
 
 </html>

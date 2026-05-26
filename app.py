@@ -21,6 +21,7 @@ def create_app():
     from extractor import extractor_bp
     from batch_extractor import batch_extractor_bp
     from upload_image import upload_image_bp
+    from mailchimp_bp import mailchimp_bp
     # ── Day 8 Editor (v2 — BS4-based) ──
     import importlib.util
     import sys
@@ -109,6 +110,7 @@ def create_app():
     app.register_blueprint(day17_editor_bp, url_prefix='/day17-editor')
     app.register_blueprint(batch_extractor_bp, url_prefix='/batch-extractor')
     app.register_blueprint(upload_image_bp, url_prefix='/upload-image')
+    app.register_blueprint(mailchimp_bp, url_prefix='/mailchimp')
     # ─────────────────────────────────────────────
     # Health Check (required by Render)
     # ─────────────────────────────────────────────
