@@ -1086,9 +1086,9 @@
                                oninput="scheduleUpdate()" autocomplete="off" style="font-size:12px;" />
                     </div>
                     <div class="field" style="flex:1; gap:3px;">
-                        <label style="font-size:8px;">Change</label>
-                        <input type="text" id="mkt${i}_change" value="${escAttr(mkt.change || '')}"
-                               oninput="scheduleUpdate()" autocomplete="off" style="font-size:12px;" />
+                        <label style="font-size:8px;">% Change</label>
+                        <input type="text" id="mkt${i}_pct" value="${escAttr(mkt.pct || '')}"
+                               oninput="scheduleUpdate()" autocomplete="off" style="font-size:12px;" placeholder="e.g. 1.23" />
                     </div>
                 </div>
                 <input type="hidden" id="mkt${i}_label" value="${escAttr(mkt.label || '')}" />
@@ -1114,7 +1114,7 @@
                 markets.push({
                     label: document.getElementById(`mkt${i}_label`).value || '',
                     value: val(`mkt${i}_value`),
-                    change: val(`mkt${i}_change`),
+                    pct: val(`mkt${i}_pct`),
                     positive: document.getElementById(`mkt${i}_pos`).value === '1',
                 });
                 i++;

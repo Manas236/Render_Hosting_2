@@ -100,32 +100,54 @@ def _find_market_data(soup):
     """
     markets = []
 
-    dark_td = None
-    for td in soup.find_all("td"):
-        if "background-color:#0f172a" in td.get("style", ""):
-            dark_td = td
+    dark_container = None
+    for tag in soup.find_all(["table", "td"]):
+        if "background-color:#0f172a" in tag.get("style", ""):
+            dark_container = tag
             break
 
-    if not dark_td:
+    if not dark_container:
         return markets
 
     ticker_cells = [
-        td for td in dark_td.find_all("td")
+        td for td in dark_container.find_all("td")
         if td.get("valign") == "top" and td.get("width") == "25%"
     ]
 
     for cell in ticker_cells:
         divs = cell.find_all("div")
         if len(divs) >= 3:
+            change_text = divs[2].get_text().strip()
+            positive = "color:#10b981" in divs[2].get("style", "")
+            pct_match = re.search(r'([\d.]+)%', change_text)
+            pct = pct_match.group(1) if pct_match else "0.00"
             market = {
                 "label": divs[0].get_text().strip(),
                 "value": divs[1].get_text().strip(),
-                "change": divs[2].get_text().strip(),
+                "pct": pct,
+                "positive": positive,
             }
-            market["positive"] = "color:#10b981" in divs[2].get("style", "")
             markets.append(market)
 
     return markets
+
+
+def _format_change_str(label: str, value_str: str, pct_float: float, positive: bool) -> str:
+    arrow = "▲" if positive else "▼"
+    sign = "+" if positive else "−"
+    clean = value_str.replace("₹", "").replace(",", "").strip()
+    try:
+        value_num = float(clean)
+    except Exception:
+        return f"{arrow} N/A  ({sign}{abs(pct_float):.2f}%)"
+    abs_change = value_num * pct_float / 100
+    label_lower = label.lower()
+    if "gold" in label_lower:
+        return f"{arrow} {int(round(abs_change))}  ({sign}{abs(pct_float):.2f}%)"
+    elif "usd" in label_lower or "/" in label:
+        return f"{arrow} {abs(abs_change):.2f}  ({sign}{abs(pct_float):.2f}%)"
+    else:
+        return f"{arrow} {int(round(abs_change)):,}  ({sign}{abs(pct_float):.2f}%)"
 
 
 # ── Parse: extract current editable fields ────────────────────────────────────
@@ -283,15 +305,15 @@ def update_html(html: str, data: dict) -> str:
     # Markets
     markets_data = data.get("markets", [])
     if markets_data:
-        dark_td = None
-        for td in soup.find_all("td"):
-            if "background-color:#0f172a" in td.get("style", ""):
-                dark_td = td
+        dark_container = None
+        for tag in soup.find_all(["table", "td"]):
+            if "background-color:#0f172a" in tag.get("style", ""):
+                dark_container = tag
                 break
 
-        if dark_td:
+        if dark_container:
             ticker_cells = [
-                td for td in dark_td.find_all("td")
+                td for td in dark_container.find_all("td")
                 if td.get("valign") == "top" and td.get("width") == "25%"
             ]
 
@@ -307,10 +329,15 @@ def update_html(html: str, data: dict) -> str:
                     value = (mkt.get("value") or "").strip()
                     if value:
                         _set_text(divs[1], value)
-                    change = (mkt.get("change") or "").strip()
-                    if change:
-                        _set_text(divs[2], change)
                     positive = mkt.get("positive", True)
+                    pct_raw = (mkt.get("pct") or "").strip().replace("%", "")
+                    try:
+                        pct_float = float(pct_raw)
+                    except ValueError:
+                        pct_float = 0.0
+                    value_str = value or divs[1].get_text().strip()
+                    change_str = _format_change_str(label or divs[0].get_text().strip(), value_str, pct_float, positive)
+                    _set_text(divs[2], change_str)
                     color = "#10b981" if positive else "#ef4444"
                     existing_style = divs[2].get("style", "")
                     divs[2]["style"] = re.sub(
@@ -470,15 +497,12 @@ def api_markets_fetch():
                 pass
             return None, None
 
-        def build_entry(now, prev, label, value_fmt, chg_dec=2):
+        def build_entry(now, prev, label, value_fmt):
             if now is None or prev is None:
-                return {"label": label, "value": "N/A", "change": "N/A", "positive": True}
+                return {"label": label, "value": "N/A", "pct": "0.00", "positive": True}
             chg = now - prev
             pct = (chg / prev) * 100
-            arrow = "▲" if chg >= 0 else "▼"
-            sign = "+" if pct >= 0 else "−"
-            chg_str = f"{arrow} {abs(chg):,.{chg_dec}f}  ({sign}{abs(pct):.2f}%)"
-            return {"label": label, "value": value_fmt(now), "change": chg_str, "positive": chg >= 0}
+            return {"label": label, "value": value_fmt(now), "pct": f"{abs(pct):.2f}", "positive": chg >= 0}
 
         def fetch_usd_inr():
             """
@@ -525,7 +549,7 @@ def api_markets_fetch():
             build_entry(s_now, s_prev, "SENSEX",        lambda v: f"{int(round(v)):,}"),
             build_entry(n_now, n_prev, "NIFTY 50",       lambda v: f"{int(round(v)):,}"),
             build_entry(u_now, u_prev, "USD / INR",      lambda v: f"{v:.2f}"),
-            build_entry(g_now, g_prev, "GOLD 24K (MUMBAI)", lambda v: f"{int(round(v)):,}", chg_dec=0),
+            build_entry(g_now, g_prev, "GOLD 24K (MUMBAI)", lambda v: f"{int(round(v)):,}"),
         ]
         return jsonify({"markets": markets})
     except Exception as e:

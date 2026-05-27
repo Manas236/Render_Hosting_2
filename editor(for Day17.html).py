@@ -93,7 +93,7 @@ def _find_s2_s3(soup):
     cells = soup.find_all("td", class_="two-col-cell")
     for i, cell in enumerate(cells[:2]):
         story = {}
-        # Links
+        # The whole card is wrapped in a single <a>; no second <a> exists
         a_tags = cell.find_all("a")
         if a_tags:
             story["links"] = a_tags
@@ -101,9 +101,9 @@ def _find_s2_s3(soup):
         img = cell.find("img")
         if img:
             story["image"] = img
-        # Paragraphs inside second a (card link)
-        if len(a_tags) >= 2:
-            p_tags = a_tags[1].find_all("p")
+        # Paragraphs are inside the one card <a> (index 0)
+        if len(a_tags) >= 1:
+            p_tags = a_tags[0].find_all("p")
             if len(p_tags) >= 3:
                 story["category"] = p_tags[0]
                 story["headline"] = p_tags[1]
@@ -120,30 +120,26 @@ def _find_s4_s5(soup):
         story = {}
         t_cell = thumbs[i]
         c_cell = contents[i]
-        
-        # Links
+
+        # The <a> wraps the outer table, not the inner cells — walk up to find it
         links = []
-        img_a = t_cell.find("a")
-        if img_a:
-            links.append(img_a)
-        content_a = c_cell.find("a")
-        if content_a:
-            links.append(content_a)
+        outer_a = t_cell.find_parent("a")
+        if outer_a:
+            links.append(outer_a)
         story["links"] = links
-        
+
         # Image cell + img
         story["thumb_cell"] = t_cell
         img = t_cell.find("img")
         if img:
             story["image"] = img
 
-        # Paragraphs inside content a
-        if content_a:
-            p_tags = content_a.find_all("p")
-            if len(p_tags) >= 3:
-                story["category"] = p_tags[0]
-                story["headline"] = p_tags[1]
-                story["summary"] = p_tags[2]
+        # Paragraphs are directly inside the content cell (no inner <a>)
+        p_tags = c_cell.find_all("p")
+        if len(p_tags) >= 3:
+            story["category"] = p_tags[0]
+            story["headline"] = p_tags[1]
+            story["summary"] = p_tags[2]
         stories.append(story)
     return stories
 
