@@ -229,7 +229,6 @@ def _find_market_data(soup):
     Returns list of 4 dicts (Sensex, Nifty, USD/INR, Gold).
     """
     markets = []
-    # The dark section has background:#0f0f0f
     dark_section = None
     for td in soup.find_all("td"):
         style = td.get("style", "")
@@ -240,7 +239,6 @@ def _find_market_data(soup):
     if not dark_section:
         return markets
 
-    # Find all market stat cells (4 tds with valign="top" and width="25%")
     stat_cells = []
     for td in dark_section.find_all("td"):
         width = td.get("width", "")
@@ -251,17 +249,37 @@ def _find_market_data(soup):
     for cell in stat_cells:
         divs = cell.find_all("div")
         if len(divs) >= 3:
+            change_text = divs[2].get_text().strip()
+            positive = "color:#4caf7a" in divs[2].get("style", "")
+            pct_match = re.search(r'([\d.]+)%', change_text)
+            pct = pct_match.group(1) if pct_match else "0.00"
             market = {
                 "label": divs[0].get_text().strip(),
                 "value": divs[1].get_text().strip(),
-                "change": divs[2].get_text().strip(),
+                "pct": pct,
+                "positive": positive,
             }
-            # Check if change is positive or negative
-            style = divs[2].get("style", "")
-            market["positive"] = "color:#4caf7a" in style
             markets.append(market)
 
     return markets
+
+
+def _format_change_str(label: str, value_str: str, pct_float: float, positive: bool) -> str:
+    arrow = "▲" if positive else "▼"
+    sign = "+" if positive else "−"
+    clean = value_str.replace("₹", "").replace(",", "").strip()
+    try:
+        value_num = float(clean)
+    except Exception:
+        return f"{arrow} N/A  ({sign}{abs(pct_float):.2f}%)"
+    abs_change = value_num * pct_float / 100
+    label_lower = label.lower()
+    if "gold" in label_lower:
+        return f"{arrow} {int(round(abs_change))}  ({sign}{abs(pct_float):.2f}%)"
+    elif "usd" in label_lower or "/" in label:
+        return f"{arrow} {abs(abs_change):.2f}  ({sign}{abs(pct_float):.2f}%)"
+    else:
+        return f"{arrow} {int(round(abs_change)):,}  ({sign}{abs(pct_float):.2f}%)"
 
 
 # ── Parse: extract current editable fields ────────────────────────────────────
@@ -489,10 +507,15 @@ def update_html(html: str, data: dict) -> str:
                     value = (mkt.get("value") or "").strip()
                     if value:
                         _set_text(divs[1], value)
-                    change = (mkt.get("change") or "").strip()
-                    if change:
-                        _set_text(divs[2], change)
                     positive = mkt.get("positive", True)
+                    pct_raw = (mkt.get("pct") or "").strip().replace("%", "")
+                    try:
+                        pct_float = float(pct_raw)
+                    except ValueError:
+                        pct_float = 0.0
+                    value_str = value or divs[1].get_text().strip()
+                    change_str = _format_change_str(label or divs[0].get_text().strip(), value_str, pct_float, positive)
+                    _set_text(divs[2], change_str)
                     color = "#4caf7a" if positive else "#e07a6b"
                     existing_style = divs[2].get("style", "")
                     divs[2]["style"] = re.sub(r'color:#[0-9a-fA-F]{6}', f'color:{color}', existing_style)
@@ -676,15 +699,12 @@ def api_markets_fetch():
                 pass
             return None, None
 
-        def build_entry(now, prev, label, value_fmt, chg_dec=2):
+        def build_entry(now, prev, label, value_fmt):
             if now is None or prev is None:
-                return {"label": label, "value": "N/A", "change": "N/A", "positive": True}
+                return {"label": label, "value": "N/A", "pct": "0.00", "positive": True}
             chg = now - prev
             pct = (chg / prev) * 100
-            arrow = "▲" if chg >= 0 else "▼"
-            sign = "+" if pct >= 0 else "−"
-            chg_str = f"{arrow} {abs(chg):,.{chg_dec}f}  ({sign}{abs(pct):.2f}%)"
-            return {"label": label, "value": value_fmt(now), "change": chg_str, "positive": chg >= 0}
+            return {"label": label, "value": value_fmt(now), "pct": f"{abs(pct):.2f}", "positive": chg >= 0}
 
         s_now, s_prev = fetch_two("^BSESN")
         n_now, n_prev = fetch_two("^NSEI")
@@ -692,10 +712,10 @@ def api_markets_fetch():
         g_now, g_prev = fetch_mumbai_gold()
 
         markets = [
-            build_entry(s_now, s_prev, "Sensex",        lambda v: f"{int(round(v)):,}"),
-            build_entry(n_now, n_prev, "Nifty 50",       lambda v: f"{int(round(v)):,}"),
-            build_entry(u_now, u_prev, "USD / INR",      lambda v: f"{v:.2f}"),
-            build_entry(g_now, g_prev, "Gold 24K (Mumbai) ₹/10g", lambda v: f"{int(round(v)):,}", chg_dec=0),
+            build_entry(s_now, s_prev, "Sensex",                   lambda v: f"{int(round(v)):,}"),
+            build_entry(n_now, n_prev, "Nifty 50",                  lambda v: f"{int(round(v)):,}"),
+            build_entry(u_now, u_prev, "USD / INR",                 lambda v: f"{v:.2f}"),
+            build_entry(g_now, g_prev, "Gold 24K (Mumbai) ₹/10g",  lambda v: f"{int(round(v)):,}"),
         ]
         return jsonify({"markets": markets})
     except Exception as e:

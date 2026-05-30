@@ -9,6 +9,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap"
         rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <style>
         /* ── Reset ─────────────────────────────────────────────────────────────── */
         *,
@@ -187,6 +188,21 @@
             color: var(--text-1);
             background: var(--surface);
         }
+
+        .icon-pick-btn {
+            font-size: 20px;
+            width: 38px;
+            height: 38px;
+            border: 2px solid transparent;
+            border-radius: 6px;
+            background: var(--bg-2);
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            transition: border-color 0.12s, background 0.12s;
+        }
+        .icon-pick-btn:hover { background: var(--surface); border-color: var(--border); }
+        .icon-pick-btn.active { border-color: #c8102e; background: rgba(200,16,46,0.1); }
 
         .btn-primary {
             background: var(--accent);
@@ -738,6 +754,43 @@
                 </div>
             </div>
 
+            <!-- WEATHER SECTION -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-label"><span class="accent-dot">●</span> Weather Forecast</span>
+                    <button class="btn btn-ghost" id="fetchWeatherBtn" onclick="fetchLiveWeather()" style="padding:3px 10px; font-size:9px;">⚡ Fetch</button>
+                </div>
+                <div class="section-body">
+                    <div class="field">
+                        <label>Location</label>
+                        <input type="text" id="weatherLocation" placeholder="e.g. Navi Mumbai" autocomplete="off"
+                            oninput="scheduleUpdate()" />
+                    </div>
+                    <div class="field">
+                        <label>Condition</label>
+                        <input type="text" id="weatherTodayDesc" placeholder="e.g. Partly cloudy" autocomplete="off"
+                            oninput="scheduleUpdate()" />
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <div class="field" style="flex:1;">
+                            <label>High (°C)</label>
+                            <input type="number" id="weatherTodayHigh" placeholder="e.g. 36" autocomplete="off"
+                                oninput="scheduleUpdate()" />
+                        </div>
+                        <div class="field" style="flex:1;">
+                            <label>Low (°C)</label>
+                            <input type="number" id="weatherTodayLow" placeholder="e.g. 27" autocomplete="off"
+                                oninput="scheduleUpdate()" />
+                        </div>
+                    </div>
+                    <div class="field" style="margin-top:4px;">
+                        <label>Icon</label>
+                        <input type="hidden" id="weatherIcon" value="⛅" />
+                        <div id="weatherIconGrid" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;"></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- MARKETS SECTION -->
             <div class="section">
                 <div class="section-header">
@@ -839,6 +892,15 @@
         function populateForm(data) {
             document.getElementById('hdrDate').value = data.date || '';
             document.getElementById('hdrRni').value = data.rni || '';
+
+            // Weather
+            if (data.weather) {
+                document.getElementById('weatherLocation').value = data.weather.location || '';
+                document.getElementById('weatherTodayDesc').value = data.weather.today_desc || '';
+                document.getElementById('weatherTodayHigh').value = data.weather.today_high || '';
+                document.getElementById('weatherTodayLow').value = data.weather.today_low || '';
+                if (data.weather.today_icon) syncWeatherIconPicker(data.weather.today_icon);
+            }
 
             const ml = document.getElementById('marketsList');
             if (ml) { ml.innerHTML = ''; (data.markets || []).forEach((m, i) => buildMarketRow(m, i, ml)); }
@@ -951,6 +1013,13 @@
             return {
                 date: val('hdrDate'),
                 rni: val('hdrRni'),
+                weather: {
+                    location: val('weatherLocation'),
+                    today_desc: val('weatherTodayDesc'),
+                    today_high: val('weatherTodayHigh'),
+                    today_low: val('weatherTodayLow'),
+                    today_icon: document.getElementById('weatherIcon')?.value || '⛅',
+                },
                 stories,
                 markets: getMarketsData(),
             };
@@ -1122,6 +1191,80 @@
             return markets;
         }
 
+        const WEATHER_OPTIONS = [
+            { value: '⛅', label: 'Partly Cloudy',  condition: 'Partly cloudy',  bi: 'bi-cloud-sun' },
+            { value: '☀',  label: 'Clear / Sunny',  condition: 'Clear sky',       bi: 'bi-sun' },
+            { value: '🌤', label: 'Mostly Clear',   condition: 'Mainly clear',    bi: 'bi-cloud-sun-fill' },
+            { value: '☁',  label: 'Cloudy',         condition: 'Overcast',        bi: 'bi-cloud' },
+            { value: '🌫', label: 'Foggy',           condition: 'Foggy',           bi: 'bi-cloud-fog' },
+            { value: '☔', label: 'Rainy',           condition: 'Moderate rain',   bi: 'bi-cloud-rain' },
+            { value: '⛈', label: 'Thunderstorm',    condition: 'Thunderstorm',    bi: 'bi-cloud-lightning-rain' },
+            { value: '❄',  label: 'Snowy / Cold',   condition: 'Snow',            bi: 'bi-snow' },
+        ];
+
+        function buildWeatherIconGrid() {
+            const grid = document.getElementById('weatherIconGrid');
+            if (!grid) return;
+            const current = document.getElementById('weatherIcon')?.value || '⛅';
+            grid.innerHTML = '';
+            WEATHER_OPTIONS.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'icon-pick-btn' + (opt.value === current ? ' active' : '');
+                btn.dataset.icon = opt.value;
+                btn.title = opt.label;
+                btn.onclick = () => selectWeatherIcon(opt.value);
+                btn.innerHTML = `<i class="bi ${opt.bi}" style="font-size:18px; pointer-events:none;"></i>`;
+                grid.appendChild(btn);
+            });
+        }
+
+        function selectWeatherIcon(icon) {
+            document.getElementById('weatherIcon').value = icon;
+            document.querySelectorAll('#weatherIconGrid .icon-pick-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.icon === icon);
+            });
+            // Auto-sync condition label
+            const opt = WEATHER_OPTIONS.find(o => o.value === icon);
+            if (opt) document.getElementById('weatherTodayDesc').value = opt.condition;
+            scheduleUpdate();
+        }
+
+        function syncWeatherIconPicker(icon) {
+            document.getElementById('weatherIcon').value = icon;
+            document.querySelectorAll('#weatherIconGrid .icon-pick-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.icon === icon);
+            });
+        }
+
+        async function fetchLiveWeather() {
+            let loc = val('weatherLocation');
+            if (!loc) {
+                loc = "Navi Mumbai";
+                document.getElementById('weatherLocation').value = loc;
+            }
+            const btn = document.getElementById('fetchWeatherBtn');
+            if (btn) { btn.disabled = true; btn.textContent = '⏳ Fetching…'; }
+            try {
+                const res = await fetch(`{{ api_prefix|default('/day9-2-editor') }}/api/weather/fetch?location=${encodeURIComponent(loc)}`);
+                const data = await res.json();
+                if (data.error) throw new Error(data.error);
+                document.getElementById('weatherLocation').value = data.location || loc;
+                document.getElementById('weatherTodayDesc').value = data.today_desc || '';
+                document.getElementById('weatherTodayHigh').value = data.today_high || '';
+                document.getElementById('weatherTodayLow').value = data.today_low || '';
+                if (data.today_icon) syncWeatherIconPicker(data.today_icon);
+                await sendUpdate();
+                setStatus('saved', 'WEATHER UPDATED');
+                setTimeout(() => setStatus('', 'READY'), 2200);
+            } catch (e) {
+                setStatus('error', 'FETCH FAILED: ' + e.message);
+                setTimeout(() => setStatus('', 'READY'), 3500);
+            } finally {
+                if (btn) { btn.textContent = '⚡ Fetch'; btn.disabled = false; }
+            }
+        }
+
         async function fetchLiveMarkets() {
             const btn = document.getElementById('fetchLiveBtn');
             btn.textContent = '⏳ Fetching…';
@@ -1178,6 +1321,7 @@
         function escAttr(s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
         /* ── Boot ────────────────────────────────────────────────────────────────── */
+        buildWeatherIconGrid();
         loadFields();
 
         /* ── Auto-sync initial date into preview after 2 s ──────────────────────── */

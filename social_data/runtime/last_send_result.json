@@ -1,0 +1,48 @@
+{
+  "timestamp": "2026-05-30T11:51:19.038323Z",
+  "total": 10,
+  "success_count": 10,
+  "results": [
+    {
+      "endpoint": "/day8-editor/api/import_json",
+      "ok": true
+    },
+    {
+      "endpoint": "/day9-editor/api/import_json",
+      "ok": true
+    },
+    {
+      "endpoint": "/day6temp-editor/api/import_json",
+      "ok": true
+    },
+    {
+      "endpoint": "/template1-editor/api/import_json",
+      "ok": true
+    },
+    {
+      "endpoint": "/day11-editor/api/import_json",
+      "ok": true
+    },
+    {
+      "endpoint": "/day12-editor/api/import_json",
+      "ok": true
+    },
+    {
+      "endpoint": "/day15-editor/api/import_json",
+      "ok": true
+    },
+    {
+      "endpoint": "/day12-2-editor/api/import_json",
+      "ok": true
+    },
+    {
+      "endpoint": "/day9-2-editor/api/import_json",
+      "ok": true
+    },
+    {
+      "endpoint": "/day17-editor/api/import_json",
+      "ok": true
+    }
+  ],
+  "failed": []
+}

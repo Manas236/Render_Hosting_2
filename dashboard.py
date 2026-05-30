@@ -151,6 +151,11 @@ DASHBOARD_HTML = """
           <div class="dash-btn-title">Campaign Analytics</div>
           <div class="dash-btn-desc">Mailchimp send stats — opens, clicks, bounces, unsubscribes.</div>
         </a>
+        <a href="{{ url_for('social_pipeline_bp.dashboard') }}" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+          <span class="dash-btn-icon">🚀</span>
+          <div class="dash-btn-title">Social Pipeline</div>
+          <div class="dash-btn-desc">Monitor and reset social post orchestration state.</div>
+        </a>
       </div>
     </div>
     <div class="footer-note">NEWSBAND JOURNALISM PLATFORM &nbsp;·&nbsp; CONFIDENTIAL</div>
