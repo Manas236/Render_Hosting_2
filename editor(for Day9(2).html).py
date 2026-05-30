@@ -9,8 +9,37 @@ adapted from editor(for Day12(2).html).py.
 
 import io
 import re
+from urllib.parse import quote as _url_quote
 from flask import Blueprint, request, jsonify, render_template, send_file, Response
 from bs4 import BeautifulSoup, NavigableString
+
+# WMO weather code → (description, icon character)
+_WMO_CODES = {
+    0:  ("Clear sky",              "☀"),
+    1:  ("Mainly clear",           "☀"),
+    2:  ("Partly cloudy",          "⛅"),
+    3:  ("Overcast",               "☁"),
+    45: ("Foggy",                  "🌫"),
+    48: ("Icy fog",                "🌫"),
+    51: ("Light drizzle",          "☔"),
+    53: ("Drizzle",                "☔"),
+    55: ("Dense drizzle",          "☔"),
+    61: ("Slight rain",            "☔"),
+    63: ("Moderate rain",          "☔"),
+    65: ("Heavy rain",             "☔"),
+    71: ("Light snow",             "❄"),
+    73: ("Snow",                   "❄"),
+    75: ("Heavy snow",             "❄"),
+    77: ("Snow grains",            "❄"),
+    80: ("Rain showers",           "☔"),
+    81: ("Moderate showers",       "☔"),
+    82: ("Heavy showers",          "☔"),
+    85: ("Snow showers",           "❄"),
+    86: ("Heavy snow showers",     "❄"),
+    95: ("Thunderstorm",           "⛈"),
+    96: ("Thunderstorm with hail", "⛈"),
+    99: ("Heavy thunderstorm",     "⛈"),
+}
 
 day9_2_editor_bp = Blueprint('day9_2_editor', __name__)
 
@@ -150,6 +179,49 @@ def _format_change_str(label: str, value_str: str, pct_float: float, positive: b
         return f"{arrow} {int(round(abs_change)):,}  ({sign}{abs(pct_float):.2f}%)"
 
 
+# ── Weather section helpers ───────────────────────────────────────────────────
+
+def _find_weather_data(soup):
+    weather = {}
+
+    desc_today = soup.find(class_="weather-desc-today")
+    if desc_today:
+        weather["today_desc"] = desc_today.get_text().strip()
+
+    high_today = soup.find(class_="weather-high-today")
+    if high_today:
+        m = re.search(r'\d+', high_today.get_text())
+        if m:
+            weather["today_high"] = m.group()
+
+    low_today = soup.find(class_="weather-low-today")
+    if low_today:
+        m = re.search(r'\d+', low_today.get_text())
+        if m:
+            weather["today_low"] = m.group()
+
+    for tag in soup.find_all(["table", "td"]):
+        style_val = tag.get("style", "")
+        if "background-color: #fdf8ef" in style_val or tag.get("bgcolor") == "#fdf8ef":
+            for p in tag.find_all("p"):
+                text = p.get_text().strip()
+                if "·" in text or "·" in text:
+                    parts = re.split(r'\s*[··]\s*', text)
+                    weather["location"] = parts[0].strip()
+                    break
+            for td in tag.find_all("td"):
+                if "font-size: 30px" in td.get("style", ""):
+                    icon_text = td.get_text().strip()
+                    if icon_text:
+                        weather["today_icon"] = icon_text
+                    break
+            break
+
+    weather.setdefault("location", "Navi Mumbai")
+    weather.setdefault("today_icon", "⛅")
+    return weather
+
+
 # ── Parse: extract current editable fields ────────────────────────────────────
 
 def get_tomorrow_date_str() -> str:
@@ -198,6 +270,9 @@ def parse_fields(html: str) -> dict:
         stories.append(story)
 
     result["stories"] = stories
+
+    # Weather
+    result["weather"] = _find_weather_data(soup)
 
     # Markets
     result["markets"] = _find_market_data(soup)
@@ -343,6 +418,51 @@ def update_html(html: str, data: dict) -> str:
                     divs[2]["style"] = re.sub(
                         r'color:#[0-9a-fA-F]{6}', f'color:{color}', existing_style)
 
+    # Weather
+    weather_data = data.get("weather", {})
+    if weather_data:
+        weather_container = None
+        for tag in soup.find_all("table"):
+            style_val = tag.get("style", "")
+            if "background-color: #fdf8ef" in style_val or tag.get("bgcolor") == "#fdf8ef":
+                weather_container = tag
+                break
+        if weather_container:
+            loc = (weather_data.get("location") or "").strip()
+            t_desc = (weather_data.get("today_desc") or "").strip()
+            t_high = (weather_data.get("today_high") or "").strip()
+            t_low = (weather_data.get("today_low") or "").strip()
+            t_icon = (weather_data.get("today_icon") or "⛅").strip() or "⛅"
+
+            new_tr_html = f"""
+                                            <tr>
+                                                <td style="padding: 14px 14px 14px 18px; vertical-align: middle;" valign="middle">
+                                                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                                                        <tr>
+                                                            <td style="font-size: 30px; line-height: 30px; padding-right: 12px; vertical-align: middle; width: 38px;" valign="middle" width="38">{t_icon}</td>
+                                                            <td style="vertical-align: middle;" valign="middle">
+                                                                <p style="margin: 0 0 3px 0; font-family: 'Courier New', Courier, monospace; font-size: 9px; font-weight: bold; color: #b8860b; letter-spacing: 1.5px; text-transform: uppercase; line-height: 13px;">{loc} &#183; Today's Forecast</p>
+                                                                <p class="weather-desc-today" style="margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #6b5c3e; line-height: 17px;">{t_desc}</p>
+                                                            </td>
+                                                            <td style="vertical-align: middle; text-align: right; padding-left: 16px; white-space: nowrap;" valign="middle" align="right">
+                                                                <p style="margin: 0 0 2px 0; font-family: 'Courier New', Courier, monospace; font-size: 8px; font-weight: bold; letter-spacing: 2px; color: #b8860b; text-transform: uppercase; line-height: 11px; text-align: right;">Expected</p>
+                                                                <p style="margin: 0 0 2px 0; line-height: 22px; text-align: right;">
+                                                                    <span class="weather-high-today" style="font-family: 'Courier New', Courier, monospace; font-size: 18px; font-weight: bold; color: #b8532d;">{t_high}&#176;</span>
+                                                                    <span style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #aaaaaa;"> / </span>
+                                                                    <span class="weather-low-today" style="font-family: 'Courier New', Courier, monospace; font-size: 18px; font-weight: bold; color: #1e40af;">{t_low}&#176;</span>
+                                                                    <span style="font-family: Arial, Helvetica, sans-serif; font-size: 9px; color: #999999;"> c</span>
+                                                                </p>
+                                                                <p style="margin: 0; font-family: 'Courier New', Courier, monospace; font-size: 8px; color: #c4a85a; letter-spacing: 1px; text-align: right; line-height: 11px;">High &#183; Low</p>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+            """
+            new_tr_soup = BeautifulSoup(new_tr_html, "html.parser")
+            weather_container.clear()
+            weather_container.append(new_tr_soup)
+
     return str(soup)
 
 
@@ -382,6 +502,110 @@ def api_export():
         download_name="newsband_day9_2_newsletter.html",
         mimetype="text/html",
     )
+
+
+@day9_2_editor_bp.route("/api/weather/fetch")
+def api_weather_fetch():
+    import requests as _req
+    location = request.args.get("location", "Navi Mumbai").strip()
+
+    res_data = {
+        "location": location,
+        "today_desc": "Partly cloudy",
+        "today_high": "35",
+        "today_low": "27",
+        "today_icon": "⛅",
+    }
+
+    def clean_temp(val, default="27"):
+        if val is None:
+            return default
+        try:
+            n = int(round(float(str(val))))
+            if "mumbai" in location.lower() and n < 24:
+                return "24"
+            return str(n)
+        except Exception:
+            return default
+
+    # 1. Open-Meteo (geocoding + forecast — free, no key required)
+    try:
+        hdrs = {"User-Agent": "Mozilla/5.0"}
+        geo_url = (
+            f"https://geocoding-api.open-meteo.com/v1/search"
+            f"?name={_url_quote(location)}&count=1&language=en&format=json"
+        )
+        geo_resp = _req.get(geo_url, headers=hdrs, timeout=8)
+        if geo_resp.status_code == 200:
+            geo_results = geo_resp.json().get("results", [])
+            if geo_results:
+                r = geo_results[0]
+                lat, lon = r["latitude"], r["longitude"]
+                place_name = r.get("name", location)
+
+                wx_url = (
+                    f"https://api.open-meteo.com/v1/forecast"
+                    f"?latitude={lat}&longitude={lon}"
+                    f"&daily=temperature_2m_max,temperature_2m_min,weather_code"
+                    f"&timezone=auto&forecast_days=2"
+                )
+                wx_resp = _req.get(wx_url, headers=hdrs, timeout=8)
+                if wx_resp.status_code == 200:
+                    daily = wx_resp.json().get("daily", {})
+                    maxtemps = daily.get("temperature_2m_max", [])
+                    mintemps = daily.get("temperature_2m_min", [])
+                    codes = daily.get("weather_code") or daily.get("weathercode", [])
+                    if maxtemps:
+                        wmo = int(codes[0]) if codes else 2
+                        desc, icon = _WMO_CODES.get(wmo, ("Partly cloudy", "⛅"))
+                        res_data.update({
+                            "location": place_name,
+                            "today_desc": desc,
+                            "today_high": clean_temp(maxtemps[0], "35"),
+                            "today_low": clean_temp(mintemps[0] if mintemps else None, "27"),
+                            "today_icon": icon,
+                        })
+                        print(f"DEBUG [Weather]: Open-Meteo OK → {place_name} {desc} {maxtemps[0]}/{mintemps[0] if mintemps else '?'}°C")
+                        return jsonify(res_data)
+    except Exception as e:
+        print(f"DEBUG [Weather]: Open-Meteo failed ({e}), trying wttr.in…")
+
+    # 2. Fallback — wttr.in JSON API
+    try:
+        loc_query = location.replace(" ", "_")
+        url = f"https://wttr.in/{loc_query}?format=j1"
+        hdrs = {"User-Agent": "Mozilla/5.0"}
+        resp = _req.get(url, headers=hdrs, timeout=8)
+        if resp.status_code == 200:
+            weather_days = resp.json().get("weather", [])
+            if weather_days:
+                day_data = weather_days[0]
+                res_data["today_high"] = clean_temp(day_data.get("maxtempC"), "35")
+                res_data["today_low"] = clean_temp(day_data.get("mintempC"), "27")
+
+                hourly = day_data.get("hourly", [])
+                desc, wmo_code = "Partly cloudy", None
+                if hourly:
+                    mid = hourly[len(hourly) // 2]
+                    desc_list = mid.get("weatherDesc", [])
+                    if desc_list:
+                        desc = desc_list[0].get("value", desc)
+                    raw_code = mid.get("weatherCode")
+                    if raw_code is not None:
+                        wmo_code = int(raw_code)
+
+                res_data["today_desc"] = desc
+                if wmo_code is not None:
+                    _, icon = _WMO_CODES.get(wmo_code, ("", "⛅"))
+                    res_data["today_icon"] = icon
+
+                print(f"DEBUG [Weather]: wttr.in OK → {location} {desc}")
+                return jsonify(res_data)
+    except Exception as e:
+        print(f"DEBUG [Weather]: wttr.in failed ({e})")
+
+    res_data["warning"] = "Live fetch unavailable; showing defaults."
+    return jsonify(res_data), 200
 
 
 @day9_2_editor_bp.route("/api/markets/fetch")

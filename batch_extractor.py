@@ -726,6 +726,9 @@ def api_batch_stream():
 @batch_extractor_bp.route("/api/send", methods=["POST"])
 def api_send():
     """Proxy: forward stories JSON to the template app's /api/import_json internally."""
+    import datetime
+    from social_utils import write_runtime_file
+
     payload = flask_request.json or {}
     endpoints = [
         "/day8-editor/api/import_json",
@@ -740,8 +743,8 @@ def api_send():
         "/day17-editor/api/import_json",
     ]
 
+    results = []
     success_count = 0
-    errors = []
 
     from flask import current_app
     client = current_app.test_client()
@@ -752,18 +755,35 @@ def api_send():
             resp = client.post(target, json=payload)
             if resp.status_code == 200:
                 success_count += 1
+                results.append({"endpoint": target, "ok": True})
             else:
-                logger.error(
-                    f"[X] Forward failed to {target}: returned {resp.status_code}")
-                errors.append(f"{target}: returned {resp.status_code}")
+                logger.error(f"[X] Forward failed to {target}: returned {resp.status_code}")
+                results.append({"endpoint": target, "ok": False, "reason": f"HTTP {resp.status_code}"})
         except Exception as e:
             logger.error(f"[X] Forward failed to {target}: {e}")
-            errors.append(f"{target}: {str(e)}")
+            results.append({"endpoint": target, "ok": False, "reason": str(e)[:120]})
+
+    failed_details = [r for r in results if not r['ok']]
+    write_runtime_file('last_send_result.json', {
+        'timestamp': datetime.datetime.utcnow().isoformat() + 'Z',
+        'total': len(endpoints),
+        'success_count': success_count,
+        'results': results,
+        'failed': failed_details,
+    })
+    logger.info(f"[+] Send result persisted: {success_count}/{len(endpoints)} success")
 
     if success_count > 0:
-        return jsonify({"success": True, "message": f"Sent to {success_count} editors", "errors": errors})
+        return jsonify({
+            "success": True,
+            "message": f"Sent to {success_count} editors",
+            "errors": [f"{f['endpoint']}: {f['reason']}" for f in failed_details],
+        })
     else:
-        return jsonify({"error": "Failed to send to any editors", "details": errors}), 502
+        return jsonify({
+            "error": "Failed to send to any editors",
+            "details": [f"{f['endpoint']}: {f['reason']}" for f in failed_details],
+        }), 502
 
 
 if __name__ == "__main__":

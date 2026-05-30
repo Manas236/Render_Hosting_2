@@ -22,6 +22,7 @@ def create_app():
     from batch_extractor import batch_extractor_bp
     from upload_image import upload_image_bp
     from mailchimp_bp import mailchimp_bp
+    from social_pipeline_bp import social_pipeline_bp
     # ── Day 8 Editor (v2 — BS4-based) ──
     import importlib.util
     import sys
@@ -111,6 +112,7 @@ def create_app():
     app.register_blueprint(batch_extractor_bp, url_prefix='/batch-extractor')
     app.register_blueprint(upload_image_bp, url_prefix='/upload-image')
     app.register_blueprint(mailchimp_bp, url_prefix='/mailchimp')
+    app.register_blueprint(social_pipeline_bp)
     # ─────────────────────────────────────────────
     # Health Check (required by Render)
     # ─────────────────────────────────────────────

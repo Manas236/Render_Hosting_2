@@ -6,8 +6,37 @@ Footer, layout structure, CSS, and logo are strictly locked.
 
 import io
 import re
+from urllib.parse import quote as _url_quote
 from flask import Blueprint, request, jsonify, render_template, send_file, Response
 from bs4 import BeautifulSoup, NavigableString
+
+# WMO weather code → (description, icon character)
+_WMO_CODES = {
+    0:  ("Clear sky",              "☀"),
+    1:  ("Mainly clear",           "☀"),
+    2:  ("Partly cloudy",          "⛅"),
+    3:  ("Overcast",               "☁"),
+    45: ("Foggy",                  "🌫"),
+    48: ("Icy fog",                "🌫"),
+    51: ("Light drizzle",          "☔"),
+    53: ("Drizzle",                "☔"),
+    55: ("Dense drizzle",          "☔"),
+    61: ("Slight rain",            "☔"),
+    63: ("Moderate rain",          "☔"),
+    65: ("Heavy rain",             "☔"),
+    71: ("Light snow",             "❄"),
+    73: ("Snow",                   "❄"),
+    75: ("Heavy snow",             "❄"),
+    77: ("Snow grains",            "❄"),
+    80: ("Rain showers",           "☔"),
+    81: ("Moderate showers",       "☔"),
+    82: ("Heavy showers",          "☔"),
+    85: ("Snow showers",           "❄"),
+    86: ("Heavy snow showers",     "❄"),
+    95: ("Thunderstorm",           "⛈"),
+    96: ("Thunderstorm with hail", "⛈"),
+    99: ("Heavy thunderstorm",     "⛈"),
+}
 
 day17_editor_bp = Blueprint('day17_editor', __name__)
 
@@ -164,19 +193,28 @@ def _find_weather_data(soup):
         if m:
             weather["today_low"] = m.group()
 
-    # Location: find weather container, read the "Location · Today's Forecast" paragraph
+    # Location + icon: find weather container
     for tag in soup.find_all(["table", "td"]):
         style_val = tag.get("style", "")
         if "background-color: #fdf8ef" in style_val or tag.get("bgcolor") == "#fdf8ef":
+            # Location from "City · Today's Forecast" paragraph
             for p in tag.find_all("p"):
                 text = p.get_text().strip()
-                if "·" in text:
-                    parts = re.split(r'\s*[·]\s*', text)
+                if "·" in text or "・" in text or "·" in text:
+                    parts = re.split(r'\s*[·・·]\s*', text)
                     weather["location"] = parts[0].strip()
+                    break
+            # Icon from the large-font td
+            for td in tag.find_all("td"):
+                if "font-size: 30px" in td.get("style", ""):
+                    icon_text = td.get_text().strip()
+                    if icon_text:
+                        weather["today_icon"] = icon_text
                     break
             break
 
     weather.setdefault("location", "Navi Mumbai")
+    weather.setdefault("today_icon", "⛅")
     return weather
 
 
@@ -424,13 +462,14 @@ def update_html(html: str, data: dict) -> str:
             t_desc = (weather_data.get("today_desc") or "").strip()
             t_high = (weather_data.get("today_high") or "").strip()
             t_low = (weather_data.get("today_low") or "").strip()
+            t_icon = (weather_data.get("today_icon") or "⛅").strip() or "⛅"
 
             new_tr_html = f"""
                                             <tr>
                                                 <td style="padding: 14px 14px 14px 18px; vertical-align: middle;" valign="middle">
                                                     <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
                                                         <tr>
-                                                            <td style="font-size: 30px; line-height: 30px; padding-right: 12px; vertical-align: middle; width: 38px;" valign="middle" width="38">&#9925;</td>
+                                                            <td style="font-size: 30px; line-height: 30px; padding-right: 12px; vertical-align: middle; width: 38px;" valign="middle" width="38">{t_icon}</td>
                                                             <td style="vertical-align: middle;" valign="middle">
                                                                 <p style="margin: 0 0 3px 0; font-family: Arial, Helvetica, sans-serif; font-size: 9px; font-weight: bold; color: #b8860b; letter-spacing: 1.5px; text-transform: uppercase; line-height: 13px;">{loc} &#183; Today's Forecast</p>
                                                                 <p class="weather-desc-today" style="margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #6b5c3e; line-height: 17px;">{t_desc}</p>
@@ -552,107 +591,107 @@ def api_export():
 @day17_editor_bp.route("/api/weather/fetch")
 def api_weather_fetch():
     import requests as _req
-    import xml.etree.ElementTree as ET
     location = request.args.get("location", "Navi Mumbai").strip()
-    
-    # Initialize response structure
+
     res_data = {
         "location": location,
         "today_desc": "Partly cloudy",
         "today_high": "35",
-        "today_low": "30",
-        "tomorrow_desc": "Sunny",
-        "tomorrow_high": "34",
-        "tomorrow_low": "30"
+        "today_low": "27",
+        "today_icon": "⛅",
     }
-    
-    # Helper to bump Navi Mumbai/Mumbai low temperatures below 30 to 30
-    def clean_temp(t_str, default="30"):
-        if not t_str:
+
+    def clean_temp(val, default="27"):
+        if val is None:
             return default
         try:
-            val = int(t_str)
-            if "mumbai" in location.lower() and val < 30:
-                return "30"
-            return str(val)
+            n = int(round(float(str(val))))
+            if "mumbai" in location.lower() and n < 24:
+                return "24"
+            return str(n)
         except Exception:
-            return t_str
-            
-    # 1. Try MSN Weather
-    try:
-        url = f"https://weather.service.msn.com/data.aspx?src=outlook&weadegreetype=C&culture=en-US&weasearchstr={location.replace(' ', '%20')}"
-        headers = {"User-Agent": "Mozilla/5.0"}
-        resp = _req.get(url, headers=headers, timeout=8)
-        if resp.status_code == 200:
-            root = ET.fromstring(resp.text)
-            weather = root.find('weather')
-            if weather is not None:
-                forecasts = weather.findall('forecast')
-                if forecasts:
-                    day1_idx = 1 if len(forecasts) > 1 else 0
-                    day2_idx = 2 if len(forecasts) > 2 else day1_idx
-                    
-                    f1 = forecasts[day1_idx]
-                    f2 = forecasts[day2_idx]
-                    
-                    res_data["today_high"] = clean_temp(f1.get('high'), "35")
-                    res_data["today_low"] = clean_temp(f1.get('low'), "30")
-                    res_data["today_desc"] = f1.get('skytextday', 'Partly cloudy')
-                    
-                    res_data["tomorrow_high"] = clean_temp(f2.get('high'), "34")
-                    res_data["tomorrow_low"] = clean_temp(f2.get('low'), "30")
-                    res_data["tomorrow_desc"] = f2.get('skytextday', 'Sunny')
-                    
-                    return jsonify(res_data)
-    except Exception as msn_err:
-        print(f"DEBUG [Weather]: MSN Weather failed ({msn_err}), trying fallback wttr.in...")
+            return default
 
-    # 2. Fallback to wttr.in
+    # 1. Open-Meteo (geocoding + forecast — free, no key required)
+    try:
+        hdrs = {"User-Agent": "Mozilla/5.0"}
+        geo_url = (
+            f"https://geocoding-api.open-meteo.com/v1/search"
+            f"?name={_url_quote(location)}&count=1&language=en&format=json"
+        )
+        geo_resp = _req.get(geo_url, headers=hdrs, timeout=8)
+        if geo_resp.status_code == 200:
+            geo_results = geo_resp.json().get("results", [])
+            if geo_results:
+                r = geo_results[0]
+                lat, lon = r["latitude"], r["longitude"]
+                place_name = r.get("name", location)
+
+                wx_url = (
+                    f"https://api.open-meteo.com/v1/forecast"
+                    f"?latitude={lat}&longitude={lon}"
+                    f"&daily=temperature_2m_max,temperature_2m_min,weather_code"
+                    f"&timezone=auto&forecast_days=2"
+                )
+                wx_resp = _req.get(wx_url, headers=hdrs, timeout=8)
+                if wx_resp.status_code == 200:
+                    daily = wx_resp.json().get("daily", {})
+                    maxtemps = daily.get("temperature_2m_max", [])
+                    mintemps = daily.get("temperature_2m_min", [])
+                    # Open-Meteo renamed weathercode → weather_code; support both
+                    codes = daily.get("weather_code") or daily.get("weathercode", [])
+                    if maxtemps:
+                        wmo = int(codes[0]) if codes else 2
+                        desc, icon = _WMO_CODES.get(wmo, ("Partly cloudy", "⛅"))
+                        res_data.update({
+                            "location": place_name,
+                            "today_desc": desc,
+                            "today_high": clean_temp(maxtemps[0], "35"),
+                            "today_low": clean_temp(mintemps[0] if mintemps else None, "27"),
+                            "today_icon": icon,
+                        })
+                        print(f"DEBUG [Weather]: Open-Meteo OK → {place_name} {desc} {maxtemps[0]}/{mintemps[0] if mintemps else '?'}°C")
+                        return jsonify(res_data)
+    except Exception as e:
+        print(f"DEBUG [Weather]: Open-Meteo failed ({e}), trying wttr.in…")
+
+    # 2. Fallback — wttr.in JSON API
     try:
         loc_query = location.replace(" ", "_")
         url = f"https://wttr.in/{loc_query}?format=j1"
-        headers = {"User-Agent": "Mozilla/5.0"}
-        resp = _req.get(url, headers=headers, timeout=8)
+        hdrs = {"User-Agent": "Mozilla/5.0"}
+        resp = _req.get(url, headers=hdrs, timeout=8)
         if resp.status_code == 200:
-            weather_json = resp.json()
-            weather_days = weather_json.get("weather", [])
+            weather_days = resp.json().get("weather", [])
             if weather_days:
-                day1_idx = 1 if len(weather_days) > 1 else 0
-                day2_idx = 2 if len(weather_days) > 2 else day1_idx
-                
-                day1_data = weather_days[day1_idx]
-                day2_data = weather_days[day2_idx]
-                
-                res_data["today_high"] = clean_temp(day1_data.get("maxtempC"), "35")
-                res_data["today_low"] = clean_temp(day1_data.get("mintempC"), "30")
-                
-                # Extract description for day 1
-                hourly1 = day1_data.get("hourly", [])
-                desc1 = "Partly cloudy"
-                if hourly1:
-                    mid_slot = hourly1[len(hourly1)//2]
-                    desc_list = mid_slot.get("weatherDesc", [])
+                day_data = weather_days[0]  # index 0 = today
+                res_data["today_high"] = clean_temp(day_data.get("maxtempC"), "35")
+                res_data["today_low"] = clean_temp(day_data.get("mintempC"), "27")
+
+                hourly = day_data.get("hourly", [])
+                desc, wmo_code = "Partly cloudy", None
+                if hourly:
+                    mid = hourly[len(hourly) // 2]
+                    desc_list = mid.get("weatherDesc", [])
                     if desc_list:
-                        desc1 = desc_list[0].get("value", desc1)
-                res_data["today_desc"] = desc1
-                
-                res_data["tomorrow_high"] = clean_temp(day2_data.get("maxtempC"), "34")
-                res_data["tomorrow_low"] = clean_temp(day2_data.get("mintempC"), "30")
-                
-                # Extract description for day 2
-                hourly2 = day2_data.get("hourly", [])
-                desc2 = "Sunny"
-                if hourly2:
-                    mid_slot = hourly2[len(hourly2)//2]
-                    desc_list = mid_slot.get("weatherDesc", [])
-                    if desc_list:
-                        desc2 = desc_list[0].get("value", desc2)
-                res_data["tomorrow_desc"] = desc2
-                
+                        desc = desc_list[0].get("value", desc)
+                    raw_code = mid.get("weatherCode")
+                    if raw_code is not None:
+                        wmo_code = int(raw_code)
+
+                res_data["today_desc"] = desc
+                if wmo_code is not None:
+                    _, icon = _WMO_CODES.get(wmo_code, ("", "⛅"))
+                    res_data["today_icon"] = icon
+
+                print(f"DEBUG [Weather]: wttr.in OK → {location} {desc}")
                 return jsonify(res_data)
-        return jsonify({"error": "Failed to retrieve weather data from wttr.in"}), 502
     except Exception as e:
-        return jsonify({"error": f"Both MSN and wttr.in failed. Last error: {str(e)}"}), 500
+        print(f"DEBUG [Weather]: wttr.in failed ({e})")
+
+    # Both failed — return defaults so the editor still gets a usable response
+    res_data["warning"] = "Live fetch unavailable; showing defaults."
+    return jsonify(res_data), 200
 
 
 @day17_editor_bp.route("/api/markets/fetch")
