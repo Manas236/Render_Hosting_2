@@ -1,17 +1,38 @@
 from flask import Blueprint, request, jsonify, render_template_string
-import subprocess
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+import uuid
+import time
+from werkzeug.utils import secure_filename
 
 upload_image_bp = Blueprint('upload_image_bp', __name__)
 
-# Save images locally relative to the app so they can be pushed to the same repository
-REPO_PATH = os.path.join(os.path.dirname(
-    os.path.abspath(__file__)), "uploaded_images")
-os.makedirs(REPO_PATH, exist_ok=True)
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploaded_images")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'gif'}
+PUBLIC_BASE_URL = os.environ.get('PUBLIC_BASE_URL', 'https://newsbandnewsletter.in')
+_CLEANUP_AGE_SECONDS = 150 * 86400  # 150 days
+
+
+def cleanup_old_images() -> int:
+    """Delete images older than 150 days. Returns count of files removed."""
+    cutoff = time.time() - _CLEANUP_AGE_SECONDS
+    real_upload_dir = os.path.realpath(UPLOAD_DIR)
+    removed = 0
+    try:
+        for fname in os.listdir(real_upload_dir):
+            fpath = os.path.join(real_upload_dir, fname)
+            real_fpath = os.path.realpath(fpath)
+            # Only delete regular files that live directly inside UPLOAD_DIR
+            if os.path.dirname(real_fpath) != real_upload_dir:
+                continue
+            if os.path.isfile(real_fpath) and os.path.getmtime(real_fpath) < cutoff:
+                os.remove(real_fpath)
+                removed += 1
+    except OSError:
+        pass
+    return removed
+
 
 HTML = """
 <!DOCTYPE html>
@@ -19,7 +40,7 @@ HTML = """
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Git Image Pusher</title>
+  <title>Image Uploader</title>
   <style>
     /* ── Theme variables ── */
     body.theme-dark {
@@ -251,21 +272,6 @@ HTML = """
     .file-name { font-size: 0.85rem; color: var(--text); word-break: break-all; }
     .file-size { font-size: 0.75rem; color: var(--subtext); }
 
-    input[type="text"] {
-      width: 100%;
-      padding: 10px 14px;
-      background: var(--input-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-size: 0.9rem;
-      margin-bottom: 8px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    input[type="text"]:focus { border-color: var(--accent); }
-    .hint { font-size: 0.75rem; color: var(--subtext); margin-bottom: 22px; }
-
     button {
       width: 100%;
       padding: 13px;
@@ -297,7 +303,7 @@ HTML = """
     .output.success { border-color: #22c55e; }
     .output.error   { border-color: #ef4444; }
 
-    /* ── Raw URL box ── */
+    /* ── URL box ── */
     .url-box {
       display: none;
       margin-top: 16px;
@@ -354,9 +360,9 @@ HTML = """
     <button class="theme-btn"        data-theme="sunset"  data-label="Sunset"  onclick="setTheme(this)" title=""></button>
   </div>
 
-  <h1>🖼️ Git Image Pusher</h1>
-  <p class="subtitle">Drop an image — it gets saved and pushed automatically.</p>
-  <div class="repo-badge">📁 {{ repo_path }}</div>
+  <h1>🖼️ Image Uploader</h1>
+  <p class="subtitle">Drop an image — it gets saved and served instantly.</p>
+  <div class="repo-badge">🌐 {{ base_url }}/uploads/</div>
 
   <label>Image</label>
   <div class="drop-zone" id="dropZone">
@@ -374,16 +380,12 @@ HTML = """
     </div>
   </div>
 
-  <label>Commit Message</label>
-  <input type="text" id="commitMsg" placeholder="Leave blank to auto-number (1st commit, 2nd…)" />
-  <p class="hint">✨ Leave blank and it will auto-increment: 1st commit, 2nd commit, 3rd commit…</p>
-
-  <button id="btn" onclick="pushImage()">🚀 Save & Push to GitHub</button>
+  <button id="btn" onclick="uploadImage()">🚀 Upload Image</button>
   <div class="output" id="output"></div>
 
-  <!-- Raw URL box (shown only on success) -->
+  <!-- URL box (shown only on success) -->
   <div class="url-box" id="urlBox">
-    <div class="url-label">🔗 Your image is saved at</div>
+    <div class="url-label">🔗 Your image is available at</div>
     <div class="url-row">
       <a id="rawUrl" class="url-link" href="#" target="_blank"></a>
       <button class="copy-btn" onclick="copyUrl()">📋 Copy</button>
@@ -398,9 +400,9 @@ HTML = """
     document.body.className = 'theme-' + btn.dataset.theme;
     document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    localStorage.setItem('git-pusher-theme', btn.dataset.theme);
+    localStorage.setItem('img-uploader-theme', btn.dataset.theme);
   }
-  const saved = localStorage.getItem('git-pusher-theme');
+  const saved = localStorage.getItem('img-uploader-theme');
   if (saved) {
     const btn = document.querySelector('[data-theme="' + saved + '"]');
     if (btn) setTheme(btn);
@@ -452,7 +454,6 @@ HTML = """
         const input = document.getElementById('fileInput');
         input.files = dt.files;
         previewFile(input);
-        /* flash the drop zone to confirm paste was received */
         dropZone.classList.add('dragover');
         setTimeout(() => dropZone.classList.remove('dragover'), 300);
         break;
@@ -460,13 +461,12 @@ HTML = """
     }
   });
 
-  /* ── Push ── */
-  async function pushImage() {
+  /* ── Upload ── */
+  async function uploadImage() {
     const fileInput = document.getElementById('fileInput');
     const file = fileInput.files[0];
     if (!file) { alert('Please select an image first.'); return; }
 
-    const commitMsg = document.getElementById('commitMsg').value.trim();
     const btn    = document.getElementById('btn');
     const out    = document.getElementById('output');
     const urlBox = document.getElementById('urlBox');
@@ -475,11 +475,10 @@ HTML = """
     urlBox.classList.remove('show');
     out.className = 'output show';
     out.classList.remove('success', 'error');
-    out.textContent = '⏳ Saving image and running git commands...\\n';
+    out.textContent = '⏳ Saving image...\\n';
 
     const formData = new FormData();
     formData.append('image', file);
-    formData.append('commit_msg', commitMsg);
 
     try {
       const res  = await fetch('{{ url_for("upload_image_bp.push") }}', { method: 'POST', body: formData });
@@ -501,10 +500,9 @@ HTML = """
 
       out.classList.add(data.success ? 'success' : 'error');
       out.textContent += data.success
-        ? '✅ Done! Image pushed to GitHub.'
+        ? '✅ Done! Image saved and ready.'
         : '❌ Something went wrong. See details above.';
 
-      /* ── Show raw URL box on success ── */
       if (data.success && data.raw_url) {
         const anchor = document.getElementById('rawUrl');
         anchor.href        = data.raw_url;
@@ -524,91 +522,53 @@ HTML = """
 """
 
 
-def run_cmd(cmd):
-    result = subprocess.run(
-        cmd, cwd=REPO_PATH,
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        text=True, shell=True
-    )
-    return (result.stdout + result.stderr).strip(), result.returncode
-
-
-def ordinal(n):
-    suffix = "th" if 11 <= (n % 100) <= 13 else {
-        1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
-    return f"{n}{suffix} commit"
-
-
-def get_next_commit_label():
-    output, _ = run_cmd("git rev-list --count HEAD")
-    try:
-        return ordinal(int(output.strip()) + 1)
-    except ValueError:
-        return ordinal(1)
-
-
 @upload_image_bp.route('/')
 def index():
-    return render_template_string(HTML, repo_path=REPO_PATH)
+    return render_template_string(HTML, base_url=PUBLIC_BASE_URL)
 
 
 @upload_image_bp.route('/push', methods=['POST'])
 def push():
     image = request.files.get('image')
-    commit_msg = request.form.get('commit_msg', '').strip()
 
-    if not image:
+    if not image or not image.filename:
         return jsonify({'success': False,
                         'steps': [{'icon': '❌', 'name': 'Upload', 'output': 'No image received.'}]})
 
     steps = []
 
-    # Save image
-    save_path = os.path.join(REPO_PATH, image.filename)
+    # Sanitise the original filename
+    original_name = secure_filename(image.filename)
+    if not original_name:
+        return jsonify({'success': False,
+                        'steps': [{'icon': '❌', 'name': 'Validate', 'output': 'Invalid filename.'}]})
+
+    ext = original_name.rsplit('.', 1)[-1].lower() if '.' in original_name else ''
+    if ext not in ALLOWED_EXTENSIONS:
+        return jsonify({'success': False,
+                        'steps': [{'icon': '❌', 'name': 'Validate',
+                                   'output': f'File type .{ext} not allowed. Accepted: {", ".join(sorted(ALLOWED_EXTENSIONS))}.'}]})
+
+    # Unique filename — UUID prefix prevents any collision
+    unique_filename = f"{uuid.uuid4().hex[:12]}_{original_name}"
+    save_path = os.path.join(UPLOAD_DIR, unique_filename)
+
     try:
         image.save(save_path)
-        steps.append(
-            {'icon': '✅', 'name': f'Saved  →  {image.filename}', 'output': ''})
+        steps.append({'icon': '✅', 'name': f'Saved  →  {unique_filename}', 'output': ''})
     except Exception as e:
         return jsonify({'success': False,
                         'steps': [{'icon': '❌', 'name': 'Save image', 'output': str(e)}]})
 
-    if not commit_msg:
-        commit_msg = get_next_commit_label()
+    # Run expiry cleanup on every upload (lightweight, O(n) files in dir)
+    deleted = cleanup_old_images()
+    if deleted > 0:
+        steps.append({'icon': '🧹', 'name': f'Expired {deleted} image(s) older than 150 days', 'output': ''})
 
-    # Render environments often lack the 'origin' remote and run in a detached HEAD state.
-    # We construct the URL directly and sync via rebase before pushing HEAD to main.
-    auth_url = f"https://{GITHUB_TOKEN}@github.com/Manas236/Render_Hosting_2.git" if GITHUB_TOKEN else "https://github.com/Manas236/Render_Hosting_2.git"
+    public_url = f"{PUBLIC_BASE_URL}/uploads/{unique_filename}"
+    steps.append({'icon': '🔗', 'name': 'Public URL ready', 'output': public_url})
 
-    commands = [
-        ('git add .',                     'git add .'),
-        (f'git commit -m "{commit_msg}"',
-         f'git -c user.name="Newsband Image Pusher" -c user.email="bot@newsband.app" commit --allow-empty -m "{commit_msg}"'),
-        ('git pull (sync with remote)',
-         f'git -c user.name="Newsband Image Pusher" -c user.email="bot@newsband.app" pull --no-rebase {auth_url} main'),
-        ('git push to repository',        f'git push {auth_url} HEAD:main'),
-    ]
-
-    success = True
-    for label, cmd in commands:
-        output, code = run_cmd(cmd)
-        if GITHUB_TOKEN:
-            output = output.replace(GITHUB_TOKEN, "***")
-        ok = (code == 0)
-        steps.append({'icon': '✅' if ok else '❌',
-                     'name': label, 'output': output})
-        if not ok:
-            success = False
-            break
-
-    # Build raw GitHub URL (URL-encode spaces just in case)
-    encoded_filename = image.filename.replace(' ', '%20')
-    raw_url = (
-        f"https://raw.githubusercontent.com/Manas236/Render_Hosting_2/main/uploaded_images/{encoded_filename}"
-        if success else None
-    )
-
-    return jsonify({'success': success, 'steps': steps, 'raw_url': raw_url})
+    return jsonify({'success': True, 'steps': steps, 'raw_url': public_url})
 
 
 if __name__ == '__main__':

@@ -531,7 +531,8 @@ def fix_date_br(text: str) -> str:
         if text.startswith(day):
             rest = text[len(day):]
             if re.match(r'^\s*<br\s*/?>', rest, re.I):
-                text = f"{day}<br>{re.sub(r'^\s*<br\s*/?>\s*', '', rest, flags=re.I)}"
+                cleaned_rest = re.sub(r'^\s*<br\s*/?>\s*', '', rest, flags=re.I)
+                text = f"{day}<br>{cleaned_rest}"
             else:
                 text = f"{day}<br>{rest.lstrip()}"
             break

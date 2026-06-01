@@ -125,6 +125,14 @@ def create_app():
     def serve_static(filename):
         return send_from_directory('.', filename)
 
+    # Serve uploaded images — Nginx intercepts this in production;
+    # Flask handles it in dev/fallback.
+    _upload_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploaded_images")
+
+    @app.route('/uploads/<filename>')
+    def serve_upload(filename):
+        return send_from_directory(_upload_dir, filename)
+
     return app
 
 
