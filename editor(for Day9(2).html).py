@@ -13,32 +13,42 @@ from urllib.parse import quote as _url_quote
 from flask import Blueprint, request, jsonify, render_template, send_file, Response
 from bs4 import BeautifulSoup, NavigableString
 
-# WMO weather code → (description, icon character)
+# WMO weather code → (description, colourful emoji icon)
+# Using variation selector U+FE0F to force colour/emoji presentation
+_SUNNY   = "☀️"         # ☀️
+_MCLOUD  = "\U0001F324️"     # 🌤️
+_PCLOUD  = "⛅"               # ⛅  (already emoji-presentation)
+_CLOUD   = "☁️"         # ☁️
+_FOG     = "\U0001F32B️"     # 🌫️
+_RAIN    = "\U0001F327️"     # 🌧️
+_SNOW    = "\U0001F328️"     # 🌨️
+_STORM   = "⛈️"         # ⛈️
+
 _WMO_CODES = {
-    0:  ("Clear sky",              "☀"),
-    1:  ("Mainly clear",           "☀"),
-    2:  ("Partly cloudy",          "⛅"),
-    3:  ("Overcast",               "☁"),
-    45: ("Foggy",                  "🌫"),
-    48: ("Icy fog",                "🌫"),
-    51: ("Light drizzle",          "☔"),
-    53: ("Drizzle",                "☔"),
-    55: ("Dense drizzle",          "☔"),
-    61: ("Slight rain",            "☔"),
-    63: ("Moderate rain",          "☔"),
-    65: ("Heavy rain",             "☔"),
-    71: ("Light snow",             "❄"),
-    73: ("Snow",                   "❄"),
-    75: ("Heavy snow",             "❄"),
-    77: ("Snow grains",            "❄"),
-    80: ("Rain showers",           "☔"),
-    81: ("Moderate showers",       "☔"),
-    82: ("Heavy showers",          "☔"),
-    85: ("Snow showers",           "❄"),
-    86: ("Heavy snow showers",     "❄"),
-    95: ("Thunderstorm",           "⛈"),
-    96: ("Thunderstorm with hail", "⛈"),
-    99: ("Heavy thunderstorm",     "⛈"),
+    0:  ("Clear sky",              _SUNNY),
+    1:  ("Mainly clear",           _MCLOUD),
+    2:  ("Partly cloudy",          _PCLOUD),
+    3:  ("Overcast",               _CLOUD),
+    45: ("Foggy",                  _FOG),
+    48: ("Icy fog",                _FOG),
+    51: ("Light drizzle",          _RAIN),
+    53: ("Drizzle",                _RAIN),
+    55: ("Dense drizzle",          _RAIN),
+    61: ("Slight rain",            _RAIN),
+    63: ("Moderate rain",          _RAIN),
+    65: ("Heavy rain",             _RAIN),
+    71: ("Light snow",             _SNOW),
+    73: ("Snow",                   _SNOW),
+    75: ("Heavy snow",             _SNOW),
+    77: ("Snow grains",            _SNOW),
+    80: ("Rain showers",           _RAIN),
+    81: ("Moderate showers",       _RAIN),
+    82: ("Heavy showers",          _RAIN),
+    85: ("Snow showers",           _SNOW),
+    86: ("Heavy snow showers",     _SNOW),
+    95: ("Thunderstorm",           _STORM),
+    96: ("Thunderstorm with hail", _STORM),
+    99: ("Heavy thunderstorm",     _STORM),
 }
 
 day9_2_editor_bp = Blueprint('day9_2_editor', __name__)
@@ -200,22 +210,25 @@ def _find_weather_data(soup):
         if m:
             weather["today_low"] = m.group()
 
-    for tag in soup.find_all(["table", "td"]):
-        style_val = tag.get("style", "")
-        if "background-color: #fdf8ef" in style_val or tag.get("bgcolor") == "#fdf8ef":
-            for p in tag.find_all("p"):
-                text = p.get_text().strip()
-                if "·" in text or "·" in text:
-                    parts = re.split(r'\s*[··]\s*', text)
-                    weather["location"] = parts[0].strip()
-                    break
-            for td in tag.find_all("td"):
-                if "font-size: 30px" in td.get("style", ""):
-                    icon_text = td.get_text().strip()
-                    if icon_text:
-                        weather["today_icon"] = icon_text
-                    break
-            break
+    # Find the weather section by its stable id anchor
+    weather_container = soup.find(id="weatherSection")
+    if weather_container:
+        for p in weather_container.find_all("p"):
+            text = p.get_text().strip()
+            if "·" in text or "·" in text:
+                parts = re.split(r"\s*[··]\s*", text)
+                if parts:
+                    # Strip leading bullet / whitespace from location
+                    loc = re.sub(r"^[\s•·•]+", "", parts[0]).strip()
+                    if loc:
+                        weather["location"] = loc
+                break
+        for td in weather_container.find_all("td"):
+            if "font-size: 30px" in td.get("style", ""):
+                icon_text = td.get_text().strip()
+                if icon_text:
+                    weather["today_icon"] = icon_text
+                break
 
     weather.setdefault("location", "Navi Mumbai")
     weather.setdefault("today_icon", "⛅")
@@ -421,12 +434,8 @@ def update_html(html: str, data: dict) -> str:
     # Weather
     weather_data = data.get("weather", {})
     if weather_data:
-        weather_container = None
-        for tag in soup.find_all("table"):
-            style_val = tag.get("style", "")
-            if "background-color: #fdf8ef" in style_val or tag.get("bgcolor") == "#fdf8ef":
-                weather_container = tag
-                break
+        # Find the weather section by its stable id anchor
+        weather_container = soup.find(id="weatherSection")
         if weather_container:
             loc = (weather_data.get("location") or "").strip()
             t_desc = (weather_data.get("today_desc") or "").strip()
@@ -439,7 +448,7 @@ def update_html(html: str, data: dict) -> str:
                                                 <td style="padding: 14px 14px 14px 18px; vertical-align: middle;" valign="middle">
                                                     <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
                                                         <tr>
-                                                            <td style="font-size: 30px; line-height: 30px; padding-right: 12px; vertical-align: middle; width: 38px;" valign="middle" width="38">{t_icon}</td>
+                                                            <td style="font-size: 30px; line-height: 30px; padding-right: 12px; vertical-align: middle; width: 38px; font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;" valign="middle" width="38">{t_icon}</td>
                                                             <td style="vertical-align: middle;" valign="middle">
                                                                 <p style="margin: 0 0 3px 0; font-family: 'Courier New', Courier, monospace; font-size: 9px; font-weight: bold; color: #b8860b; letter-spacing: 1.5px; text-transform: uppercase; line-height: 13px;">{loc} &#183; Today's Forecast</p>
                                                                 <p class="weather-desc-today" style="margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #6b5c3e; line-height: 17px;">{t_desc}</p>
@@ -555,17 +564,19 @@ def api_weather_fetch():
                     maxtemps = daily.get("temperature_2m_max", [])
                     mintemps = daily.get("temperature_2m_min", [])
                     codes = daily.get("weather_code") or daily.get("weathercode", [])
-                    if maxtemps:
-                        wmo = int(codes[0]) if codes else 2
+                    # Use index 1 (tomorrow) — newsletter is scheduled for tomorrow
+                    # but displays as "Today's Forecast" in the newsletter
+                    if len(maxtemps) >= 2:
+                        wmo = int(codes[1]) if len(codes) >= 2 else 2
                         desc, icon = _WMO_CODES.get(wmo, ("Partly cloudy", "⛅"))
                         res_data.update({
                             "location": place_name,
                             "today_desc": desc,
-                            "today_high": clean_temp(maxtemps[0], "35"),
-                            "today_low": clean_temp(mintemps[0] if mintemps else None, "27"),
+                            "today_high": clean_temp(maxtemps[1], "35"),
+                            "today_low": clean_temp(mintemps[1] if len(mintemps) >= 2 else None, "27"),
                             "today_icon": icon,
                         })
-                        print(f"DEBUG [Weather]: Open-Meteo OK → {place_name} {desc} {maxtemps[0]}/{mintemps[0] if mintemps else '?'}°C")
+                        print(f"DEBUG [Weather]: Open-Meteo OK (tomorrow) → {place_name} {desc} {maxtemps[1]}/{mintemps[1] if len(mintemps) >= 2 else '?'}°C")
                         return jsonify(res_data)
     except Exception as e:
         print(f"DEBUG [Weather]: Open-Meteo failed ({e}), trying wttr.in…")
@@ -578,8 +589,9 @@ def api_weather_fetch():
         resp = _req.get(url, headers=hdrs, timeout=8)
         if resp.status_code == 200:
             weather_days = resp.json().get("weather", [])
+            # Use tomorrow's data (index 1); fall back to today if unavailable
             if weather_days:
-                day_data = weather_days[0]
+                day_data = weather_days[1] if len(weather_days) >= 2 else weather_days[0]
                 res_data["today_high"] = clean_temp(day_data.get("maxtempC"), "35")
                 res_data["today_low"] = clean_temp(day_data.get("mintempC"), "27")
 
@@ -599,7 +611,7 @@ def api_weather_fetch():
                     _, icon = _WMO_CODES.get(wmo_code, ("", "⛅"))
                     res_data["today_icon"] = icon
 
-                print(f"DEBUG [Weather]: wttr.in OK → {location} {desc}")
+                print(f"DEBUG [Weather]: wttr.in OK (tomorrow) → {location} {desc}")
                 return jsonify(res_data)
     except Exception as e:
         print(f"DEBUG [Weather]: wttr.in failed ({e})")

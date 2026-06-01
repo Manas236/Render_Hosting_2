@@ -146,6 +146,11 @@ DASHBOARD_HTML = """
           <div class="dash-btn-title">Image Uploader</div>
           <div class="dash-btn-desc">Upload images and get public URLs.</div>
         </a>
+        <a href="{{ url_for('git_pusher_bp.index') }}" target="_blank" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+          <span class="dash-btn-icon">🐙</span>
+          <div class="dash-btn-title">Git Image Pusher</div>
+          <div class="dash-btn-desc">Upload images directly to GitHub repository.</div>
+        </a>
         <a href="{{ url_for('mailchimp_bp.index') }}" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
           <span class="dash-btn-icon">📬</span>
           <div class="dash-btn-title">Campaign Analytics</div>

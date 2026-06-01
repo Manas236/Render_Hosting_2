@@ -749,6 +749,34 @@
                 </div>
             </div>
 
+            <!-- WEATHER SECTION -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-label"><span class="accent-dot">●</span> Weather</span>
+                    <button class="btn btn-ghost" id="fetchWeatherBtn" onclick="fetchWeather()" style="padding:3px 10px; font-size:9px;">⛅ Fetch</button>
+                </div>
+                <div class="section-body">
+                    <div class="field">
+                        <label>Location</label>
+                        <input type="text" id="wxLocation" placeholder="Navi Mumbai" oninput="scheduleUpdate()" autocomplete="off" />
+                    </div>
+                    <div class="field">
+                        <label>Weather Description</label>
+                        <input type="text" id="wxDesc" placeholder="Partly cloudy, evening showers" oninput="scheduleUpdate()" autocomplete="off" />
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <div class="field" style="flex:1;">
+                            <label>High (°C)</label>
+                            <input type="number" id="wxHigh" placeholder="36" oninput="scheduleUpdate()" />
+                        </div>
+                        <div class="field" style="flex:1;">
+                            <label>Low (°C)</label>
+                            <input type="number" id="wxLow" placeholder="27" oninput="scheduleUpdate()" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- STORIES SECTION -->
             <div class="section" style="flex:1;">
                 <div class="section-header">
@@ -842,6 +870,13 @@
 
             const ml = document.getElementById('marketsList');
             if (ml) { ml.innerHTML = ''; (data.markets || []).forEach((m, i) => buildMarketRow(m, i, ml)); }
+
+            // Weather
+            const w = data.weather || {};
+            document.getElementById('wxLocation').value = w.location || '';
+            document.getElementById('wxDesc').value = w.today_desc || '';
+            document.getElementById('wxHigh').value = w.today_high || '';
+            document.getElementById('wxLow').value = w.today_low || '';
 
             const list = document.getElementById('storiesList');
             list.innerHTML = '';
@@ -953,6 +988,7 @@
                 rni: val('hdrRni'),
                 stories,
                 markets: getMarketsData(),
+                weather: getWeatherData(),
             };
         }
 
@@ -1086,9 +1122,9 @@
                                oninput="scheduleUpdate()" autocomplete="off" style="font-size:12px;" />
                     </div>
                     <div class="field" style="flex:1; gap:3px;">
-                        <label style="font-size:8px;">Change</label>
-                        <input type="text" id="mkt${i}_change" value="${escAttr(mkt.change || '')}"
-                               oninput="scheduleUpdate()" autocomplete="off" style="font-size:12px;" />
+                        <label style="font-size:8px;">% Change</label>
+                        <input type="text" id="mkt${i}_pct" value="${escAttr(mkt.pct || '')}"
+                               oninput="scheduleUpdate()" autocomplete="off" style="font-size:12px;" placeholder="e.g. 0.81" />
                     </div>
                 </div>
                 <input type="hidden" id="mkt${i}_label" value="${escAttr(mkt.label || '')}" />
@@ -1114,7 +1150,7 @@
                 markets.push({
                     label: document.getElementById(`mkt${i}_label`).value || '',
                     value: val(`mkt${i}_value`),
-                    change: val(`mkt${i}_change`),
+                    pct: val(`mkt${i}_pct`),
                     positive: document.getElementById(`mkt${i}_pos`).value === '1',
                 });
                 i++;
@@ -1141,6 +1177,44 @@
                 setTimeout(() => setStatus('', 'READY'), 3500);
             } finally {
                 btn.textContent = '⚡ Live';
+                btn.disabled = false;
+            }
+        }
+
+        /* ── Weather ─────────────────────────────────────────────────────────────── */
+        function getWeatherData() {
+            return {
+                location: val('wxLocation'),
+                today_desc: val('wxDesc'),
+                today_high: val('wxHigh'),
+                today_low: val('wxLow'),
+            };
+        }
+
+        async function fetchWeather() {
+            const btn = document.getElementById('fetchWeatherBtn');
+            btn.textContent = '⏳ Fetching…';
+            btn.disabled = true;
+            try {
+                const loc = val('wxLocation') || 'Navi Mumbai';
+                const res = await fetch(
+                    "{{ api_prefix|default('/day15-editor') }}/api/weather/fetch?location=" + encodeURIComponent(loc)
+                );
+                const data = await res.json();
+                if (data.error) throw new Error(data.error);
+                const w = data.weather;
+                document.getElementById('wxLocation').value = w.location || '';
+                document.getElementById('wxDesc').value = w.today_desc || '';
+                document.getElementById('wxHigh').value = w.today_high || '';
+                document.getElementById('wxLow').value = w.today_low || '';
+                await sendUpdate();
+                setStatus('saved', 'WEATHER UPDATED');
+                setTimeout(() => setStatus('', 'READY'), 2200);
+            } catch (e) {
+                setStatus('error', 'WEATHER FAILED: ' + e.message);
+                setTimeout(() => setStatus('', 'READY'), 3500);
+            } finally {
+                btn.textContent = '⛅ Fetch';
                 btn.disabled = false;
             }
         }
