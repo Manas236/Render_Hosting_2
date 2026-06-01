@@ -282,6 +282,77 @@ def _format_change_str(label: str, value_str: str, pct_float: float, positive: b
         return f"{arrow} {int(round(abs_change)):,}  ({sign}{abs(pct_float):.2f}%)"
 
 
+# ── WMO weather codes ─────────────────────────────────────────────────────────
+
+_WMO_CODES = {
+    0:  ("Clear sky",            "☀"),
+    1:  ("Mainly clear",         "☀"),
+    2:  ("Partly cloudy",        "⛅"),
+    3:  ("Overcast",             "☁"),
+    45: ("Fog",                  "🌫"),
+    48: ("Icy fog",              "🌫"),
+    51: ("Light drizzle",        "🌦"),
+    53: ("Moderate drizzle",     "🌦"),
+    55: ("Dense drizzle",        "🌧"),
+    61: ("Light rain",           "🌧"),
+    63: ("Moderate rain",        "🌧"),
+    65: ("Heavy rain",           "🌧"),
+    71: ("Light snow",           "❄"),
+    73: ("Moderate snow",        "❄"),
+    75: ("Heavy snow",           "❄"),
+    77: ("Snow grains",          "❄"),
+    80: ("Light showers",        "🌦"),
+    81: ("Moderate showers",     "🌧"),
+    82: ("Heavy showers",        "⛈"),
+    85: ("Slight snow showers",  "❄"),
+    86: ("Heavy snow showers",   "❄"),
+    95: ("Thunderstorm",         "⛈"),
+    96: ("Thunderstorm w/ hail", "⛈"),
+    99: ("Thunderstorm w/ hail", "⛈"),
+}
+
+
+def _find_weather_data(soup):
+    """
+    Find the Day15 weather band.
+    Returns dict with location, today_desc, today_high, today_low.
+    """
+    weather = {}
+
+    # Location div: letter-spacing:3px + color:#8b2a1f, contains · separator
+    for div in soup.find_all("div"):
+        style = div.get("style", "")
+        if "letter-spacing:3px" in style and "color:#8b2a1f" in style:
+            text = div.get_text()
+            if "·" in text or "Weather" in text:
+                parts = text.split("·")
+                if parts:
+                    weather["location"] = parts[0].strip().strip("\xa0").strip()
+                break
+
+    desc_div = soup.find(class_="weather-desc-today")
+    if desc_div:
+        weather["today_desc"] = desc_div.get_text().strip()
+
+    high_span = soup.find(class_="weather-high-today")
+    if high_span:
+        m = re.search(r"\d+", high_span.get_text())
+        if m:
+            weather["today_high"] = m.group()
+
+    low_span = soup.find(class_="weather-low-today")
+    if low_span:
+        m = re.search(r"\d+", low_span.get_text())
+        if m:
+            weather["today_low"] = m.group()
+
+    weather.setdefault("location", "Navi Mumbai")
+    weather.setdefault("today_desc", "")
+    weather.setdefault("today_high", "")
+    weather.setdefault("today_low", "")
+    return weather
+
+
 # ── Parse: extract current editable fields ────────────────────────────────────
 
 def get_tomorrow_date_str() -> str:
@@ -360,6 +431,9 @@ def parse_fields(html: str) -> dict:
         stories.append(s)
 
     result["stories"] = stories
+
+    # Weather
+    result["weather"] = _find_weather_data(soup)
 
     # Markets
     result["markets"] = _find_market_data(soup)
@@ -519,6 +593,38 @@ def update_html(html: str, data: dict) -> str:
                     color = "#4caf7a" if positive else "#e07a6b"
                     existing_style = divs[2].get("style", "")
                     divs[2]["style"] = re.sub(r'color:#[0-9a-fA-F]{6}', f'color:{color}', existing_style)
+
+    # Weather
+    weather_data = data.get("weather", {})
+    if weather_data:
+        loc = (weather_data.get("location") or "").strip()
+        t_desc = (weather_data.get("today_desc") or "").strip()
+        t_high = (weather_data.get("today_high") or "").strip()
+        t_low = (weather_data.get("today_low") or "").strip()
+
+        if loc:
+            for div in soup.find_all("div"):
+                style = div.get("style", "")
+                if "letter-spacing:3px" in style and "color:#8b2a1f" in style:
+                    text = div.get_text()
+                    if "·" in text or "Weather" in text:
+                        _set_text(div, f"{loc}\xa0·\xa0Today's Weather")
+                        break
+
+        if t_desc:
+            desc_div = soup.find(class_="weather-desc-today")
+            if desc_div:
+                _set_text(desc_div, t_desc)
+
+        if t_high:
+            high_span = soup.find(class_="weather-high-today")
+            if high_span:
+                _set_text(high_span, f"{t_high}°")
+
+        if t_low:
+            low_span = soup.find(class_="weather-low-today")
+            if low_span:
+                _set_text(low_span, f"{t_low}°")
 
     return str(soup)
 
@@ -727,6 +833,63 @@ def api_reset():
     global _current_html
     _current_html = BASE_HTML
     return jsonify({"success": True})
+
+
+@day15_editor_bp.route("/api/weather/fetch")
+def api_weather_fetch():
+    import requests as _req
+    location = request.args.get("location", "Navi Mumbai").strip() or "Navi Mumbai"
+    try:
+        hdrs = {"User-Agent": "Mozilla/5.0 (Newsband/1.0; +https://newsband.in)"}
+
+        # Geocode via Nominatim
+        geo_resp = _req.get(
+            "https://nominatim.openstreetmap.org/search",
+            params={"q": location, "format": "json", "limit": 1},
+            headers=hdrs, timeout=8,
+        )
+        geo_data = geo_resp.json() if geo_resp.status_code == 200 else []
+        if not geo_data:
+            return jsonify({"error": f"Could not geocode '{location}'"}), 400
+        lat, lon = geo_data[0]["lat"], geo_data[0]["lon"]
+
+        # Fetch from Open-Meteo (free, no API key)
+        wx_resp = _req.get(
+            "https://api.open-meteo.com/v1/forecast",
+            params={
+                "latitude": lat, "longitude": lon,
+                "daily": "temperature_2m_max,temperature_2m_min,weather_code",
+                "timezone": "auto", "forecast_days": 2,
+            },
+            headers=hdrs, timeout=8,
+        )
+        if wx_resp.status_code != 200:
+            return jsonify({"error": "Weather API unavailable"}), 500
+
+        daily = wx_resp.json().get("daily", {})
+        maxtemps = daily.get("temperature_2m_max", [None, None])
+        mintemps = daily.get("temperature_2m_min", [None, None])
+        codes = daily.get("weather_code") or daily.get("weathercode", [2, 2])
+
+        # index 1 = tomorrow (newsletter is scheduled for the next day)
+        wmo = int(codes[1]) if len(codes) > 1 else 2
+        desc, _ = _WMO_CODES.get(wmo, ("Partly cloudy", "⛅"))
+        tmrw_high = maxtemps[1] if len(maxtemps) > 1 else None
+        tmrw_low  = mintemps[1] if len(mintemps) > 1 else None
+        today_high = str(round(tmrw_high)) if tmrw_high is not None else "—"
+        today_low  = str(round(tmrw_low))  if tmrw_low  is not None else "—"
+
+        print(f"DEBUG [Weather/Day15]: {location} tomorrow → {desc} {today_high}°/{today_low}°C")
+        return jsonify({
+            "weather": {
+                "location": location,
+                "today_desc": desc,
+                "today_high": today_high,
+                "today_low": today_low,
+            }
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @day15_editor_bp.route("/api/import_json", methods=["POST"])

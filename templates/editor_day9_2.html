@@ -191,18 +191,21 @@
 
         .icon-pick-btn {
             font-size: 20px;
-            width: 38px;
-            height: 38px;
+            width: 40px;
+            height: 40px;
             border: 2px solid transparent;
             border-radius: 6px;
-            background: var(--bg-2);
+            background: var(--surface);
             cursor: pointer;
             padding: 0;
             line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             transition: border-color 0.12s, background 0.12s;
         }
-        .icon-pick-btn:hover { background: var(--surface); border-color: var(--border); }
-        .icon-pick-btn.active { border-color: #c8102e; background: rgba(200,16,46,0.1); }
+        .icon-pick-btn:hover { background: var(--bg); border-color: var(--border); }
+        .icon-pick-btn.active { border-color: var(--accent); background: var(--accent-dim); }
 
         .btn-primary {
             background: var(--accent);
@@ -1192,14 +1195,14 @@
         }
 
         const WEATHER_OPTIONS = [
-            { value: '⛅', label: 'Partly Cloudy',  condition: 'Partly cloudy',  bi: 'bi-cloud-sun' },
-            { value: '☀',  label: 'Clear / Sunny',  condition: 'Clear sky',       bi: 'bi-sun' },
-            { value: '🌤', label: 'Mostly Clear',   condition: 'Mainly clear',    bi: 'bi-cloud-sun-fill' },
-            { value: '☁',  label: 'Cloudy',         condition: 'Overcast',        bi: 'bi-cloud' },
-            { value: '🌫', label: 'Foggy',           condition: 'Foggy',           bi: 'bi-cloud-fog' },
-            { value: '☔', label: 'Rainy',           condition: 'Moderate rain',   bi: 'bi-cloud-rain' },
-            { value: '⛈', label: 'Thunderstorm',    condition: 'Thunderstorm',    bi: 'bi-cloud-lightning-rain' },
-            { value: '❄',  label: 'Snowy / Cold',   condition: 'Snow',            bi: 'bi-snow' },
+            { value: '⛅',   label: 'Partly Cloudy', condition: 'Partly cloudy'  },
+            { value: '☀️',  label: 'Clear / Sunny',  condition: 'Clear sky'       },
+            { value: '🌤️', label: 'Mostly Clear',   condition: 'Mainly clear'    },
+            { value: '☁️',  label: 'Overcast',       condition: 'Overcast'        },
+            { value: '🌫️', label: 'Foggy',           condition: 'Foggy'           },
+            { value: '🌧️', label: 'Rainy',           condition: 'Moderate rain'   },
+            { value: '⛈️', label: 'Thunderstorm',    condition: 'Thunderstorm'    },
+            { value: '🌨️', label: 'Snowy',           condition: 'Snow'            },
         ];
 
         function buildWeatherIconGrid() {
@@ -1214,7 +1217,7 @@
                 btn.dataset.icon = opt.value;
                 btn.title = opt.label;
                 btn.onclick = () => selectWeatherIcon(opt.value);
-                btn.innerHTML = `<i class="bi ${opt.bi}" style="font-size:18px; pointer-events:none;"></i>`;
+                btn.innerHTML = `<span style="font-size:22px; font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif; pointer-events:none; line-height:1;">${opt.value}</span>`;
                 grid.appendChild(btn);
             });
         }
