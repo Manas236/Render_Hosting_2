@@ -36,11 +36,36 @@ All blueprints are registered in `app.py` via `create_app()`.
 | `extractor.py` | `extractor_bp` — single-URL news extractor |
 | `batch_extractor.py` | `batch_extractor_bp` — parallel article processing (SSE) |
 | `codeview.py` | `codeview_bp` — HTML viewer + ZIP download |
-| `upload_image.py` | `upload_image_bp` — push images to GitHub |
-| `mailchimp_bp.py` | `mailchimp_bp` — Mailchimp campaign analytics |
+| `upload_image.py` | `upload_image_bp` (`/upload-image`) — push images to GitHub |
+| `upload2.py` | `git_pusher_bp` (`/git-pusher`) — Git Image Pusher: save images locally + commit/push to the repo |
+| `mailchimp_bp.py` | `mailchimp_bp` (`/mailchimp`) — Mailchimp campaign analytics UI |
+| `mailchimp.py` | Mailchimp API data-fetch helpers (campaigns/reports), used by the blueprint |
 | `social_pipeline_bp.py` | `social_pipeline_bp` — Social Pipeline dashboard + API |
 | `social_utils.py` | Shared utilities for social pipeline state management |
-| `editor_*.py` / `app11.py` | Per-template newsletter editors (Day 6–17, Template 1) |
+| `editor_*.py` / `app11.py` / `editor(for Day*.html).py` | Per-template newsletter editors (see editor table below) |
+
+### Registered Editor Blueprints
+
+All editors are BS4-based and registered in `create_app()`. Several are loaded dynamically
+via `importlib` because their filenames contain parentheses/spaces.
+
+| Module | URL prefix |
+|---|---|
+| `editor_day8_v2.py` | `/day8-editor` |
+| `editor(for Day9.html).py` | `/day9-editor` |
+| `editor_day6temp.py` | `/day6temp-editor` |
+| `editor_template1.py` | `/template1-editor` |
+| `app11.py` | `/day11-editor` |
+| `editor(for Day12.html).py` | `/day12-editor` |
+| `editor(for Day15.html).py` | `/day15-editor` — includes weather panel |
+| `editor(for Day12(2).html).py` | `/day12-2-editor` |
+| `editor(for Day9(2).html).py` | `/day9-2-editor` — includes markets ticker |
+| `editor(for Day17.html).py` | `/day17-editor` — includes market snapshot |
+
+> Note: `editor.py`, `editor(for Day8.html).py`, and `editor(for Day12.html).py`'s siblings
+> may exist on disk as older/unregistered variants; only the blueprints listed above are wired
+> into the app. Utility scripts (`backup.py`, `merge_excel.py`, `test_imports.py`) and the
+> `scratch/` directory are dev-only and not part of the served app.
 
 ---
 

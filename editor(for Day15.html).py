@@ -151,12 +151,17 @@ def _find_twin_stories(soup):
         if "font-size:14px" in style and "line-height:1.55" in style and "color:#3a3a3a" in style and "text-align:justify" in style:
             twin_summaries.append(td)
 
-    # Find "Read →" links
-    read_links = []
+    # Find twin wrapper <a> tags — contain max-width:320px images (distinct from
+    # feature at 754px and compact at 240px). The "Read →" text is in a <span>,
+    # not a separate <a>, so the outer wrapper is the only link element available.
+    twin_wrappers = []
     for a in soup.find_all("a"):
-        text = a.get_text().strip()
-        if text.startswith("Read") and "→" in text and "Full" not in text:
-            read_links.append(a)
+        style = a.get("style", "")
+        if "display:block" in style and "text-decoration:none" in style and "color:inherit" in style:
+            for img in a.find_all("img"):
+                if "max-width:320px" in img.get("style", ""):
+                    twin_wrappers.append(a)
+                    break
 
     # Build stories from matched elements
     for i in range(min(2, len(twin_headlines))):
@@ -169,8 +174,8 @@ def _find_twin_stories(soup):
             story["headline"] = twin_headlines[i]
         if i < len(twin_summaries):
             story["summary"] = twin_summaries[i]
-        if i < len(read_links):
-            story["link"] = read_links[i]
+        if i < len(twin_wrappers):
+            story["link"] = twin_wrappers[i]
         stories.append(story)
 
     return stories
