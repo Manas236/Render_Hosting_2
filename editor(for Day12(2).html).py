@@ -140,15 +140,115 @@ def _find_market_data(soup):
     for cell in ticker_cells:
         divs = cell.find_all("div")
         if len(divs) >= 3:
+            change_text = divs[2].get_text().strip()
+            positive = "color:#10b981" in divs[2].get("style", "")
+            pct_match = re.search(r'([\d.]+)%', change_text)
+            pct = pct_match.group(1) if pct_match else "0.00"
             market = {
                 "label": divs[0].get_text().strip(),
                 "value": divs[1].get_text().strip(),
-                "change": divs[2].get_text().strip(),
+                "pct": pct,
+                "positive": positive,
             }
-            market["positive"] = "color:#10b981" in divs[2].get("style", "")
             markets.append(market)
 
     return markets
+
+
+def _format_change_str(label: str, value_str: str, pct_float: float, positive: bool) -> str:
+    """
+    Build the ticker change string from a % change, matching Day12(2)'s format:
+      indices  → "▲ 612.40  (+0.81%)"   (2-decimal absolute change, comma-grouped)
+      USD/INR  → "▲ 0.06  (+0.07%)"      (2-decimal)
+      Gold     → "▲ 240  (+0.35%)"       (integer)
+    """
+    arrow = "▲" if positive else "▼"
+    sign = "+" if positive else "−"
+    clean = value_str.replace("₹", "").replace(",", "").strip()
+    try:
+        value_num = float(clean)
+    except Exception:
+        return f"{arrow} N/A ({sign}{abs(pct_float):.2f}%)"
+    abs_change = value_num * pct_float / 100
+    label_lower = label.lower()
+    if "gold" in label_lower:
+        return f"{arrow} {int(round(abs_change)):,} ({sign}{abs(pct_float):.2f}%)"
+    elif "usd" in label_lower or "/" in label:
+        return f"{arrow} {abs(abs_change):.2f} ({sign}{abs(pct_float):.2f}%)"
+    else:
+        return f"{arrow} {abs(abs_change):,.2f} ({sign}{abs(pct_float):.2f}%)"
+
+
+# ── WMO weather codes ─────────────────────────────────────────────────────────
+
+_WMO_CODES = {
+    0:  ("Clear sky",            "☀"),
+    1:  ("Mainly clear",         "☀"),
+    2:  ("Partly cloudy",        "⛅"),
+    3:  ("Overcast",             "☁"),
+    45: ("Fog",                  "🌫"),
+    48: ("Icy fog",              "🌫"),
+    51: ("Light drizzle",        "🌦"),
+    53: ("Moderate drizzle",     "🌦"),
+    55: ("Dense drizzle",        "🌧"),
+    61: ("Light rain",           "🌧"),
+    63: ("Moderate rain",        "🌧"),
+    65: ("Heavy rain",           "🌧"),
+    71: ("Light snow",           "❄"),
+    73: ("Moderate snow",        "❄"),
+    75: ("Heavy snow",           "❄"),
+    77: ("Snow grains",          "❄"),
+    80: ("Light showers",        "🌦"),
+    81: ("Moderate showers",     "🌧"),
+    82: ("Heavy showers",        "⛈"),
+    85: ("Slight snow showers",  "❄"),
+    86: ("Heavy snow showers",   "❄"),
+    95: ("Thunderstorm",         "⛈"),
+    96: ("Thunderstorm w/ hail", "⛈"),
+    99: ("Thunderstorm w/ hail", "⛈"),
+}
+
+
+def _find_weather_location(soup):
+    """Find the weather location/header div (class weather-location)."""
+    return soup.find(class_="weather-location")
+
+
+def _find_weather_data(soup):
+    """
+    Find the Day12(2) weather band.
+    Returns dict with location, today_desc, today_high, today_low.
+    """
+    weather = {}
+
+    loc_div = _find_weather_location(soup)
+    if loc_div:
+        text = loc_div.get_text()
+        parts = text.split("·")
+        if parts:
+            weather["location"] = parts[0].strip().strip("\xa0").strip()
+
+    desc_div = soup.find(class_="weather-desc-today")
+    if desc_div:
+        weather["today_desc"] = desc_div.get_text().strip()
+
+    high_span = soup.find(class_="weather-high-today")
+    if high_span:
+        m = re.search(r"\d+", high_span.get_text())
+        if m:
+            weather["today_high"] = m.group()
+
+    low_span = soup.find(class_="weather-low-today")
+    if low_span:
+        m = re.search(r"\d+", low_span.get_text())
+        if m:
+            weather["today_low"] = m.group()
+
+    weather.setdefault("location", "Navi Mumbai")
+    weather.setdefault("today_desc", "")
+    weather.setdefault("today_high", "")
+    weather.setdefault("today_low", "")
+    return weather
 
 
 # ── Parse: extract current editable fields ────────────────────────────────────
@@ -203,6 +303,9 @@ def parse_fields(html: str) -> dict:
 
     # Markets
     result["markets"] = _find_market_data(soup)
+
+    # Weather
+    result["weather"] = _find_weather_data(soup)
 
     return result
 
@@ -297,14 +400,48 @@ def update_html(html: str, data: dict) -> str:
                     value = (mkt.get("value") or "").strip()
                     if value:
                         _set_text(divs[1], value)
-                    change = (mkt.get("change") or "").strip()
-                    if change:
-                        _set_text(divs[2], change)
                     positive = mkt.get("positive", True)
+                    pct_raw = (mkt.get("pct") or "").strip().replace("%", "")
+                    try:
+                        pct_float = float(pct_raw)
+                    except ValueError:
+                        pct_float = 0.0
+                    value_str = value or divs[1].get_text().strip()
+                    change_str = _format_change_str(
+                        label or divs[0].get_text().strip(), value_str, pct_float, positive)
+                    _set_text(divs[2], change_str)
                     color = "#10b981" if positive else "#ef4444"
                     existing_style = divs[2].get("style", "")
                     divs[2]["style"] = re.sub(
                         r'color:#[0-9a-fA-F]{6}', f'color:{color}', existing_style)
+
+    # Weather
+    weather_data = data.get("weather", {})
+    if weather_data:
+        loc = (weather_data.get("location") or "").strip()
+        t_desc = (weather_data.get("today_desc") or "").strip()
+        t_high = (weather_data.get("today_high") or "").strip()
+        t_low = (weather_data.get("today_low") or "").strip()
+
+        if loc:
+            loc_div = _find_weather_location(soup)
+            if loc_div:
+                _set_text(loc_div, f"{loc}\xa0·\xa0Today's Weather")
+
+        if t_desc:
+            desc_div = soup.find(class_="weather-desc-today")
+            if desc_div:
+                _set_text(desc_div, t_desc)
+
+        if t_high:
+            high_span = soup.find(class_="weather-high-today")
+            if high_span:
+                _set_text(high_span, f"{t_high}°")
+
+        if t_low:
+            low_span = soup.find(class_="weather-low-today")
+            if low_span:
+                _set_text(low_span, f"{t_low}°")
 
     return str(soup)
 
@@ -469,15 +606,12 @@ def api_markets_fetch():
                 pass
             return None, None
 
-        def build_entry(now, prev, label, value_fmt, chg_dec=2):
+        def build_entry(now, prev, label, value_fmt):
             if now is None or prev is None:
-                return {"label": label, "value": "N/A", "change": "N/A", "positive": True}
+                return {"label": label, "value": "N/A", "pct": "0.00", "positive": True}
             chg = now - prev
             pct = (chg / prev) * 100
-            arrow = "▲" if chg >= 0 else "▼"
-            sign = "+" if pct >= 0 else "−"
-            chg_str = f"{arrow} {abs(chg):,.{chg_dec}f}  ({sign}{abs(pct):.2f}%)"
-            return {"label": label, "value": value_fmt(now), "change": chg_str, "positive": chg >= 0}
+            return {"label": label, "value": value_fmt(now), "pct": f"{abs(pct):.2f}", "positive": chg >= 0}
 
         def fetch_usd_inr():
             """
@@ -524,7 +658,7 @@ def api_markets_fetch():
             build_entry(s_now, s_prev, "SENSEX",        lambda v: f"{int(round(v)):,}"),
             build_entry(n_now, n_prev, "NIFTY 50",       lambda v: f"{int(round(v)):,}"),
             build_entry(u_now, u_prev, "USD / INR",      lambda v: f"{v:.2f}"),
-            build_entry(g_now, g_prev, "GOLD 24K (MUMBAI)", lambda v: f"{int(round(v)):,}", chg_dec=0),
+            build_entry(g_now, g_prev, "GOLD 24K (MUMBAI)", lambda v: f"{int(round(v)):,}"),
         ]
         return jsonify({"markets": markets})
     except Exception as e:
@@ -536,6 +670,63 @@ def api_reset():
     global _current_html
     _current_html = BASE_HTML
     return jsonify({"success": True})
+
+
+@day12_2_editor_bp.route("/api/weather/fetch")
+def api_weather_fetch():
+    import requests as _req
+    location = request.args.get("location", "Navi Mumbai").strip() or "Navi Mumbai"
+    try:
+        hdrs = {"User-Agent": "Mozilla/5.0 (Newsband/1.0; +https://newsband.in)"}
+
+        # Geocode via Nominatim
+        geo_resp = _req.get(
+            "https://nominatim.openstreetmap.org/search",
+            params={"q": location, "format": "json", "limit": 1},
+            headers=hdrs, timeout=8,
+        )
+        geo_data = geo_resp.json() if geo_resp.status_code == 200 else []
+        if not geo_data:
+            return jsonify({"error": f"Could not geocode '{location}'"}), 400
+        lat, lon = geo_data[0]["lat"], geo_data[0]["lon"]
+
+        # Fetch from Open-Meteo (free, no API key)
+        wx_resp = _req.get(
+            "https://api.open-meteo.com/v1/forecast",
+            params={
+                "latitude": lat, "longitude": lon,
+                "daily": "temperature_2m_max,temperature_2m_min,weather_code",
+                "timezone": "auto", "forecast_days": 2,
+            },
+            headers=hdrs, timeout=8,
+        )
+        if wx_resp.status_code != 200:
+            return jsonify({"error": "Weather API unavailable"}), 500
+
+        daily = wx_resp.json().get("daily", {})
+        maxtemps = daily.get("temperature_2m_max", [None, None])
+        mintemps = daily.get("temperature_2m_min", [None, None])
+        codes = daily.get("weather_code") or daily.get("weathercode", [2, 2])
+
+        # index 1 = tomorrow (newsletter is scheduled for the next day)
+        wmo = int(codes[1]) if len(codes) > 1 else 2
+        desc, _ = _WMO_CODES.get(wmo, ("Partly cloudy", "⛅"))
+        tmrw_high = maxtemps[1] if len(maxtemps) > 1 else None
+        tmrw_low  = mintemps[1] if len(mintemps) > 1 else None
+        today_high = str(round(tmrw_high)) if tmrw_high is not None else "—"
+        today_low  = str(round(tmrw_low))  if tmrw_low  is not None else "—"
+
+        print(f"DEBUG [Weather/Day12_2]: {location} tomorrow → {desc} {today_high}°/{today_low}°C")
+        return jsonify({
+            "weather": {
+                "location": location,
+                "today_desc": desc,
+                "today_high": today_high,
+                "today_low": today_low,
+            }
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @day12_2_editor_bp.route("/api/import_json", methods=["POST"])
