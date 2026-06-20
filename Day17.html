@@ -7,6 +7,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="x-apple-disable-message-reformatting" />
     <meta name="format-detection" content="telephone=no, address=no, email=no, date=no, url=no" />
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
     <title>Newsband Newsletter</title>
 
     <!--[if mso]>
@@ -27,12 +29,37 @@
 
     <!--[if !mso]><!-->
     <style type="text/css">
-        /* Mobile + landscape — zoom-scale the whole shell to fit viewport */
-        @media only screen and (max-width: 600px),
-               only screen and (orientation: landscape) and (max-height: 500px) {
-            body { overflow-x: hidden !important; margin: 0 !important; }
-            table.inner-table { zoom: calc(100vw / 600) !important; }
+        /* Declare this as a light-only email so Apple Mail / iOS Mail / Outlook
+           don't force-invert it into dark mode. */
+        :root { color-scheme: light; }
+
+        /* iOS Mail / Apple Mail auto-link dates, addresses and phone numbers and
+           wrap them in their own styled link even when format-detection is set.
+           Force those injected links to inherit our styling. */
+        a[x-apple-data-detectors] {
+            color: inherit !important;
+            text-decoration: none !important;
+            font-size: inherit !important;
+            font-family: inherit !important;
+            font-weight: inherit !important;
+            line-height: inherit !important;
         }
+
+        /* Mobile responsiveness.
+           FALLBACK: the shell is fluid via the inline width:100%/max-width:600px
+           on .inner-table, so clients that ignore these media-query rules still
+           avoid horizontal scrolling. These rules only stack multi-column rows
+           and let images fill the available width. */
+        @media only screen and (max-width: 600px) {
+            .fluid-img      { width: 100% !important; max-width: 100% !important; height: auto !important; }
+            .hero-img-cell  { height: auto !important; }
+            .two-col-cell   { display: block !important; width: 100% !important; box-sizing: border-box !important; }
+            .gutter-cell    { display: block !important; width: 100% !important; height: 16px !important; font-size: 0 !important; line-height: 16px !important; }
+            .ticker-cell    { display: block !important; width: 100% !important; box-sizing: border-box !important; border-right: 0 !important; border-bottom: 1px solid #eeeeee !important; }
+            .horiz-thumb    { display: block !important; width: 100% !important; height: auto !important; box-sizing: border-box !important; }
+            .horiz-content  { display: block !important; width: 100% !important; box-sizing: border-box !important; }
+        }
+
     </style>
     <!--<![endif]-->
 
@@ -56,23 +83,23 @@
                 <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" style="width:600px;" arcsize="2%" fillcolor="#ffffff" stroke="false">
                 <v:textbox style="mso-fit-shape-to-text:false" inset="0,0,0,0">
                 <![endif]-->
-                <table role="presentation" class="inner-table" width="600" align="center" border="0" cellpadding="0" cellspacing="0" style="width: 600px; max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden;" bgcolor="#ffffff">
+                <table role="presentation" class="inner-table" width="600" align="center" border="0" cellpadding="0" cellspacing="0" style="width: 100%; max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden;" bgcolor="#ffffff">
 
 
                     <!-- ====== HEADER ====== -->
                     <tr>
-                        <td style="padding: 16px 24px; border-bottom: 1px solid #eeeeee; background-color: #ffffff; background-image: url('https://singlecolorimage.com/get/ffffff/600x400'); background-size: cover;" bgcolor="#ffffff">
+                        <td style="padding: 16px 24px; border-bottom: 1px solid #eeeeee; background-color: #ffffff;" bgcolor="#ffffff">
                             <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
                                 <tr>
                                     <td style="font-size: 0; line-height: 0;" align="left" valign="middle">
                                         <a href="https://www.newsband.in/" target="_blank" style="text-decoration: none;">
-                                            <img src="https://raw.githubusercontent.com/Manas236/Newsband/main/newsband-logo-0022.png" width="200" height="auto" alt="Newsband" style="display: block; border: 0; outline: none; width: 200px; height: auto;" />
+                                            <img src="https://raw.githubusercontent.com/Manas236/Newsband/main/newsband-logo-0022.png" width="200" alt="Newsband" style="display: block; border: 0; outline: none; width: 200px; max-width: 200px; height: auto;" />
                                         </a>
                                     </td>
                                     <td align="right" valign="middle">
                                         <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                                             <tr>
-                                                <td style="background-color: #f5f5f5; background-image: url('https://singlecolorimage.com/get/f5f5f5/100x100'); background-size: cover; padding: 6px 12px; text-align: right; border-radius: 6px;" bgcolor="#f5f5f5">
+                                                <td style="background-color: #f5f5f5; padding: 6px 12px; text-align: right; border-radius: 6px;" bgcolor="#f5f5f5">
                                                     <!--[if mso]>
                                                     <table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td style="background-color: #f5f5f5; padding: 6px 12px;">
                                                     <![endif]-->
@@ -106,7 +133,7 @@
                                             <!-- Hero image -->
                                             <tr>
                                                 <td class="hero-img-cell" style="background-color: #e9ecf0; height: 240px; text-align: center; vertical-align: middle; font-size: 0; line-height: 0;" bgcolor="#e9ecf0" height="240">
-                                                    <img src="https://picsum.photos/seed/newsband-hero/544/240" width="544" height="240" alt="Hero Image" style="display: block; border: 0; outline: none; width: 544px; max-width: 544px; height: 240px;" />
+                                                    <img src="https://picsum.photos/seed/newsband-hero/544/240" width="544" height="240" alt="Hero Image" class="fluid-img" style="display: block; border: 0; outline: none; width: 100%; max-width: 544px; height: auto;" />
                                                 </td>
                                             </tr>
                                             <!-- Hero content -->
@@ -146,12 +173,12 @@
                                     <td style="padding: 24px 28px 0 28px;">
                                         <!-- Outer border container -->
                                         <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="border: 1px solid #e2e2e2; border-radius: 8px; overflow: hidden; background-color: #ffffff; " bgcolor="#ffffff">
-                                            <!-- Header row: no fill, so it inverts coherently with the cells -->
+                                            <!-- Header row: solid black bar. Black is naturally dark-mode-safe (Gmail never lightens a dark background), so no lock needed. -->
                                             <tr>
-                                                <td colspan="7" style="padding: 9px 16px; border-bottom: 1px solid #e8e8e8;">
+                                                <td colspan="4" class="mkt-head-bar" style="padding: 9px 16px; border-bottom: 1px solid #000000; background-color: #000000;" bgcolor="#000000">
                                                     <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
                                                         <tr>
-                                                            <td style="font-family: Arial, Helvetica, sans-serif; font-size: 9px; font-weight: bold; color: #555555; letter-spacing: 2px; text-transform: uppercase; line-height: 14px;">Market snapshot</td>
+                                                            <td class="mkt-head" style="font-family: Arial, Helvetica, sans-serif; font-size: 9px; font-weight: bold; color: #ffffff; letter-spacing: 2px; text-transform: uppercase; line-height: 14px;">Market snapshot</td>
                                                         </tr>
                                                     </table>
                                                 </td>
@@ -160,84 +187,84 @@
                                             <tr>
                                                 <!-- NIFTY 50 -->
                                                 <td class="ticker-cell" width="25%" style="background-color: #ffffff; padding: 12px 14px; border-right: 1px solid #eeeeee; vertical-align: top;" bgcolor="#ffffff" valign="top">
-                                                    <p style="margin: 0 0 2px 0; font-family: Arial, Helvetica, sans-serif; font-size: 10px; font-weight: bold; color: #777777; line-height: 14px;">Nifty 50</p>
-                                                    <p style="margin: 0 0 6px 0; font-family: Arial, Helvetica, sans-serif; font-size: 8px; color: #aaaaaa; line-height: 12px;">NSE Index</p>
-                                                    <p style="margin: 0 0 4px 0; font-family: 'Courier New', Courier, monospace; font-size: 14px; font-weight: bold; color: #1a1a1a; line-height: 18px;">24,867.30</p>
+                                                    <p class="mkt-name" style="margin: 0 0 2px 0; font-family: Arial, Helvetica, sans-serif; font-size: 10px; font-weight: bold; color: #777777; line-height: 14px;">Nifty 50</p>
+                                                    <p class="mkt-sub" style="margin: 0 0 6px 0; font-family: Arial, Helvetica, sans-serif; font-size: 8px; color: #aaaaaa; line-height: 12px;">NSE Index</p>
+                                                    <p class="mkt-val" style="margin: 0 0 4px 0; font-family: 'Courier New', Courier, monospace; font-size: 14px; font-weight: bold; color: #1a1a1a; line-height: 18px;">24,867.30</p>
                                                     <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                                                         <tr>
-                                                            <td style="background-color: #edfcf2; padding: 2px 5px; border-radius: 3px;" bgcolor="#edfcf2">
-                                                                <span class="mkt-pct" style="font-family: 'Courier New', Courier, monospace; font-size: 10px; color: #16a34a;">&#9650; 1.24%</span>
+                                                            <td class="mkt-up-bg" style="background-color: #edfcf2; padding: 2px 5px; border-radius: 3px;" bgcolor="#edfcf2">
+                                                                <span class="mkt-pct mkt-up" style="font-family: 'Courier New', Courier, monospace; font-size: 10px; color: #16a34a;">&#9650; 1.24%</span>
                                                             </td>
                                                         </tr>
                                                         <tr>
                                                             <td style="height: 3px; font-size: 0; line-height: 0;" height="3">&nbsp;</td>
                                                         </tr>
                                                         <tr>
-                                                            <td style="background-color: #edfcf2; padding: 2px 5px; border-radius: 3px;" bgcolor="#edfcf2">
-                                                                <span class="mkt-abs" style="font-family: 'Courier New', Courier, monospace; font-size: 9px; color: #16a34a;">+308 pts</span>
+                                                            <td class="mkt-up-bg" style="background-color: #edfcf2; padding: 2px 5px; border-radius: 3px;" bgcolor="#edfcf2">
+                                                                <span class="mkt-abs mkt-up" style="font-family: 'Courier New', Courier, monospace; font-size: 9px; color: #16a34a;">+308 pts</span>
                                                             </td>
                                                         </tr>
                                                     </table>
                                                 </td>
                                                 <!-- SENSEX -->
                                                 <td class="ticker-cell" width="25%" style="background-color: #ffffff; padding: 12px 14px; border-right: 1px solid #eeeeee; vertical-align: top;" bgcolor="#ffffff" valign="top">
-                                                    <p style="margin: 0 0 2px 0; font-family: Arial, Helvetica, sans-serif; font-size: 10px; font-weight: bold; color: #777777; line-height: 14px;">Sensex</p>
-                                                    <p style="margin: 0 0 6px 0; font-family: Arial, Helvetica, sans-serif; font-size: 8px; color: #aaaaaa; line-height: 12px;">BSE Index</p>
-                                                    <p style="margin: 0 0 4px 0; font-family: 'Courier New', Courier, monospace; font-size: 14px; font-weight: bold; color: #1a1a1a; line-height: 18px;">81,543.76</p>
+                                                    <p class="mkt-name" style="margin: 0 0 2px 0; font-family: Arial, Helvetica, sans-serif; font-size: 10px; font-weight: bold; color: #777777; line-height: 14px;">Sensex</p>
+                                                    <p class="mkt-sub" style="margin: 0 0 6px 0; font-family: Arial, Helvetica, sans-serif; font-size: 8px; color: #aaaaaa; line-height: 12px;">BSE Index</p>
+                                                    <p class="mkt-val" style="margin: 0 0 4px 0; font-family: 'Courier New', Courier, monospace; font-size: 14px; font-weight: bold; color: #1a1a1a; line-height: 18px;">81,543.76</p>
                                                     <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                                                         <tr>
-                                                            <td style="background-color: #edfcf2; padding: 2px 5px; border-radius: 3px;" bgcolor="#edfcf2">
-                                                                <span class="mkt-pct" style="font-family: 'Courier New', Courier, monospace; font-size: 10px; color: #16a34a;">&#9650; 0.91%</span>
+                                                            <td class="mkt-up-bg" style="background-color: #edfcf2; padding: 2px 5px; border-radius: 3px;" bgcolor="#edfcf2">
+                                                                <span class="mkt-pct mkt-up" style="font-family: 'Courier New', Courier, monospace; font-size: 10px; color: #16a34a;">&#9650; 0.91%</span>
                                                             </td>
                                                         </tr>
                                                         <tr>
                                                             <td style="height: 3px; font-size: 0; line-height: 0;" height="3">&nbsp;</td>
                                                         </tr>
                                                         <tr>
-                                                            <td style="background-color: #edfcf2; padding: 2px 5px; border-radius: 3px;" bgcolor="#edfcf2">
-                                                                <span class="mkt-abs" style="font-family: 'Courier New', Courier, monospace; font-size: 9px; color: #16a34a;">+742 pts</span>
+                                                            <td class="mkt-up-bg" style="background-color: #edfcf2; padding: 2px 5px; border-radius: 3px;" bgcolor="#edfcf2">
+                                                                <span class="mkt-abs mkt-up" style="font-family: 'Courier New', Courier, monospace; font-size: 9px; color: #16a34a;">+742 pts</span>
                                                             </td>
                                                         </tr>
                                                     </table>
                                                 </td>
                                                 <!-- USD/INR -->
                                                 <td class="ticker-cell" width="25%" style="background-color: #ffffff; padding: 12px 14px; border-right: 1px solid #eeeeee; vertical-align: top;" bgcolor="#ffffff" valign="top">
-                                                    <p style="margin: 0 0 2px 0; font-family: Arial, Helvetica, sans-serif; font-size: 10px; font-weight: bold; color: #777777; line-height: 14px;">USD / INR</p>
-                                                    <p style="margin: 0 0 6px 0; font-family: Arial, Helvetica, sans-serif; font-size: 8px; color: #aaaaaa; line-height: 12px;">Forex</p>
-                                                    <p style="margin: 0 0 4px 0; font-family: 'Courier New', Courier, monospace; font-size: 14px; font-weight: bold; color: #1a1a1a; line-height: 18px;">85.42</p>
+                                                    <p class="mkt-name" style="margin: 0 0 2px 0; font-family: Arial, Helvetica, sans-serif; font-size: 10px; font-weight: bold; color: #777777; line-height: 14px;">USD / INR</p>
+                                                    <p class="mkt-sub" style="margin: 0 0 6px 0; font-family: Arial, Helvetica, sans-serif; font-size: 8px; color: #aaaaaa; line-height: 12px;">Forex</p>
+                                                    <p class="mkt-val" style="margin: 0 0 4px 0; font-family: 'Courier New', Courier, monospace; font-size: 14px; font-weight: bold; color: #1a1a1a; line-height: 18px;">85.42</p>
                                                     <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                                                         <tr>
-                                                            <td style="background-color: #fef2f2; padding: 2px 5px; border-radius: 3px;" bgcolor="#fef2f2">
-                                                                <span class="mkt-pct" style="font-family: 'Courier New', Courier, monospace; font-size: 10px; color: #dc2626;">&#9660; 0.18%</span>
+                                                            <td class="mkt-dn-bg" style="background-color: #fef2f2; padding: 2px 5px; border-radius: 3px;" bgcolor="#fef2f2">
+                                                                <span class="mkt-pct mkt-dn" style="font-family: 'Courier New', Courier, monospace; font-size: 10px; color: #dc2626;">&#9660; 0.18%</span>
                                                             </td>
                                                         </tr>
                                                         <tr>
                                                             <td style="height: 3px; font-size: 0; line-height: 0;" height="3">&nbsp;</td>
                                                         </tr>
                                                         <tr>
-                                                            <td style="background-color: #fef2f2; padding: 2px 5px; border-radius: 3px;" bgcolor="#fef2f2">
-                                                                <span class="mkt-abs" style="font-family: 'Courier New', Courier, monospace; font-size: 9px; color: #dc2626;">&#8722;0.15</span>
+                                                            <td class="mkt-dn-bg" style="background-color: #fef2f2; padding: 2px 5px; border-radius: 3px;" bgcolor="#fef2f2">
+                                                                <span class="mkt-abs mkt-dn" style="font-family: 'Courier New', Courier, monospace; font-size: 9px; color: #dc2626;">&#8722;0.15</span>
                                                             </td>
                                                         </tr>
                                                     </table>
                                                 </td>
                                                 <!-- GOLD 24K -->
                                                 <td class="ticker-cell" width="25%" style="background-color: #ffffff; padding: 12px 14px; vertical-align: top;" bgcolor="#ffffff" valign="top">
-                                                    <p style="margin: 0 0 2px 0; font-family: Arial, Helvetica, sans-serif; font-size: 10px; font-weight: bold; color: #777777; line-height: 14px;">Gold 24K</p>
-                                                    <p style="margin: 0 0 6px 0; font-family: Arial, Helvetica, sans-serif; font-size: 8px; color: #aaaaaa; line-height: 12px;">10g &#183; Mumbai Std</p>
-                                                    <p style="margin: 0 0 4px 0; font-family: 'Courier New', Courier, monospace; font-size: 14px; font-weight: bold; color: #1a1a1a; line-height: 18px;">&#8377;94,720</p>
+                                                    <p class="mkt-name" style="margin: 0 0 2px 0; font-family: Arial, Helvetica, sans-serif; font-size: 10px; font-weight: bold; color: #777777; line-height: 14px;">Gold 24K</p>
+                                                    <p class="mkt-sub" style="margin: 0 0 6px 0; font-family: Arial, Helvetica, sans-serif; font-size: 8px; color: #aaaaaa; line-height: 12px;">10g &#183; Mumbai Std</p>
+                                                    <p class="mkt-val" style="margin: 0 0 4px 0; font-family: 'Courier New', Courier, monospace; font-size: 14px; font-weight: bold; color: #1a1a1a; line-height: 18px;">&#8377;94,720</p>
                                                     <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                                                         <tr>
-                                                            <td style="background-color: #edfcf2; padding: 2px 5px; border-radius: 3px;" bgcolor="#edfcf2">
-                                                                <span class="mkt-pct" style="font-family: 'Courier New', Courier, monospace; font-size: 10px; color: #16a34a;">&#9650; 0.40%</span>
+                                                            <td class="mkt-up-bg" style="background-color: #edfcf2; padding: 2px 5px; border-radius: 3px;" bgcolor="#edfcf2">
+                                                                <span class="mkt-pct mkt-up" style="font-family: 'Courier New', Courier, monospace; font-size: 10px; color: #16a34a;">&#9650; 0.40%</span>
                                                             </td>
                                                         </tr>
                                                         <tr>
                                                             <td style="height: 3px; font-size: 0; line-height: 0;" height="3">&nbsp;</td>
                                                         </tr>
                                                         <tr>
-                                                            <td style="background-color: #edfcf2; padding: 2px 5px; border-radius: 3px;" bgcolor="#edfcf2">
-                                                                <span class="mkt-abs" style="font-family: 'Courier New', Courier, monospace; font-size: 9px; color: #16a34a;">+&#8377;380</span>
+                                                            <td class="mkt-up-bg" style="background-color: #edfcf2; padding: 2px 5px; border-radius: 3px;" bgcolor="#edfcf2">
+                                                                <span class="mkt-abs mkt-up" style="font-family: 'Courier New', Courier, monospace; font-size: 9px; color: #16a34a;">+&#8377;380</span>
                                                             </td>
                                                         </tr>
                                                     </table>
@@ -317,7 +344,7 @@
                                                     <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="border: 1px solid #e8e8e8; border-radius: 8px; overflow: hidden;">
                                                         <tr>
                                                             <td style="background-color: #e9ecf0; height: 130px; text-align: center; vertical-align: middle;" bgcolor="#e9ecf0" height="130" valign="middle">
-                                                                <img src="https://picsum.photos/seed/newsband-infra/260/130" width="260" height="130" alt="Image" style="display: block; border: 0; outline: none; width: 260px; max-width: 260px; height: 130px;" />
+                                                                <img src="https://picsum.photos/seed/newsband-infra/260/130" width="260" height="130" alt="Image" class="fluid-img" style="display: block; border: 0; outline: none; width: 100%; max-width: 260px; height: auto;" />
                                                             </td>
                                                         </tr>
                                                         <tr>
@@ -341,7 +368,7 @@
                                                     <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="border: 1px solid #e8e8e8; border-radius: 8px; overflow: hidden;">
                                                         <tr>
                                                             <td style="background-color: #e9ecf0; height: 130px; text-align: center; vertical-align: middle;" bgcolor="#e9ecf0" height="130" valign="middle">
-                                                                <img src="https://picsum.photos/seed/newsband-tech/260/130" width="260" height="130" alt="Image" style="display: block; border: 0; outline: none; width: 260px; max-width: 260px; height: 130px;" />
+                                                                <img src="https://picsum.photos/seed/newsband-tech/260/130" width="260" height="130" alt="Image" class="fluid-img" style="display: block; border: 0; outline: none; width: 100%; max-width: 260px; height: auto;" />
                                                             </td>
                                                         </tr>
                                                         <tr>
@@ -377,7 +404,7 @@
                                             <tr>
                                                 <!-- Thumbnail -->
                                                 <td class="horiz-thumb" width="220" style="background-color: #ffffff; padding: 0; width: 220px; height: 140px;" bgcolor="#ffffff" height="140">
-                                                    <img src="https://picsum.photos/seed/newsband-sports/220/140" width="220" height="140" alt="Image" style="display: block; border: 0; outline: none; width: 220px; height: 140px; object-fit: cover; object-position: center;" />
+                                                    <img src="https://picsum.photos/seed/newsband-sports/220/140" width="220" height="140" alt="Image" class="fluid-img" style="display: block; border: 0; outline: none; width: 100%; max-width: 220px; height: auto;" />
                                                 </td>
                                                 <!-- Content -->
                                                 <td class="horiz-content" style="background-color: #ffffff; padding: 16px 20px; vertical-align: middle;" bgcolor="#ffffff" valign="middle">
@@ -409,7 +436,7 @@
                                             <tr>
                                                 <!-- Thumbnail -->
                                                 <td class="horiz-thumb" width="220" style="background-color: #ffffff; padding: 0; width: 220px; height: 140px;" bgcolor="#ffffff" height="140">
-                                                    <img src="https://picsum.photos/seed/newsband-health/220/140" width="220" height="140" alt="Image" style="display: block; border: 0; outline: none; width: 220px; height: 140px; object-fit: cover; object-position: center;" />
+                                                    <img src="https://picsum.photos/seed/newsband-health/220/140" width="220" height="140" alt="Image" class="fluid-img" style="display: block; border: 0; outline: none; width: 100%; max-width: 220px; height: auto;" />
                                                 </td>
                                                 <!-- Content -->
                                                 <td class="horiz-content" style="background-color: #ffffff; padding: 16px 20px; vertical-align: middle;" bgcolor="#ffffff" valign="middle">

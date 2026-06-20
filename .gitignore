@@ -10,3 +10,6 @@ build/
 trial.html
 trial2.html
 
+# Social pipeline runtime state — transient, regenerated at runtime, must never be tracked
+social_data/runtime/
+

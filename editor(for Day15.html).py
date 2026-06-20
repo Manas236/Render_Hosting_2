@@ -672,6 +672,21 @@ def api_export():
     )
 
 
+@day15_editor_bp.route("/api/export_zip")
+def api_export_zip():
+    import zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("newsband_day15_newsletter.html", _current_html.encode("utf-8"))
+    buf.seek(0)
+    return send_file(
+        buf,
+        as_attachment=True,
+        download_name="newsband_day15_newsletter.zip",
+        mimetype="application/zip",
+    )
+
+
 @day15_editor_bp.route("/api/markets/fetch")
 def api_markets_fetch():
     try:

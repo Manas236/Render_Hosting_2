@@ -220,9 +220,9 @@
 
         /* ── Left Editor Panel ──────────────────────────────────────────────────── */
         .editor-panel {
-            width: 400px;
+            width: 440px;
             min-width: 320px;
-            max-width: 520px;
+            max-width: 620px;
             background: var(--panel);
             border-right: 1px solid var(--border);
             overflow-y: auto;
@@ -342,6 +342,160 @@
         .field input::placeholder,
         .field textarea::placeholder {
             color: var(--text-3);
+        }
+
+        /* ── Field Tooltips ─────────────────────────────────────────────────────── */
+        .field-head {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .tip-trigger {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 15px;
+            height: 15px;
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            font-family: var(--mono);
+            font-size: 10px;
+            font-style: normal;
+            line-height: 1;
+            color: var(--text-3);
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+
+        .tip-trigger:hover,
+        .tip-trigger:focus-visible {
+            color: var(--accent);
+            border-color: var(--accent);
+            background: var(--accent-dim);
+            outline: none;
+        }
+
+        body.tips-on .tip-trigger {
+            color: var(--accent);
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .tip-pop {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            padding: 0 12px;
+            margin: 0;
+            font-family: var(--sans);
+            font-size: 12px;
+            line-height: 1.55;
+            color: var(--text-2);
+            background: var(--accent-glow);
+            border-left: 2px solid var(--accent);
+            border-radius: 0 6px 6px 0;
+            transition: max-height 0.28s ease, opacity 0.2s ease, padding 0.28s ease, margin 0.28s ease;
+        }
+
+        .field:has(.tip-trigger:hover) .tip-pop,
+        .field:has(.tip-trigger:focus-visible) .tip-pop,
+        .tip-pop.pinned,
+        body.tips-on .tip-pop {
+            max-height: 180px;
+            opacity: 1;
+            padding: 9px 12px;
+            margin: 4px 0 2px;
+        }
+
+        .tip-pop .tip-emoji {
+            font-size: 14px;
+            margin-right: 4px;
+        }
+
+        .btn.active {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Navbar button tooltips — float below the button on hover/focus */
+        .topbar-right .btn {
+            position: relative;
+        }
+
+        .topbar-right .btn[data-tip]::after {
+            content: attr(data-tip);
+            position: absolute;
+            top: calc(100% + 9px);
+            right: 0;
+            width: max-content;
+            max-width: 240px;
+            white-space: normal;
+            text-align: left;
+            text-transform: none;
+            letter-spacing: normal;
+            font-family: var(--sans);
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 1.5;
+            color: var(--text-2);
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-left: 2px solid var(--accent);
+            border-radius: 7px;
+            padding: 9px 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-4px);
+            transition: opacity 0.15s ease, transform 0.15s ease;
+            z-index: 200;
+            pointer-events: none;
+        }
+
+        .topbar-right .btn[data-tip]:hover::after,
+        .topbar-right .btn[data-tip]:focus-visible::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        /* Tips help bar — revealed under the navbar by the ⓘ Tips toggle */
+        .nav-help {
+            display: none;
+            flex-wrap: wrap;
+            gap: 7px 10px;
+            align-items: center;
+            padding: 10px 20px;
+            background: var(--accent-glow);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        body.tips-on .nav-help {
+            display: flex;
+        }
+
+        .nav-help-item {
+            font-family: var(--sans);
+            font-size: 11.5px;
+            color: var(--text-2);
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 5px 9px;
+        }
+
+        .nav-help-item .nh-key {
+            font-family: var(--mono);
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            color: var(--accent);
+            margin-right: 6px;
         }
 
         /* ── Story Cards ────────────────────────────────────────────────────────── */
@@ -703,12 +857,25 @@
             </div>
         </div>
         <div class="topbar-right">
-            <a href="/dashboard" class="btn btn-ghost">🏠 Dashboard</a>
-            <button class="btn btn-ghost" onclick="openImportModal()">{ } JSON Import</button>
-            <button class="btn btn-ghost" onclick="refreshPreview()">🔄 Reload Preview</button>
-            <button class="btn btn-danger" onclick="doReset()">↺ Reset</button>
-            <button class="btn btn-primary" onclick="doExport()">↓ Export HTML</button>
+            <button class="btn btn-ghost" id="tipsToggle" onclick="toggleAllTips()" data-tip="🛈 Toggle these tips on or off — they explain every field and every button up here.">ⓘ Tips</button>
+            <a href="/dashboard" class="btn btn-ghost" data-tip="🏠 Leave the editor and return to the main dashboard.">🏠 Dashboard</a>
+            <button class="btn btn-ghost" onclick="openImportModal()" data-tip="{ } Paste a JSON object to fill the date and every story in one go.">{ } JSON Import</button>
+            <button class="btn btn-ghost" onclick="refreshPreview()" data-tip="🔄 Re-render the live preview on the right with your latest edits.">🔄 Reload Preview</button>
+            <button class="btn btn-danger" onclick="doReset()" data-tip="↺ Restore the original template — this discards all of your changes.">↺ Reset</button>
+            <button class="btn btn-primary" onclick="doExport()" data-tip="↓ Done editing? Download the finished newsletter as a single HTML file.">↓ Export HTML</button>
+            <button class="btn btn-primary" onclick="doExportZip()" data-tip="📦 Download the newsletter plus its images/assets bundled as a ZIP.">📦 Export ZIP</button>
         </div>
+    </div>
+
+    <!-- Tips help bar (revealed by the ⓘ Tips toggle) -->
+    <div class="nav-help" id="navHelp">
+        <span class="nav-help-item"><span class="nh-key">ⓘ Tips</span> Toggle these explanations on or off.</span>
+        <span class="nav-help-item"><span class="nh-key">🏠 Dashboard</span> Back to the main dashboard.</span>
+        <span class="nav-help-item"><span class="nh-key">{ } JSON Import</span> Fill every field at once from JSON.</span>
+        <span class="nav-help-item"><span class="nh-key">🔄 Reload Preview</span> Re-render the preview on the right.</span>
+        <span class="nav-help-item"><span class="nh-key">↺ Reset</span> Restore the original template (discards changes).</span>
+        <span class="nav-help-item"><span class="nh-key">↓ Export HTML</span> Download as a single HTML file.</span>
+        <span class="nav-help-item"><span class="nh-key">📦 Export ZIP</span> Download newsletter + assets as a ZIP.</span>
     </div>
 
     <!-- Main split layout -->
@@ -726,12 +893,20 @@
                 </div>
                 <div class="section-body">
                     <div class="field">
-                        <label>Date</label>
+                        <div class="field-head">
+                            <label>Date</label>
+                            <span class="tip-trigger" tabindex="0" role="button" aria-label="About this field">i</span>
+                        </div>
+                        <div class="tip-pop"><span class="tip-emoji">📅</span> Issue date printed in the newsletter masthead. Use <b>DD/MM/YYYY</b> — e.g. 21/04/2026.</div>
                         <input type="text" id="hdrDate" placeholder="DD/MM/YYYY" autocomplete="off"
                             oninput="scheduleUpdate()" />
                     </div>
                     <div class="field">
-                        <label>RNI Number</label>
+                        <div class="field-head">
+                            <label>RNI Number</label>
+                            <span class="tip-trigger" tabindex="0" role="button" aria-label="About this field">i</span>
+                        </div>
+                        <div class="tip-pop"><span class="tip-emoji">📰</span> Registrar of Newspapers ID shown in the header. Format like <b>MAHENG/2007/XXXXX</b>.</div>
                         <input type="text" id="hdrRni" placeholder="MAHENG/2007/XXXXX" autocomplete="off"
                             oninput="scheduleUpdate()" />
                     </div>
@@ -859,26 +1034,46 @@
     </div>
     <div class="story-card-body" id="storyBody_${i}">
       <div class="field">
-        <label>Category</label>
+        <div class="field-head">
+          <label>Category</label>
+          <span class="tip-trigger" tabindex="0" role="button" aria-label="About this field">i</span>
+        </div>
+        <div class="tip-pop"><span class="tip-emoji">🏷️</span> Short section tag shown as a badge (e.g. POLITICS, TECH). Auto-uppercased in the preview.</div>
         <input type="text" id="s${i}_cat" value="${escAttr(cat)}" placeholder="e.g. POLITICS"
                oninput="syncBadge(${i}); scheduleUpdate()" autocomplete="off" />
       </div>
       <div class="field">
-        <label>Headline</label>
+        <div class="field-head">
+          <label>Headline</label>
+          <span class="tip-trigger" tabindex="0" role="button" aria-label="About this field">i</span>
+        </div>
+        <div class="tip-pop"><span class="tip-emoji">✍️</span> The main story title — the boldest line readers see first. Keep it short and punchy.</div>
         <input type="text" id="s${i}_hl" value="${escAttr(hl)}"
                oninput="syncPreview(${i}); scheduleUpdate()" autocomplete="off" />
       </div>
       <div class="field">
-        <label>Summary</label>
+        <div class="field-head">
+          <label>Summary</label>
+          <span class="tip-trigger" tabindex="0" role="button" aria-label="About this field">i</span>
+        </div>
+        <div class="tip-pop"><span class="tip-emoji">📝</span> One or two sentences under the headline. Aim for ~30–50 words.</div>
         <textarea id="s${i}_sum" oninput="scheduleUpdate()">${escH(story.summary || '')}</textarea>
       </div>
       <div class="field">
-        <label>Image URL</label>
+        <div class="field-head">
+          <label>Image URL</label>
+          <span class="tip-trigger" tabindex="0" role="button" aria-label="About this field">i</span>
+        </div>
+        <div class="tip-pop"><span class="tip-emoji">🖼️</span> Direct link to the story image. Use a full <b>https://</b> URL (Unsplash works great).</div>
         <input type="url" id="s${i}_img" value="${escAttr(story.image || '')}"
                placeholder="https://images.unsplash.com/…" oninput="scheduleUpdate()" autocomplete="off" />
       </div>
       <div class="field">
-        <label>Story Link</label>
+        <div class="field-head">
+          <label>Story Link</label>
+          <span class="tip-trigger" tabindex="0" role="button" aria-label="About this field">i</span>
+        </div>
+        <div class="tip-pop"><span class="tip-emoji">🔗</span> Where “Read more” points — the full <b>https://</b> URL to the article.</div>
         <input type="url" id="s${i}_lnk" value="${escAttr(story.link || '')}"
                placeholder="https://newsband.in/…" oninput="scheduleUpdate()" autocomplete="off" />
       </div>
@@ -994,6 +1189,9 @@
         function doExport() {
             window.location.href = "{{ api_prefix|default('/day12-editor') }}/api/export";
         }
+        function doExportZip() {
+            window.location.href = "{{ api_prefix|default('/day12-editor') }}/api/export_zip";
+        }
 
         /* ── JSON Import ─────────────────────────────────────────────────────────── */
         function openImportModal() {
@@ -1067,7 +1265,7 @@
             });
             document.addEventListener('mousemove', e => {
                 if (!dragging) return;
-                const newW = Math.min(560, Math.max(300, startW + (e.clientX - startX)));
+                const newW = Math.min(620, Math.max(300, startW + (e.clientX - startX)));
                 panel.style.width = newW + 'px';
             });
             document.addEventListener('mouseup', () => {
@@ -1080,6 +1278,32 @@
         })();
 
         /* ── Escape helpers ──────────────────────────────────────────────────────── */
+        /* Field tooltips: global toggle + click-to-pin */
+        function toggleAllTips() {
+            const on = document.body.classList.toggle('tips-on');
+            const btn = document.getElementById('tipsToggle');
+            if (btn) {
+                btn.classList.toggle('active', on);
+                btn.innerHTML = on ? 'ⓘ Tips On' : 'ⓘ Tips';
+            }
+        }
+
+        document.addEventListener('click', e => {
+            const trig = e.target.closest('.tip-trigger');
+            if (!trig) return;
+            const pop = trig.closest('.field-head')?.nextElementSibling;
+            if (pop && pop.classList.contains('tip-pop')) pop.classList.toggle('pinned');
+        });
+
+        document.addEventListener('keydown', e => {
+            const el = e.target;
+            if ((e.key === 'Enter' || e.key === ' ') && el.classList && el.classList.contains('tip-trigger')) {
+                e.preventDefault();
+                const pop = el.closest('.field-head')?.nextElementSibling;
+                if (pop && pop.classList.contains('tip-pop')) pop.classList.toggle('pinned');
+            }
+        });
+
         function escH(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
         function escAttr(s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 

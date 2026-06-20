@@ -588,6 +588,21 @@ def api_export():
     )
 
 
+@day17_editor_bp.route("/api/export_zip")
+def api_export_zip():
+    import zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("newsband_day17_newsletter.html", _current_html.encode("utf-8"))
+    buf.seek(0)
+    return send_file(
+        buf,
+        as_attachment=True,
+        download_name="newsband_day17_newsletter.zip",
+        mimetype="application/zip",
+    )
+
+
 @day17_editor_bp.route("/api/weather/fetch")
 def api_weather_fetch():
     import requests as _req

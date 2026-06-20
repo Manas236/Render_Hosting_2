@@ -219,6 +219,21 @@ def api_export():
     )
 
 
+@day6temp_editor_bp.route("/api/export_zip")
+def api_export_zip():
+    import zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("newsband_newsletter_day6temp.html", _current_html.encode("utf-8"))
+    buf.seek(0)
+    return send_file(
+        buf,
+        as_attachment=True,
+        download_name="newsband_newsletter_day6temp.zip",
+        mimetype="application/zip",
+    )
+
+
 @day6temp_editor_bp.route("/api/reset", methods=["POST"])
 def api_reset():
     global _current_html
