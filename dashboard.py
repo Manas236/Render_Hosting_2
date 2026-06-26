@@ -210,6 +210,12 @@ DASHBOARD_HTML = """
           <!-- DESCRIPTION ▸ Campaign Analytics -->
           <div class="editor-note editor-note--love" style="text-align: left; align-self: stretch;"><span class="editor-note-arrow">➤</span>Provides detailed analytics for your email campaigns, including open rates, click-through rates, and conversion metrics. Not for the ones making the newsletter, though.<span class="editor-note-claude">🤖 Claude: {{ q.campaign_analytics }}</span></div>
         </a>
+        <a href="{{ url_for('schedule_mailchimp_bp.index') }}" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+          <span class="dash-btn-icon">📅</span>
+          <div class="dash-btn-title">Schedule Mailchimp Newsletter</div>
+          <!-- DESCRIPTION ▸ Schedule Mailchimp Newsletter -->
+          <div class="editor-note editor-note--meh" style="text-align: left; align-self: stretch;"><span class="editor-note-arrow">➤</span>Still under construction — will let you queue a finished newsletter straight into Mailchimp with a send date and audience. Not ready yet.<span class="editor-note-claude">🤖 Claude: {{ q.schedule_mailchimp }}</span></div>
+        </a>
         <a href="{{ url_for('social_pipeline_bp.dashboard') }}" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
           <span class="dash-btn-icon">🚀</span>
           <div class="dash-btn-title">Social Pipeline</div>
@@ -352,6 +358,14 @@ CLAUDE_QUOTES = {
         "Scoreboard for the newsroom. The metrics don't lie, even when you'd prefer they did.",
         "The morning-after stats. Thrilling if you did well, humbling if you didn't.",
         "Turns vibes into hard numbers. Closure for the data-hungry, anxiety for everyone else.",
+    ],
+    'schedule_mailchimp': [
+        "Still in the workshop, sawdust everywhere. Big plans, half a floor, and a 'do not enter' sign nailed to nothing.",
+        "Coming soon™ — the two most load-bearing words in software. Hard hat required, results not yet included.",
+        "A promising blueprint and a lot of optimism. The scheduler exists mostly as vibes for now.",
+        "Under construction, like a highway that's been 'almost done' for three summers. We're getting there.",
+        "The IOU of features. Pours you a drink it can't serve yet — but it's writing the recipe, swear.",
+        "42% of a very good idea. The other 58% is gears spinning and me promising it'll be worth the wait.",
     ],
     'social_pipeline': [
         "The breaker box. You only open it when something's already on fire, and you always look a little afraid while doing it.",
