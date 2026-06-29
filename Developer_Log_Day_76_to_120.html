@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Developer Log Day 76–120 | Project Pandora</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f1115;
+            --text-color: #e0e6ed;
+            --accent-color: #00e5ff;
+            --card-bg: #1a1d24;
+            --border-color: #2b303b;
+            --success: #39d353;
+            --warning: #f1e05a;
+            --danger: #ff7b72;
+            --code-bg: #0d1117;
+            --purple: #bd93f9;
+            --orange: #ffb86c;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.7;
+            padding: 40px 20px;
+        }
+
+        .container { max-width: 1000px; margin: 0 auto; }
+
+        header {
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 24px;
+            margin-bottom: 48px;
+        }
+
+        h1 {
+            font-size: 2.6rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: #ffffff;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        h3 {
+            font-size: 1.15rem;
+            color: var(--accent-color);
+            margin: 24px 0 12px 0;
+        }
+
+        h4 {
+            font-size: 1rem;
+            color: #a5d6ff;
+            margin: 18px 0 8px 0;
+        }
+
+        p { margin-bottom: 14px; }
+
+        ul, ol {
+            margin-bottom: 18px;
+            padding-left: 24px;
+        }
+
+        li { margin-bottom: 8px; }
+
+        .date {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-color);
+            font-size: 0.9rem;
+        }
+
+        .intro-note {
+            margin-top: 16px;
+            font-size: 1.05rem;
+            color: #a5d6ff;
+        }
+
+        .section-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 30px 36px;
+            margin-bottom: 36px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-right: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            white-space: nowrap;
+        }
+
+        .badge.feature    { background: rgba(0,229,255,0.1);   color: var(--accent-color); border: 1px solid var(--accent-color); }
+        .badge.bugfix     { background: rgba(255,123,114,0.1);  color: var(--danger);       border: 1px solid var(--danger); }
+        .badge.refactor   { background: rgba(241,224,90,0.1);   color: var(--warning);      border: 1px solid var(--warning); }
+        .badge.architecture { background: rgba(189,147,249,0.1); color: var(--purple);      border: 1px solid var(--purple); }
+        .badge.migration  { background: rgba(255,184,108,0.1);  color: var(--orange);       border: 1px solid var(--orange); }
+        .badge.devops     { background: rgba(57,211,83,0.1);    color: var(--success);      border: 1px solid var(--success); }
+
+        pre {
+            background-color: var(--code-bg);
+            padding: 16px 20px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            overflow-x: auto;
+            margin: 16px 0 20px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            line-height: 1.65;
+            color: #a5d6ff;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.84em;
+            color: #ff7b72;
+            border: 1px solid var(--border-color);
+        }
+
+        .problem-box, .condition-box, .now-box, .note-box {
+            padding: 16px 20px;
+            margin: 18px 0;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .problem-box   { border-left: 4px solid var(--danger);  background: rgba(255,123,114,0.05); }
+        .condition-box { border-left: 4px solid var(--warning); background: rgba(241,224,90,0.05); }
+        .now-box       { border-left: 4px solid var(--success); background: rgba(57,211,83,0.05); }
+        .note-box      { border-left: 4px solid var(--purple);  background: rgba(189,147,249,0.05); }
+
+        .box-title { font-weight: 700; margin-bottom: 8px; font-size: 1rem; }
+        .problem-box   .box-title { color: var(--danger); }
+        .condition-box .box-title { color: var(--warning); }
+        .now-box       .box-title { color: var(--success); }
+        .note-box      .box-title { color: var(--purple); }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 16px 0;
+        }
+
+        .commit-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .commit-row:last-child { border-bottom: none; }
+
+        .commit-hash {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: var(--accent-color);
+            background: rgba(0,229,255,0.08);
+            border: 1px solid rgba(0,229,255,0.2);
+            border-radius: 4px;
+            padding: 2px 8px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .commit-desc { font-size: 0.92rem; color: var(--text-color); }
+        .commit-meta { font-size: 0.78rem; color: #6a737d; margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 18px 0;
+        }
+
+        .stat-card {
+            background: rgba(0,229,255,0.04);
+            border: 1px solid rgba(0,229,255,0.15);
+            border-radius: 6px;
+            padding: 14px 18px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .stat-label { font-size: 0.78rem; color: #6a737d; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .file-tree {
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 16px 20px;
+            margin: 16px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            line-height: 1.9;
+        }
+
+        .ft-new    { color: var(--success); }
+        .ft-mod    { color: var(--warning); }
+        .ft-del    { color: var(--danger); }
+        .ft-dir    { color: var(--accent-color); font-weight: 700; }
+        .ft-note   { color: #6a737d; margin-left: 8px; }
+
+        .arrow { color: #6a737d; margin: 0 6px; }
+
+        table.diff-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 0.85rem;
+        }
+
+        table.diff-table th {
+            background: rgba(0,229,255,0.1);
+            color: var(--accent-color);
+            padding: 8px 12px;
+            text-align: left;
+            font-family: 'JetBrains Mono', monospace;
+            border: 1px solid var(--border-color);
+        }
+
+        table.diff-table td {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+
+        table.diff-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+        .ins { color: var(--success); }
+        .del { color: var(--danger); }
+
+        hr.section-rule {
+            border: none;
+            border-top: 1px solid var(--border-color);
+            margin: 24px 0;
+        }
+
+        .page-break { page-break-before: always; }
+
+        @media print {
+            :root {
+                --bg-color: #ffffff;
+                --text-color: #222222;
+                --accent-color: #007bb5;
+                --card-bg: #ffffff;
+                --border-color: #cccccc;
+                --success: #2b8a3e;
+                --warning: #b08800;
+                --danger: #c92a2a;
+                --code-bg: #f4f4f4;
+                --purple: #6a0dad;
+                --orange: #b05a00;
+            }
+            body { padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .section-card { box-shadow: none; border: 1px solid #aaa; page-break-inside: avoid; }
+            pre, code { font-size: 0.78rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <header>
+        <h1>Developer Log Day 76–120</h1>
+        <div class="date">Recorded: June 26, 2026 &nbsp;|&nbsp; Project: Pandora</div>
+        <p class="intro-note">Comprehensive documentation of the platform's transformation from a pure newsletter-editing toolkit into a full editorial &amp; distribution suite. This log spans development days 76 through 120 — the period from commit <code>8798613</code> (where the Day 56–75 log closed) through the current working tree at commit <code>8b8610b</code>. It covers the integration of Mailchimp analytics &amp; remote campaign scheduling, the Social Pipeline orchestration dashboard, a second Git-native image pusher, live weather widgets, a Render → AWS Lightsail hosting migration, and a substantial dashboard re-design.</p>
+    </header>
+
+
+    <!-- ======================================================= -->
+    <!--  EXECUTIVE SUMMARY                                        -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2>Executive Summary: Day 75 Condition vs. Day 120 Condition</h2>
+
+        <div class="condition-box">
+            <div class="box-title">Where We Were (Day 75 Condition)</div>
+            <p>At the close of Day 75, Project Pandora was a mature, SDK-free newsletter-editing platform. The editor fleet had grown to ten variants, the Gemini calls had been moved to direct REST, and the financial ticker had multi-tier fallbacks. But the platform stopped at the editor's <em>Export HTML</em> button — everything downstream of producing the newsletter was still manual:</p>
+            <ul>
+                <li><strong>No distribution path:</strong> Once a newsletter was exported, the editor copy-pasted the HTML into Mailchimp by hand to schedule or send it. The platform had no idea whether a campaign went out, to whom, or how it performed.</li>
+                <li><strong>No analytics loop:</strong> Open rates, click rates, bounces, and unsubscribes lived entirely inside the Mailchimp web UI. There was no way to see campaign performance from within Pandora.</li>
+                <li><strong>Unfinished work in the tree:</strong> The Day 9(2) and Day 17 editors were still <em>unstaged</em> at the end of the last log — fully built but uncommitted, with their <code>app.py</code>/<code>dashboard.py</code>/<code>batch_extractor.py</code> wiring pending.</li>
+                <li><strong>Single image pipeline:</strong> Only the GitHub-REST <code>upload-image</code> pusher existed, serving images off raw <code>githubusercontent.com</code> URLs.</li>
+                <li><strong>No weather:</strong> The dashboard card for Day 17 promised a "weather and markets ticker," but no live weather data source had been wired into any editor.</li>
+                <li><strong>Hosting on Render only:</strong> The app ran exclusively on Render's ephemeral containers with no CI/CD; deploys were manual <code>git push</code> + Render auto-build.</li>
+                <li><strong>Flat dashboard:</strong> A single undifferentiated grid of editor cards with one-line descriptions — no notion of which template to use on which day, and no editorial guidance.</li>
+            </ul>
+        </div>
+
+        <div class="now-box">
+            <div class="box-title">Where We Are Now (Day 120 Condition)</div>
+            <p>Over the last ~45 development days the platform crossed the line from "makes the newsletter" to "ships the newsletter and tells you how it did." Every gap above has been addressed:</p>
+            <ul>
+                <li><strong>Mailchimp Campaign Analytics:</strong> A new <code>/mailchimp</code> blueprint pulls sent-campaign reports straight from the Mailchimp API — opens, clicks, bounces, unsubscribes and computed rates — with a 5-minute server-side cache and a 3-day look-back.</li>
+                <li><strong>Remote Newsletter Scheduling:</strong> The new <code>/schedule-mailchimp</code> tool takes the exact ZIP/HTML you exported from any editor, lets you pick an audience, subject and sender, and either schedules it (IST → quarter-hour UTC) or sends it immediately — creating the campaign, pushing the HTML, and triggering the schedule/send action through three chained Mailchimp API calls. A live, scaled preview iframe renders the newsletter before dispatch.</li>
+                <li><strong>Social Pipeline Dashboard:</strong> A runtime-state orchestration console at <code>/social-pipeline</code> with a file-backed state model (<code>social_data/runtime/</code> vs <code>social_data/persistent/</code>), a single-source-of-truth reset, scheduler stop signalling, and a 15-second auto-polling status grid.</li>
+                <li><strong>Git Image Pusher (v2):</strong> A second uploader (<code>upload2.py</code>, <code>/git-pusher</code>) that saves images locally and commits/pushes them with six selectable UI themes — complementing the original REST pusher.</li>
+                <li><strong>Live Weather Widgets:</strong> Open-Meteo (geocoding + forecast) with a <code>wttr.in</code> JSON fallback, wired into the Day 15, Day 17, Day 12(2) and Day 9(2) editors, complete with WMO weather-code → icon mapping.</li>
+                <li><strong>Hosting Migration → AWS Lightsail + Nginx:</strong> A GitHub Actions workflow now SSH-deploys to a Lightsail box (<code>/var/www/flaskapp</code>, systemd <code>flaskapp</code> service), and uploaded images are served from a self-hosted <code>/uploads/</code> path that Nginx intercepts in production.</li>
+                <li><strong>Day 9(2) &amp; Day 17 finalized:</strong> Both editors are now committed and fully wired; the fleet is a stable, registered ten.</li>
+                <li><strong>Export ZIP everywhere:</strong> Every editor gained an <code>/api/export_zip</code> endpoint, and the Code Viewer gained a "load directly from an editor" path via per-editor <code>/api/preview</code> routes.</li>
+                <li><strong>Dashboard re-design:</strong> Editors are now grouped by <em>Market Days</em> vs <em>Non-Market Days</em>, each card carries a sentiment-coded editorial callout (<code>.editor-note</code>), and an AI persona ("Claude's two cents") prints one of six weekday-rotating quips per card.</li>
+                <li><strong>First real documentation:</strong> <code>README.md</code> and <code>PROJECT_CONTEXT.md</code> were added, giving the project a proper module map, app map, and environment-variable reference.</li>
+            </ul>
+        </div>
+
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-number">4</div>
+                <div class="stat-label">New Platform Blueprints</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">10</div>
+                <div class="stat-label">Editors in Fleet (stable)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">8</div>
+                <div class="stat-label">Utility Tools on Dashboard</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">~14,000</div>
+                <div class="stat-label">Net Lines Added</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">80</div>
+                <div class="stat-label">Files Touched</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">2</div>
+                <div class="stat-label">Hosting Targets (Render→Lightsail)</div>
+            </div>
+        </div>
+
+        <div class="note-box">
+            <div class="box-title">A note on scope &amp; the working tree</div>
+            <p>Two changes documented here are still in the <strong>uncommitted working tree</strong> at the time of writing: the full implementation of the Mailchimp scheduler (the committed version at <code>8b8610b</code> was an "under construction" placeholder), and the matching dashboard copy that flips that tool from "not ready yet" to live. Both are described in their respective sections and flagged again under <em>Known Issues</em>.</p>
+        </div>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  COMMIT TIMELINE                                          -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2>Commit Timeline: Days 76–120</h2>
+        <p>The substantive feature commits below are authored by <em>Admin</em>; the numbered "<em>Nth commit</em>" entries are automated image pushes by the <em>Newsband Image Pusher</em> bot and routine sync merges. The period runs May&nbsp;22 → June&nbsp;26, 2026.</p>
+
+        <div class="commit-row">
+            <div><div class="commit-hash">33487cf</div></div>
+            <div>
+                <div class="commit-desc">63rd commit — finalized Day 9(2) + Day 17 full-stack additions left unstaged at the end of the Day 56–75 log (editors, templates, app/dashboard/batch wiring)</div>
+                <div class="commit-meta">May 22, 2026 · Admin</div>
+            </div>
+        </div>
+        <div class="commit-row">
+            <div><div class="commit-hash">843e47b</div></div>
+            <div>
+                <div class="commit-desc">Refactor market data to use a pct float instead of a pre-formatted change string; fix Day 17 S2/S3/S4/S5 link and paragraph extraction</div>
+                <div class="commit-meta">May 27, 2026 · Admin</div>
+            </div>
+        </div>
+        <div class="commit-row">
+            <div><div class="commit-hash">0157f69</div></div>
+            <div>
+                <div class="commit-desc">Add GitHub auto-deploy — GitHub Actions workflow that SSH-deploys to the server on push to <code>main</code></div>
+                <div class="commit-meta">May 28, 2026 · Admin</div>
+            </div>
+        </div>
+        <div class="commit-row">
+            <div><div class="commit-hash">5a3b86f</div></div>
+            <div>
+                <div class="commit-desc">Add social pipeline, weather blocks, new editors, and Day 17 market-snapshot restyle — the single largest changeset of the period</div>
+                <div class="commit-meta">May 30, 2026 · Admin</div>
+            </div>
+        </div>
+        <div class="commit-row">
+            <div><div class="commit-hash">d0de69d</div></div>
+            <div>
+                <div class="commit-desc">Fix Python 3.11 f-string regex issue (backslash inside an f-string expression); refactor <code>upload_image.py</code></div>
+                <div class="commit-meta">June 1, 2026 · Admin</div>
+            </div>
+        </div>
+        <div class="commit-row">
+            <div><div class="commit-hash">ee9ba34</div></div>
+            <div>
+                <div class="commit-desc">Add Git Image Pusher (<code>upload2.py</code>), weather panel for the Day 15 editor, and emoji/DOM fixes across the Day 9(2) editor</div>
+                <div class="commit-meta">June 1, 2026 · Admin</div>
+            </div>
+        </div>
+        <div class="commit-row">
+            <div><div class="commit-hash">a1b3f90</div></div>
+            <div>
+                <div class="commit-desc">Fixed: Day 15 news-card glitch (missing target element) and a batch-extractor glitch</div>
+                <div class="commit-meta">June 3, 2026 · Admin</div>
+            </div>
+        </div>
+        <div class="commit-row">
+            <div><div class="commit-hash">6ec09b7</div></div>
+            <div>
+                <div class="commit-desc">89th commit — image push (automated)</div>
+                <div class="commit-meta">June 5, 2026 · Newsband Image Pusher · automated</div>
+            </div>
+        </div>
+        <div class="commit-row">
+            <div><div class="commit-hash">ec767fc</div></div>
+            <div>
+                <div class="commit-desc">Changes in Day 12(2): added weather section</div>
+                <div class="commit-meta">June 9, 2026 · Admin</div>
+            </div>
+        </div>
+        <div class="commit-row">
+            <div><div class="commit-hash">5d0bd8e</div></div>
+            <div>
+                <div class="commit-desc">Add Export ZIP + inline Tips help across editors; dashboard editor-note callouts &amp; "Claude's two cents" quips</div>
+                <div class="commit-meta">June 20, 2026 · Admin</div>
+            </div>
+        </div>
+        <div class="commit-row">
+            <div><div class="commit-hash">8b8610b</div></div>
+            <div>
+                <div class="commit-desc">Upcoming feature: Scheduling Newsletter Remotely — registers the <code>/schedule-mailchimp</code> blueprint (placeholder UI committed)</div>
+                <div class="commit-meta">June 26, 2026 · Admin · <span style="color:var(--accent-color)">HEAD</span></div>
+            </div>
+        </div>
+        <div class="commit-row">
+            <div><div class="commit-hash">working</div></div>
+            <div>
+                <div class="commit-desc">Unstaged: full Mailchimp scheduler implementation (audiences, live preview, IST→UTC scheduling, send-now) + matching dashboard copy flip</div>
+                <div class="commit-meta">June 26, 2026 · Admin · pending commit</div>
+            </div>
+        </div>
+
+        <div class="note-box">
+            <div class="box-title">Reading the "Nth commit" noise</div>
+            <p>Throughout this window the working repo carried a stream of bot-authored merges (<code>0371508</code>, <code>73aa918</code>, <code>fb223df</code>, <code>981b89f</code>, <code>b0a14e2</code>, <code>ad1f409</code>, <code>eb06ef2</code>, <code>9fa7560</code>, <code>22ee8a7</code>, <code>5923ce5</code>, <code>f1d3964</code>, <code>f271cd3</code>, <code>3db7dc0</code>, <code>f542d63</code>, <code>337f91b</code>, <code>fa369c7</code>) generated by the image-push pipeline and the <code>Render_Hosting_2</code> remote sync. They carry no application-code changes and are omitted from the feature narrative below.</p>
+        </div>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  1. DAY 9(2) & DAY 17 FINALIZED                          -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge feature">Feature</span> 1. Closing the Loop on Day 9(2) &amp; Day 17</h2>
+
+        <p>The Day 56–75 log ended with both the Day 9(2) and Day 17 editors built but sitting <em>unstaged</em> in the working tree, with their platform wiring pending. The first order of business in this period was committing that work and verifying it ran end to end. They are now first-class, registered editors.</p>
+
+        <h3>app.py registration (now committed)</h3>
+        <p>Both editors are loaded with the established <code>importlib.util</code> pattern (their filenames contain parentheses and spaces, illegal in import identifiers) and registered with their URL prefixes:</p>
+<pre><code># ── Day 9(2) Editor (BS4-based, with markets ticker) ──
+spec_day9_2 = importlib.util.spec_from_file_location(
+    "day9_2_editor", "editor(for Day9(2).html).py")
+day9_2_module = importlib.util.module_from_spec(spec_day9_2)
+sys.modules["day9_2_editor"] = day9_2_module
+spec_day9_2.loader.exec_module(day9_2_module)
+day9_2_editor_bp = day9_2_module.day9_2_editor_bp
+
+# ── Day 17 Editor (BS4-based) ──
+spec_day17 = importlib.util.spec_from_file_location(
+    "day17_editor", "editor(for Day17.html).py")
+day17_module = importlib.util.module_from_spec(spec_day17)
+sys.modules["day17_editor"] = day17_module
+spec_day17.loader.exec_module(day17_module)
+day17_editor_bp = day17_module.day17_editor_bp
+
+app.register_blueprint(day9_2_editor_bp, url_prefix='/day9-2-editor')
+app.register_blueprint(day17_editor_bp,  url_prefix='/day17-editor')</code></pre>
+
+        <p>The Day 17 editor (<code>editor(for Day17.html).py</code>, ~891 lines) is the most feature-complete editor in the fleet: it carries article extraction for five stories, a markets snapshot, <em>and</em> a live weather widget (covered in §6). The Day 17 commit <code>843e47b</code> also fixed link- and paragraph-extraction for stories S2–S5, which were mis-mapping under the original selector strategy.</p>
+
+        <div class="now-box">
+            <div class="box-title">Fleet status: 10 registered editors</div>
+            <p>Day 6 Temp, Day 8, Day 9, Day 9(2), Template 1, Day 11, Day 12, Day 12(2), Day 15, Day 17. This count is now stable — no new editors were added after this point in the period; the focus shifted entirely to distribution, analytics and operations.</p>
+        </div>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  2. MAILCHIMP CAMPAIGN ANALYTICS                         -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge feature">Feature</span> 2. Mailchimp Campaign Analytics</h2>
+
+        <p>The first piece of the "what happens after Export?" story is read-only analytics. A new blueprint surfaces how recent campaigns performed without leaving Pandora. It is delivered in two files: <code>mailchimp.py</code> (a standalone, CLI-runnable data layer) and <code>mailchimp_bp.py</code> (the Flask blueprint with caching), backed by <code>templates/mailchimp_dashboard.html</code>.</p>
+
+        <h3>API configuration via the key suffix</h3>
+        <p>Mailchimp encodes the server/datacenter prefix as the suffix of the API key itself (e.g. <code>...-us21</code>). Both modules derive the base URL from that suffix, so no separate datacenter config is needed:</p>
+<pre><code>def _api_config():
+    api_key = os.environ.get("MAILCHIMP_API_KEY", "")
+    if not api_key:
+        raise RuntimeError("MAILCHIMP_API_KEY environment variable is not set.")
+    server = api_key.split("-")[-1]                       # "us21"
+    return (f"https://{server}.api.mailchimp.com/3.0",
+            {"Authorization": f"Bearer {api_key}"})</code></pre>
+
+        <h3>Three-call report assembly</h3>
+        <p>For a given date, <code>_build_stats()</code> pages through all <em>sent</em> campaigns in that day's window, fetches each campaign's report, and separately pages the unsubscribe list (which the summary report does not include as a running count). Per-campaign and aggregate rates are computed with a divide-by-zero-safe helper:</p>
+<pre><code>def _pct(part, total):
+    return round(part / total * 100, 2) if total else 0.0
+
+# per campaign: emails_sent, opens_total, clicks_total,
+#               hard_bounces + soft_bounces, unsubscribe count
+# → open_rate, click_rate, bounce_rate, unsub_rate</code></pre>
+
+        <h3>3-day look-back with a 5-minute cache</h3>
+        <p>The <code>/api/stats</code> route is the smart part. If no explicit <code>?date=</code> is supplied, it walks <em>today → yesterday → day-before-yesterday</em> and returns the first day that actually has campaigns — so the dashboard shows the most recent real send even on a quiet morning. Each resolved date is memoised in a module-level dict for 5 minutes to avoid hammering the Mailchimp API on every refresh:</p>
+<pre><code>_cache = {}
+_CACHE_TTL = 300  # seconds
+
+# for date in [today, yesterday, day_before]:
+#     if cached & fresh: return cached
+#     campaigns, totals = _build_stats(date)
+#     if campaigns or explicit-date-requested:
+#         cache and return
+# else: return an explicit empty payload listing checked_dates</code></pre>
+
+        <div class="note-box">
+            <div class="box-title">Error surfaces</div>
+            <p>A missing <code>MAILCHIMP_API_KEY</code> returns <code>500</code> with a clear message; any Mailchimp transport failure returns <code>502</code> with the upstream error text. The empty-state payload explicitly lists the <code>checked_dates</code> so the UI can say "no campaigns found for these three days" rather than rendering a blank table.</p>
+        </div>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  3. REMOTE NEWSLETTER SCHEDULING                         -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge feature">Feature</span> 3. Schedule Mailchimp Newsletter — Remote Dispatch</h2>
+
+        <p>This is the headline feature of the period and the most direct answer to the Day 75 gap. It closes the loop entirely: the file you export from any Pandora editor can now be uploaded, previewed, and scheduled straight into a Mailchimp audience — no manual copy-paste into the Mailchimp web UI. It lives at <code>/schedule-mailchimp</code> (<code>schedule_mailchimp_bp.py</code>).</p>
+
+        <div class="condition-box">
+            <div class="box-title">Two states in this log</div>
+            <p>Commit <code>8b8610b</code> ("Upcoming feature: Scheduling Newsletter Remotely") committed a <strong>212-line placeholder</strong> — a styled "under construction" page with a diagonal hazard strip and a done/todo checklist. The <strong>full ~704-line implementation</strong> described below currently lives in the uncommitted working tree. It is functionally complete and is documented here as the real state of the feature.</p>
+        </div>
+
+        <h3>Accepting the exported artifact (ZIP or HTML)</h3>
+        <p>Editors export either a bare <code>.html</code> or a <code>.zip</code> (via the new Export ZIP, §7). <code>_extract_html()</code> transparently handles both, and when given a ZIP it prefers the shallowest, shortest-named HTML file and skips macOS resource-fork entries:</p>
+<pre><code>def _extract_html(file_storage):
+    filename = (file_storage.filename or "").lower()
+    data = file_storage.read()
+    if filename.endswith(".zip"):
+        with zipfile.ZipFile(io.BytesIO(data)) as zf:
+            html_names = [n for n in zf.namelist()
+                          if n.lower().endswith((".html", ".htm"))
+                          and not n.startswith("__MACOSX")]
+            if not html_names:
+                raise ValueError("the ZIP does not contain an .html file.")
+            html_names.sort(key=lambda n: (n.count("/"), len(n)))
+            return zf.read(html_names[0]).decode("utf-8")
+    return data.decode("utf-8")</code></pre>
+
+        <h3>IST → quarter-hour UTC conversion</h3>
+        <p>The editor thinks in India Standard Time; Mailchimp requires schedule times in UTC, rounded to the quarter hour. <code>_to_mailchimp_utc()</code> handles the timezone shift and the 15-minute rounding, including the <code>:60</code> roll-over edge case:</p>
+<pre><code>IST = timezone(timedelta(hours=5, minutes=30))
+
+def _to_mailchimp_utc(local_str):
+    naive = datetime.strptime(local_str, "%Y-%m-%dT%H:%M")
+    utc = naive.replace(tzinfo=IST).astimezone(timezone.utc)
+    rounded = int(round(utc.minute / 15.0) * 15)
+    if rounded == 60:
+        utc = utc.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+    else:
+        utc = utc.replace(minute=rounded, second=0, microsecond=0)
+    return utc</code></pre>
+        <p>The default send time is pre-filled to <strong>tomorrow at 9:00&nbsp;AM IST</strong>, matching the team's standard morning dispatch.</p>
+
+        <h3>The three-step dispatch</h3>
+        <p>Mailchimp models a send as three separate API calls. <code>/api/schedule</code> chains them, surfacing a human-readable error at whichever step fails (and returning the created <code>campaign_id</code> so a half-built campaign can be found and cleaned up):</p>
+        <ol>
+            <li><strong>Create campaign</strong> — <code>POST /campaigns</code> with type <code>regular</code>, the chosen <code>list_id</code>, subject, from-name and reply-to. The internal title is stamped with an IST timestamp for traceability.</li>
+            <li><strong>Push content</strong> — <code>PUT /campaigns/{id}/content</code> with the extracted <code>html</code>.</li>
+            <li><strong>Schedule or send</strong> — <code>POST /campaigns/{id}/actions/schedule</code> with the quarter-hour UTC time, or <code>.../actions/send</code> for immediate dispatch.</li>
+        </ol>
+        <p>The schedule path validates that the requested time is at least a minute in the future before doing any work, and <code>_mc_err()</code> digs the <code>detail</code>/<code>title</code>/field-level <code>errors</code> out of Mailchimp's JSON error envelope so the operator sees "Send time must be in the future" rather than a raw <code>400</code>.</p>
+
+        <h3>Audience picker &amp; live preview</h3>
+        <p><code>/api/audiences</code> lists every Mailchimp list with member counts and auto-selects the team's default audience (<code>Push_160</code>) by normalising names (stripping spaces/underscores, case-insensitive). <code>/api/preview</code> returns the extracted HTML so the front-end can render it inside a sandboxed iframe, auto-scaled to fit the panel width, with an "⤢ Expand" fullscreen overlay. The whole page is a single self-contained <code>render_template_string</code> with a newsprint aesthetic (Playfair Display + IBM Plex Mono, hazard-free this time).</p>
+
+        <div class="now-box">
+            <div class="box-title">Why this matters</div>
+            <p>Before this, "send the newsletter" was an off-platform manual ritual every single morning. Now it is: open the editor → Export ZIP → drop it on the scheduler → confirm the preview → pick 9&nbsp;AM → done. The dashboard quip for this tool was updated from a self-deprecating "still in the workshop, sawdust everywhere" to "Quietly the most powerful button on this dashboard." It earned the promotion.</p>
+        </div>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  4. SOCIAL PIPELINE                                       -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge architecture">Architecture</span> 4. Social Pipeline — Runtime-State Orchestration</h2>
+
+        <p>The Social Pipeline is a runtime orchestration console for managing social-media post scheduling and publishing. It is split into a pure utility layer (<code>social_utils.py</code>) and a thin blueprint (<code>social_pipeline_bp.py</code>) serving a dashboard at <code>/social-pipeline</code> plus a status/reset API. The design principle is a clean split between <em>transient</em> and <em>durable</em> state.</p>
+
+        <h3>State-file layout: runtime vs persistent</h3>
+        <p>All pipeline data lives under <code>social_data/</code>, partitioned into two directories with very different lifecycles:</p>
+<pre><code>social_data/
+├── runtime/          ← ALL files here are cleared on reset
+│   ├── run_state.json          stage, in_progress, waiting_for_approval, current_post
+│   ├── current_session.json    active session identity (id, started_at)
+│   ├── scheduler_state.json    running, paused, next_run, stop_requested
+│   ├── lock.json               orchestration mutex (owner, acquired_at)
+│   ├── heartbeat.json          alive, last_beat
+│   ├── queue_processing.json   processing, queue_size
+│   ├── failed_run_marker.json  reason, failed_at
+│   ├── last_send_result.json   last batch-extractor "Send to Template" result
+│   └── *.lock                  any stray lock files
+└── persistent/       ← NEVER touched by reset
+    ├── approved_posts/   captions/   generated_images/
+    ├── payload_archive/  archive/
+    ├── posted_history.json
+    └── duplicate_protection.json</code></pre>
+
+        <h3>Single source of truth for reset</h3>
+        <p><code>reset_social_runtime_state()</code> is the <em>only</em> code path that clears state. It deletes every file in the <code>RUNTIME_FILES</code> manifest plus any stray <code>*.lock</code> files, logs each deletion, and returns a <code>{cleared, timestamp}</code> receipt. Crucially it never touches <code>persistent/</code> — posted history and duplicate-protection records survive a reset:</p>
+<pre><code>def reset_social_runtime_state():
+    ensure_dirs()
+    cleared = []
+    for filename in RUNTIME_FILES:
+        path = _runtime_path(filename)
+        if os.path.exists(path):
+            os.remove(path)
+            cleared.append(filename)
+            logger.info('[social-reset] cleared runtime state: %s', filename)
+    for lock_file in glob.glob(os.path.join(RUNTIME_DIR, '*.lock')):
+        os.remove(lock_file); cleared.append(os.path.basename(lock_file))
+    logger.info('[social-reset] reset complete — cleared: %s', cleared)
+    return {'cleared': cleared,
+            'timestamp': datetime.datetime.utcnow().isoformat() + 'Z'}</code></pre>
+
+        <h3>Graceful scheduler stop, then reset</h3>
+        <p>The reset endpoint is cooperative: if a scheduler is marked <code>running</code>, it first writes a <code>stop_requested</code> flag (and timestamp) into <code>scheduler_state.json</code> so the running loop can poll for it and exit cleanly, <em>then</em> wipes runtime state. <code>get_pipeline_status()</code> reads all eight runtime files and flattens them into one unified status dict consumed by the dashboard.</p>
+
+        <h3>Dashboard behaviour</h3>
+        <ul>
+            <li>Auto-polls <code>/api/social/status</code> every 15 seconds; a <strong>Refresh</strong> button forces an immediate re-fetch.</li>
+            <li><strong>Reset Pipeline</strong> is a red-outline button normally; when <code>in_progress == true</code> it becomes an amber <strong>Force Reset</strong> — never permanently disabled, so the operator can always break a stuck run.</li>
+            <li>A confirmation modal (with an extra amber warning when a run is in progress) guards the destructive action; success shows a green "Pipeline state reset successfully" banner.</li>
+        </ul>
+
+        <div class="note-box">
+            <div class="box-title">Batch Extractor now feeds the pipeline</div>
+            <p>The integration point: <code>batch_extractor.py</code>'s <code>api_send()</code> now writes its broadcast outcome to <code>last_send_result.json</code> in the runtime directory (timestamp, total, success count, per-endpoint results and failures). This means the "Send to Template" action is observable from the Social Pipeline status grid — see §11.</p>
+        </div>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  5. GIT IMAGE PUSHER (v2)                                -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge feature">Feature</span> 5. Git Image Pusher (upload2.py) — A Second Uploader</h2>
+
+        <p>The original <code>upload-image</code> tool pushes images through the GitHub REST API and serves them off raw <code>githubusercontent.com</code> URLs. A second, complementary uploader was added at <code>/git-pusher</code> (<code>upload2.py</code>, <code>git_pusher_bp</code>) that takes the Git-native route: it <strong>saves the image locally</strong> into the app's <code>uploaded_images/</code> directory and commits/pushes it to the same repository via <code>subprocess</code> git calls.</p>
+
+        <h3>Local-first storage</h3>
+<pre><code>REPO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         "uploaded_images")
+os.makedirs(REPO_PATH, exist_ok=True)</code></pre>
+        <p>Because the image is written into the served directory first, it is available immediately at the self-hosted <code>/uploads/&lt;filename&gt;</code> path (§9) even before the push completes — the commit is for durability, not for serving.</p>
+
+        <h3>Six selectable UI themes</h3>
+        <p>The tool ships a themed front-end with six full colour palettes selectable at runtime — <code>dark</code>, <code>light</code>, <code>dracula</code>, <code>forest</code>, <code>ocean</code> and <code>sunset</code> — each defined as a block of CSS custom properties on a <code>body.theme-*</code> selector. It is the most visually configurable utility in the suite.</p>
+
+        <div class="note-box">
+            <div class="box-title">Two pushers, one purpose</div>
+            <p>Keeping both uploaders is deliberate: the REST pusher is simpler and survives ephemeral filesystems (it never relies on a local working tree), while the Git pusher keeps the repository as the single source of truth for assets and pairs naturally with the new self-hosted <code>/uploads/</code> serving on Lightsail. The dashboard quips lean into the rivalry — the Git pusher is framed as "Image Uploader's overachieving cousin who insists on doing it 'the proper way' with version control."</p>
+        </div>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  6. LIVE WEATHER WIDGETS                                  -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge feature">Feature</span> 6. Live Weather Widgets (Open-Meteo + wttr.in)</h2>
+
+        <p>The Day 17 dashboard card had long promised "weather and markets ticker," but no weather data source existed. This period wired a real, key-free weather pipeline into four editors: <strong>Day 15, Day 17, Day 12(2)</strong> and <strong>Day 9(2)</strong>. The Day 12(2) weather section landed last, in commit <code>ec767fc</code> (June 9).</p>
+
+        <h3>Two-tier, no-API-key sourcing</h3>
+        <p>Each editor exposes a weather-fetch route that resolves a place name to a forecast through a primary/fallback chain — neither tier requires an API key, keeping the dependency surface at zero:</p>
+        <ol>
+            <li><strong>Tier 1 — Open-Meteo.</strong> Geocode the location via <code>geocoding-api.open-meteo.com/v1/search</code>, then request <code>daily=temperature_2m_max,temperature_2m_min,weather_code</code> from <code>api.open-meteo.com/v1/forecast</code> with <code>timezone=auto&amp;forecast_days=2</code>.</li>
+            <li><strong>Tier 2 — wttr.in.</strong> If Open-Meteo fails, fall back to <code>wttr.in/&lt;loc&gt;?format=j1</code>, reading <code>maxtempC</code>/<code>mintempC</code> and the mid-day hourly <code>weatherDesc</code>/<code>weatherCode</code>.</li>
+        </ol>
+
+        <h3>Resilience details worth noting</h3>
+<pre><code># Open-Meteo renamed weathercode → weather_code; support both
+codes = daily.get("weather_code") or daily.get("weathercode", [])
+...
+# WMO code → (description, icon)
+desc, icon = _WMO_CODES.get(wmo, ("Partly cloudy", "⛅"))</code></pre>
+        <ul>
+            <li><strong>Schema drift guard:</strong> Open-Meteo renamed <code>weathercode</code> to <code>weather_code</code>; the code accepts either key so an upstream rename can't blank the widget.</li>
+            <li><strong>WMO icon map:</strong> a <code>_WMO_CODES</code> table maps numeric WMO weather codes to a human description and an emoji icon.</li>
+            <li><strong>Mumbai temperature sanity clamp:</strong> a <code>clean_temp()</code> helper coerces values to integers and nudges implausibly low Mumbai readings up to a sane floor — a guard against a bad upstream reading printing "12°C" in a tropical-city newsletter.</li>
+            <li><strong>Never blank:</strong> if <em>both</em> tiers fail, the route still returns sensible defaults with a <code>warning</code> field and HTTP&nbsp;200, so the editor renders a usable widget rather than an error.</li>
+        </ul>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  7. EXPORT ZIP + CODE VIEWER LOAD-FROM-EDITOR            -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge feature">Feature</span> 7. Export ZIP Everywhere &amp; "Load From Editor"</h2>
+
+        <p>Commit <code>5d0bd8e</code> added a consistent <strong>Export ZIP</strong> capability across the editor fleet and re-plumbed the Code Viewer so it can pull HTML straight out of any editor — two changes that together make the newsletter artifact flow much smoother (and feed the new scheduler in §3).</p>
+
+        <h3>Per-editor /api/export_zip</h3>
+        <p>Every editor gained the same small endpoint — an in-memory ZIP containing the current HTML, served as a download. The Day 8 editor's version is representative:</p>
+<pre><code>@day8_v2_editor_bp.route("/api/export_zip")
+def api_export_zip():
+    import zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("newsband_newsletter_day8.html",
+                    _current_html.encode("utf-8"))
+    buf.seek(0)
+    return send_file(buf, as_attachment=True,
+                     download_name="newsband_newsletter_day8.zip",
+                     mimetype="application/zip")</code></pre>
+
+        <h3>Code Viewer: load directly from an editor</h3>
+        <p>The Code Viewer (<code>codeview.py</code>) previously only accepted an uploaded <code>.html</code> file. It now also offers a dropdown of all ten editors and a "Load →" button. Selecting one fetches that editor's <code>/api/preview</code> route and POSTs the returned HTML into the converter — so you can inspect the live editor state's source without exporting and re-uploading:</p>
+<pre><code>&lt;select id="editorSelect" class="editor-select"&gt;
+  &lt;option value="/day8-editor/api/preview"&gt;Day 8&lt;/option&gt;
+  &lt;option value="/day9-2-editor/api/preview"&gt;Day 9 (v2)&lt;/option&gt;
+  &lt;option value="/day12-2-editor/api/preview"&gt;Day 12 (v2)&lt;/option&gt;
+  &lt;option value="/day17-editor/api/preview"&gt;Day 17&lt;/option&gt;
+  ... all 10 editors ...
+&lt;/select&gt;</code></pre>
+        <p>A new <code>/api/preview</code> route now exists on <em>every</em> editor (and is also consumed by the scheduler's live-preview panel). The upload zone itself was also tightened — converted from a click-handler <code>&lt;div&gt;</code> to a proper <code>&lt;label&gt;</code> wrapping the file input, fixing a double-trigger quirk.</p>
+
+        <p>The same commit added inline "Tips" help across the editors to document these new export paths in-context for the editorial team.</p>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  8. DASHBOARD RE-DESIGN                                  -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge refactor">Refactor</span> 8. Dashboard Re-design: Grouping, Callouts &amp; "Claude's Two Cents"</h2>
+
+        <p>The dashboard went from a flat grid of look-alike cards to an opinionated editorial control surface. Three things changed.</p>
+
+        <h3>1 · Editors grouped by market day</h3>
+        <p>The editor grid is now split into two labelled groups, reflecting how the team actually chooses a template:</p>
+        <ul>
+            <li><strong>Mon–Fri · All Market Days</strong> — the four editors with a live markets ticker: Day 15, Day 12(2), Day 9(2), Day 17.</li>
+            <li><strong>Saturdays &amp; Non-Market Days</strong> — the remaining five: Day 11, Template 1, Day 8, Day 9, Day 12.</li>
+        </ul>
+
+        <h3>2 · Sentiment-coded <code>.editor-note</code> callouts</h3>
+        <p>Each card carries a description callout with a coloured left border encoding an editorial verdict — a house style now captured as a reusable pattern. Four sentiments: <span class="ins">love</span> (top picks, green), <span style="color:#1f5fa8">good</span> (dependable, blue), <span class="del">meh</span> (backup, amber) and <span style="color:#8a8175">dead</span> (RIP, grey). The note's little speech-bubble arrow, hover styling and <code>:empty</code> auto-hide are all part of the component:</p>
+<pre><code>&lt;div class="editor-note editor-note--love"&gt;
+  &lt;span class="editor-note-arrow"&gt;➤&lt;/span&gt;My #1 pick — great aesthetics.
+  &lt;span class="editor-note-claude"&gt;🤖 Claude: {{ q.day15 }}&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+
+        <h3>3 · "Claude's two cents" — weekday-rotating quips</h3>
+        <p>The most distinctive addition. A <code>CLAUDE_QUOTES</code> dict holds <strong>six quips per card</strong> — one for each weekday Mon→Sat — for every editor and utility tool. The dashboard route picks the slot matching today's weekday so the copy stays fresh daily (Sunday falls back to Saturday's):</p>
+<pre><code>@dashboard_bp.route('/dashboard')
+@require_login
+def dashboard():
+    idx = min(datetime.now().weekday(), 5)        # Mon=0 … Sat=5
+    todays_quotes = {k: v[idx] for k, v in CLAUDE_QUOTES.items()}
+    return render_template_string(DASHBOARD_HTML,
+                                  logo_url=config.LOGO_URL, q=todays_quotes)</code></pre>
+        <p>The quips are an editorial personality layer — the Day 15 template is "the valedictorian … peaked in high school and somehow keeps peaking," Day 11 gets "pour one out, it's not dead, it's resting (it's dead)," and the News Extractor is "the manual transmission in an automatic world." Each list keeps exactly six entries so the weekday index never goes out of range.</p>
+
+        <div class="note-box">
+            <div class="box-title">Working-tree copy flip for the scheduler</div>
+            <p>In the uncommitted working tree, the Schedule-Mailchimp card was flipped from <code>editor-note--meh</code> ("Still under construction … not ready yet") to <code>editor-note--love</code> with new live copy, and its six quips were rewritten from "coming soon™" placeholders to confident shipping lines — the dashboard's acknowledgement that §3 is now real.</p>
+        </div>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  9. HOSTING MIGRATION                                    -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge migration">Migration</span> 9. Hosting Migration: Render → AWS Lightsail + Nginx</h2>
+
+        <p>A quieter but architecturally significant shift: the platform gained a real CI/CD path to a self-managed server, moving off Render's build-on-push model toward an Nginx-fronted systemd service on AWS Lightsail. (The <code>README.md</code> / <code>PROJECT_CONTEXT.md</code> still describe Render as the host — documentation lags the infra here, noted under Known Issues.)</p>
+
+        <h3>GitHub Actions SSH deploy</h3>
+        <p>Commit <code>0157f69</code> added <code>.github/workflows/deploy.yml</code> — on every push to <code>main</code>, it SSHes into the server, pulls, reinstalls deps, and restarts the service via systemd:</p>
+<pre><code>name: Deploy to Lightsail
+on:
+  push: { branches: [ main ] }
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /var/www/flaskapp
+            git pull origin main
+            source venv/bin/activate
+            pip install -r requirements.txt
+            sudo systemctl restart flaskapp</code></pre>
+
+        <h3>Self-hosted image serving via /uploads/</h3>
+        <p>To match the new host, <code>app.py</code> added a Flask route that serves the <code>uploaded_images/</code> directory at <code>/uploads/&lt;filename&gt;</code>, with the explicit understanding that <strong>Nginx intercepts this path in production</strong> and Flask only handles it in dev/fallback:</p>
+<pre><code># Serve uploaded images — Nginx intercepts this in production;
+# Flask handles it in dev/fallback.
+_upload_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           "uploaded_images")
+
+@app.route('/uploads/&lt;filename&gt;')
+def serve_upload(filename):
+    return send_from_directory(_upload_dir, filename)</code></pre>
+        <p>Correspondingly, <code>upload_image.py</code> was refactored (commit <code>d0de69d</code>) so the URL it hands back points at the self-hosted <code>{base_url}/uploads/</code> path instead of a raw GitHub URL, the success copy changed from "saved at" to "available at," and a <code>cleanup_old_images()</code> helper was added to keep the directory from growing unbounded on a persistent disk.</p>
+
+        <div class="note-box">
+            <div class="box-title">Why move off raw GitHub URLs</div>
+            <p>Serving newsletter images from <code>githubusercontent.com</code> works but couples asset delivery to GitHub's CDN and rate limits, and makes the URLs awkward for special-character filenames. Serving from the app's own <code>/uploads/</code> path (Nginx in front) gives stable, predictable URLs on the same origin as the editors — better for email clients and for the preview iframes.</p>
+        </div>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  10. BUGFIXES                                            -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge bugfix">Bugfix</span> 10. Stability Fixes</h2>
+
+        <h3>Python 3.11 f-string regex crash (commit d0de69d)</h3>
+        <div class="problem-box">
+            <div class="box-title">Backslash inside an f-string expression</div>
+            <p>Several modules shared a <code>fix_date_br()</code> helper that embedded a regex substitution <em>directly inside</em> an f-string expression. On Python &lt; 3.12 a backslash is illegal inside the <code>{...}</code> portion of an f-string, so the file raised a <code>SyntaxError</code> at import time on the 3.11 runtime — taking down any blueprint that imported it.</p>
+        </div>
+<pre><code># Before — SyntaxError on Python 3.11 (backslash in f-string expr)
+text = f"{day}&lt;br&gt;{re.sub(r'^\s*&lt;br\s*/?&gt;\s*', '', rest, flags=re.I)}"
+
+# After — extract to a variable first
+cleaned_rest = re.sub(r'^\s*&lt;br\s*/?&gt;\s*', '', rest, flags=re.I)
+text = f"{day}&lt;br&gt;{cleaned_rest}"</code></pre>
+        <p>The fix was applied consistently across <code>backup.py</code>, <code>editor(for Day8.html).py</code>, <code>helpers.py</code> and the other files carrying the shared helper.</p>
+
+        <h3>Day 15 news-card glitch &amp; batch-extractor glitch (commit a1b3f90)</h3>
+        <p>The Day 15 editor could throw when a target element it expected to update was missing from the parsed DOM (a "missing target element" condition) — the save path now guards for the absent node instead of dereferencing <code>None</code>. The same commit cleared a glitch in the batch extractor's flow.</p>
+
+        <h3>Market data: pct float over pre-formatted strings (commit 843e47b)</h3>
+        <p>The markets layer was refactored to pass the change percentage around as a raw <code>float</code> rather than a pre-formatted display string. Carrying the numeric value means the sign (and therefore the up/down colour) is decided at render time from the number itself, rather than re-parsing a string like <code>"+1.2%"</code> — removing a class of formatting/colour-mismatch bugs. The same commit corrected Day 17's S2–S5 link and paragraph extraction.</p>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  11. BATCH EXTRACTOR EVOLUTION                           -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge refactor">Refactor</span> 11. Batch Extractor: Broadcast Result Telemetry</h2>
+
+        <p>The <code>api_send()</code> broadcast in <code>batch_extractor.py</code> was upgraded in two ways. First, its forwarding fleet was extended to all ten editors (adding the now-committed Day 9(2) and Day 17 endpoints). Second — and more importantly — it now <strong>persists a structured record of every broadcast</strong> into the Social Pipeline's runtime state:</p>
+<pre><code>from social_utils import write_runtime_file
+
+results = []
+# ... POST payload to each of the 10 /api/import_json endpoints ...
+#     results.append({"endpoint": target, "ok": True/False, "reason": ...})
+
+failed_details = [r for r in results if not r['ok']]
+write_runtime_file('last_send_result.json', {
+    'timestamp': datetime.datetime.utcnow().isoformat() + 'Z',
+    'total': len(endpoints),
+    'success_count': success_count,
+    'results': results,
+    'failed': failed_details,
+})</code></pre>
+        <p>The old design only tracked a flat <code>errors</code> list. The new design records a per-endpoint <code>{endpoint, ok, reason}</code> object for all ten targets, computes the failed subset, and writes the whole thing to <code>last_send_result.json</code>. <code>get_pipeline_status()</code> surfaces it as <code>send_total</code> / <code>send_success_count</code> / <code>send_results</code> / <code>send_failed</code> — so the Social Pipeline dashboard can show whether the morning's "Send to Template" actually reached every editor. This is the concrete wiring that connects the extractor to the new orchestration layer (§4).</p>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  12. DOCUMENTATION & HYGIENE                              -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2><span class="badge devops">DevOps</span> 12. Documentation, .gitignore &amp; the scratch/ Directory</h2>
+
+        <h3>First real project documentation</h3>
+        <p>Two documentation files were added for the first time:</p>
+        <ul>
+            <li><strong><code>README.md</code></strong> — a polished, badge-topped overview: an app map, a feature table, the full 10-template roster, a quick-start, the auth model, the AI-integration note (Gemini, up to 5 rotated keys), the tech stack and the project structure.</li>
+            <li><strong><code>PROJECT_CONTEXT.md</code></strong> — a denser engineering reference: the architecture table, a module map of every blueprint, the registered-editor table with URL prefixes, the full Social Pipeline spec (state layout, key functions, API endpoints, reset behaviour and button rules), the environment-variable list, and deployment notes.</li>
+        </ul>
+
+        <h3>.gitignore: never track runtime state</h3>
+<pre><code># Social pipeline runtime state — transient, regenerated at
+# runtime, must never be tracked
+social_data/runtime/</code></pre>
+        <p>This enforces the runtime/persistent split at the VCS level: the transient orchestration files are deliberately excluded so they never pollute a diff or get committed by a stray <code>git add .</code>.</p>
+
+        <h3>The scratch/ directory</h3>
+        <p>A <code>scratch/</code> directory of one-off dev scripts entered the tree during the weather/Day-17 work — inspectors and recovery helpers like <code>find_original_weather_layout.py</code>, <code>parse_day17_edits.py</code>, <code>restore_day17_clean.py</code>, <code>dump_original_html.py</code> and a <code>recovered_Day17.html</code> snapshot. These are dev-only tools (explicitly called out as not part of the served app in <code>PROJECT_CONTEXT.md</code>) used while reverse-engineering and restoring the Day 17 template's original weather layout; they should eventually be ignored or removed.</p>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  13. FILES CHANGED SUMMARY                               -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2>Complete File-Change Reference: Day 76–120</h2>
+        <p>A high-level accounting of the meaningful files touched this period (image binaries and bot-merge noise omitted). The full range tallies <strong>80 files changed, ~14,038 insertions, 347 deletions</strong>.</p>
+
+        <div class="file-tree">
+            <span class="ft-dir">Project Pandora/</span><br>
+            <br>
+            <span class="ft-note"># New platform blueprints</span><br>
+            <span class="ft-new">+</span> mailchimp.py <span class="ft-note">CLI-runnable Mailchimp data layer (campaigns / reports / unsubs)</span><br>
+            <span class="ft-new">+</span> mailchimp_bp.py <span class="ft-note">/mailchimp — analytics blueprint, 3-day look-back, 5-min cache</span><br>
+            <span class="ft-new">+</span> schedule_mailchimp_bp.py <span class="ft-note">/schedule-mailchimp — remote scheduling (placeholder committed; full impl in tree)</span><br>
+            <span class="ft-new">+</span> social_pipeline_bp.py <span class="ft-note">/social-pipeline — orchestration dashboard + status/reset API</span><br>
+            <span class="ft-new">+</span> social_utils.py <span class="ft-note">runtime/persistent state model, reset SSOT, scheduler stop</span><br>
+            <span class="ft-new">+</span> upload2.py <span class="ft-note">/git-pusher — Git-native image pusher, 6 UI themes</span><br>
+            <br>
+            <span class="ft-note"># Templates &amp; docs</span><br>
+            <span class="ft-new">+</span> templates/mailchimp_dashboard.html <span class="ft-note">Campaign Analytics UI</span><br>
+            <span class="ft-new">+</span> templates/editor_day17.html <span class="ft-note">Day 17 editor front-end (~1580 lines)</span><br>
+            <span class="ft-new">+</span> templates/editor_day9_2.html <span class="ft-note">Day 9(2) editor front-end (~1579 lines)</span><br>
+            <span class="ft-new">+</span> README.md <span class="ft-note">project overview, app map, template roster</span><br>
+            <span class="ft-new">+</span> PROJECT_CONTEXT.md <span class="ft-note">engineering reference, module map, social-pipeline spec</span><br>
+            <span class="ft-new">+</span> .github/workflows/deploy.yml <span class="ft-note">SSH deploy to Lightsail on push to main</span><br>
+            <br>
+            <span class="ft-note"># Editors &amp; templates (modified)</span><br>
+            <span class="ft-new">+</span> Day17.html / Day9(2).html <span class="ft-note">finalized &amp; committed (were unstaged)</span><br>
+            <span class="ft-new">+</span> editor(for Day17.html).py <span class="ft-note">~891 lines — articles + markets + weather</span><br>
+            <span class="ft-new">+</span> editor(for Day9(2).html).py <span class="ft-note">~843 lines — cards + markets + weather</span><br>
+            <span class="ft-mod">~</span> editor(for Day15.html).py <span class="ft-note">+weather panel, news-card fix, export_zip, api/preview</span><br>
+            <span class="ft-mod">~</span> editor(for Day12(2).html).py <span class="ft-note">+weather section (ec767fc), export_zip, api/preview</span><br>
+            <span class="ft-mod">~</span> editor_day8_v2 / editor_day6temp / editor_template1 / Day9 / Day12 <span class="ft-note">+export_zip + api/preview (+15 lines each)</span><br>
+            <br>
+            <span class="ft-note"># Platform wiring (modified)</span><br>
+            <span class="ft-mod">~</span> app.py <span class="ft-note">+4 blueprint registrations, +Day9(2)/Day17 editors, /uploads/ route</span><br>
+            <span class="ft-mod">~</span> dashboard.py <span class="ft-note">group split, .editor-note callouts, CLAUDE_QUOTES (+~350 lines)</span><br>
+            <span class="ft-mod">~</span> codeview.py <span class="ft-note">"load from editor" dropdown + label-wrapped upload zone</span><br>
+            <span class="ft-mod">~</span> batch_extractor.py <span class="ft-note">10-endpoint broadcast + last_send_result.json telemetry</span><br>
+            <span class="ft-mod">~</span> upload_image.py <span class="ft-note">/uploads/ URLs, cleanup_old_images(), f-string fix</span><br>
+            <span class="ft-mod">~</span> helpers.py / backup.py / editor(for Day8.html).py <span class="ft-note">Python 3.11 f-string fix</span><br>
+            <span class="ft-mod">~</span> .gitignore <span class="ft-note">social_data/runtime/ excluded</span><br>
+            <br>
+            <span class="ft-dir">scratch/</span> <span class="ft-note">dev-only Day 17 / weather recovery scripts (~17 files)</span><br>
+            <span class="ft-dir">social_data/</span> <span class="ft-note">runtime/ (ignored) + persistent/ state tree</span><br>
+        </div>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  14. ARCHITECTURAL STATE MAP                             -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2>Current Platform Architecture (Day 120 State)</h2>
+
+        <p>The complete request-path architecture as it stands at Day 120. New since Day 75 is marked <span style="color:var(--accent-color)">← NEW</span>.</p>
+
+<pre><code>Browser / Email Client
+        │
+        ▼
+  [ AWS Lightsail · Nginx → Gunicorn (systemd flaskapp) ]   ← NEW host
+  [ Render (legacy / fallback) ]
+        │
+        ▼
+  app.py → create_app()
+  │
+  ├── /                       login_bp          (login.py)
+  ├── /dashboard              dashboard_bp      grouped + .editor-note + Claude quips
+  ├── /codeview · /converter  codeview_bp       + "load from editor" dropdown
+  │
+  ├── /extractor              extractor_bp      Gemini REST (no SDK)
+  ├── /batch-extractor        batch_extractor_bp
+  │       ├── /api/batch-stream   ← SSE, threaded
+  │       └── /api/send           ← broadcast to 10 editors + last_send_result.json
+  │
+  ├── /upload-image           upload_image_bp   GitHub REST → /uploads/ URLs
+  ├── /git-pusher             git_pusher_bp     ← NEW  local save + git commit/push
+  ├── /mailchimp              mailchimp_bp      ← NEW  campaign analytics (cached)
+  ├── /schedule-mailchimp     schedule_mailchimp_bp ← NEW remote scheduling
+  │       ├── /api/audiences   /api/preview
+  │       └── /api/schedule    (create → content → schedule|send)
+  ├── /social-pipeline        social_pipeline_bp ← NEW orchestration console
+  │       ├── /api/social/status   (15s auto-poll)
+  │       └── /api/social/reset    (stop scheduler → clear runtime SSOT)
+  │
+  ├── /uploads/&lt;file&gt;         serve_upload      ← NEW  Nginx in prod, Flask in dev
+  │
+  └── Editor fleet (10, stable):
+      /day6temp /day8 /day9 /day9-2 /template1
+      /day11 /day12 /day12-2 /day15 /day17
+          └── Each editor exposes:
+              ├── GET  /              → editor UI
+              ├── GET  /api/fields    → editable fields as JSON
+              ├── POST /api/save      → apply updates (BeautifulSoup4)
+              ├── GET  /api/export    → download HTML
+              ├── GET  /api/export_zip→ download HTML as ZIP        ← NEW
+              ├── GET  /api/preview   → current HTML (codeview/scheduler) ← NEW
+              ├── POST /api/import_json → batch-extractor broadcast
+              ├── GET  /api/markets   (Day 15, 12(2), 9(2), 17)
+              └── GET  /api/weather   (Day 15, 12(2), 9(2), 17)     ← NEW
+                      └── Open-Meteo (geocode+forecast) → wttr.in fallback</code></pre>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  15. KNOWN ISSUES                                        -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2>Known Issues &amp; Open Items at Day 120</h2>
+
+        <div class="problem-box">
+            <div class="box-title">Mailchimp scheduler is uncommitted</div>
+            <p>The full ~704-line implementation of <code>schedule_mailchimp_bp.py</code> (audiences, live preview, IST→UTC scheduling, send-now) and the matching dashboard copy flip are in the <strong>working tree only</strong>. Commit <code>8b8610b</code> shipped a placeholder. Stage and commit both before the next Lightsail deploy, or the deployed app will still show "under construction."</p>
+        </div>
+
+        <div class="condition-box">
+            <div class="box-title">Docs say "Render," infra says "Lightsail"</div>
+            <p><code>README.md</code> and <code>PROJECT_CONTEXT.md</code> both list Render as the host, but <code>deploy.yml</code> targets a Lightsail box with Nginx and a systemd <code>flaskapp</code> service, and image serving assumes Nginx intercepts <code>/uploads/</code>. The documentation should be reconciled with the actual deploy target, and the dual-host story (is Render still a live fallback, or fully retired?) clarified.</p>
+        </div>
+
+        <div class="condition-box">
+            <div class="box-title">scratch/ is in the repo</div>
+            <p>~17 one-off recovery/inspection scripts plus a <code>recovered_Day17.html</code> snapshot are tracked under <code>scratch/</code>. They are dev-only and should be moved behind <code>.gitignore</code> (or deleted) so they stop appearing in diffs and file counts.</p>
+        </div>
+
+        <div class="condition-box">
+            <div class="box-title">social_data/persistent durability on ephemeral hosts</div>
+            <p>As <code>PROJECT_CONTEXT.md</code> notes, <code>social_data/persistent/</code> (posted history, duplicate protection, approved posts) needs a mounted disk or external storage to survive a container restart. On the new Lightsail box this is a real local disk; if Render remains a fallback, persistence there is not guaranteed.</p>
+        </div>
+
+        <div class="problem-box">
+            <div class="box-title">No campaign de-duplication in the scheduler</div>
+            <p>The scheduler creates a fresh Mailchimp campaign on every submit. Double-submitting the same exported file (or a flaky network retry after step 1 succeeds) can leave orphaned half-built campaigns in Mailchimp. The response returns the <code>campaign_id</code> for manual cleanup, but an idempotency guard or a "you already scheduled this today" check would be safer.</p>
+        </div>
+
+        <div class="condition-box">
+            <div class="box-title">Unprotected routes — still open from Day 75</div>
+            <p>Auth is a single session login; the carried-over recommendation to add explicit route guards still applies, now across a wider surface (four new blueprints, including the destructive Social Pipeline reset and the live Mailchimp dispatch).</p>
+        </div>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!--  16. CONCLUSION                                          -->
+    <!-- ======================================================= -->
+    <div class="section-card">
+        <h2>Conclusion &amp; Next Steps</h2>
+
+        <p>Days 76–120 were the period Project Pandora outgrew the word "editor." The platform that began the window as a sophisticated HTML-newsletter builder ended it as an end-to-end editorial pipeline: extract the stories, build the newsletter in one of ten templates, export it, schedule it into Mailchimp, watch the open and click rates come back, and orchestrate the social side — all without leaving the dashboard. Along the way it picked up a real CI/CD path to a self-managed Lightsail host, live weather, a second image pipeline, its first documentation, and a dashboard with genuine editorial opinions.</p>
+
+        <p>The architecture proved it can absorb whole new product surfaces — analytics, scheduling, orchestration — as cleanly registered blueprints, not bolt-ons. The investment focus for Days 121+ should shift from "add capability" to "harden and finish."</p>
+
+        <h3>Priority Next Steps</h3>
+        <ol>
+            <li><strong>Commit the scheduler.</strong> Stage the full <code>schedule_mailchimp_bp.py</code> implementation and the dashboard copy flip, then deploy — the marquee feature of this log is currently invisible in production.</li>
+            <li><strong>Reconcile the hosting story.</strong> Update <code>README.md</code> / <code>PROJECT_CONTEXT.md</code> to reflect Lightsail + Nginx, confirm the systemd unit and Nginx <code>/uploads/</code> location block, and decide Render's status.</li>
+            <li><strong>Add scheduler idempotency.</strong> Guard against duplicate/orphaned Mailchimp campaigns on resubmit or retry.</li>
+            <li><strong>Clean the tree.</strong> Move <code>scratch/</code> behind <code>.gitignore</code> and confirm <code>social_data/runtime/</code> stays untracked everywhere.</li>
+            <li><strong>Route guards.</strong> Apply explicit auth protection to all new blueprints — especially the destructive reset and the live dispatch endpoints.</li>
+            <li><strong>Close the analytics loop.</strong> Link a scheduled campaign's <code>campaign_id</code> from the scheduler through to the Campaign Analytics view, so "I sent this" and "here's how it did" become one continuous thread.</li>
+        </ol>
+    </div>
+
+</div>
+
+</body>
+</html>

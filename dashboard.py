@@ -173,55 +173,69 @@ DASHBOARD_HTML = """
       </div>
 
       <div class="rule-divider" style="margin-top: 36px;"><span></span><em>UTILITY TOOLS</em><span></span></div>
-      <div class="dashboard-grid">
-        <a href="{{ url_for('codeview_bp.converter') }}" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
-          <span class="dash-btn-icon">💻</span>
-          <div class="dash-btn-title">Code Viewer</div>
-          <!-- DESCRIPTION ▸ Code Viewer -->
-          <div class="editor-note editor-note--good" style="text-align: left; align-self: stretch;"><span class="editor-note-arrow">➤</span>Come here — this is the place to come to after you've clicked Export HTML. It'll give you the raw code you need.<span class="editor-note-claude">🤖 Claude: {{ q.code_viewer }}</span></div>
-        </a>
-        <a href="{{ url_for('extractor_bp.index') }}" target="_blank" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
-          <span class="dash-btn-icon">📰</span>
-          <div class="dash-btn-title">News Extractor Analyzer</div>
-          <!-- DESCRIPTION ▸ News Extractor Analyzer -->
-          <div class="editor-note editor-note--dead" style="text-align: left; align-self: stretch;"><span class="editor-note-arrow">➤</span>Dead weight — don't press this. Not useful unless you're fond of doing things the manual way.<span class="editor-note-claude">🤖 Claude: {{ q.news_extractor }}</span></div>
-        </a>
-        <a href="{{ url_for('batch_extractor_bp.index') }}" target="_blank" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
-          <span class="dash-btn-icon">⚡</span>
-          <div class="dash-btn-title">Batch Extractor</div>
-          <!-- DESCRIPTION ▸ Batch Extractor -->
-          <div class="editor-note editor-note--love" style="text-align: left; align-self: stretch;"><span class="editor-note-arrow">➤</span>Extracts and processes multiple news articles at once. This is the place to come when you're starting to make the newsletters — paste all five links, send to template, and this guy's job is done.<span class="editor-note-claude">🤖 Claude: {{ q.batch_extractor }}</span></div>
-        </a>
-        <a href="{{ url_for('upload_image_bp.index') }}" target="_blank" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
-          <span class="dash-btn-icon">🖼️</span>
-          <div class="dash-btn-title">Image Uploader</div>
-          <!-- DESCRIPTION ▸ Image Uploader -->
-          <div class="editor-note editor-note--love" style="text-align: left; align-self: stretch;"><span class="editor-note-arrow">➤</span>This is the superior image uploader — fast and reliable. One thing to keep in mind: it can't process big files, so compress them and give it to him, or change the photo size.<span class="editor-note-claude">🤖 Claude: {{ q.image_uploader }}</span></div>
-        </a>
-        <a href="{{ url_for('git_pusher_bp.index') }}" target="_blank" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
-          <span class="dash-btn-icon">🐙</span>
-          <div class="dash-btn-title">Git Image Pusher</div>
-          <!-- DESCRIPTION ▸ Git Image Pusher -->
-          <div class="editor-note editor-note--meh" style="text-align: left; align-self: stretch;"><span class="editor-note-arrow">➤</span>The inferior image uploader. Slow and inconsistent — might work, might not. High chances of not working.<span class="editor-note-claude">🤖 Claude: {{ q.git_pusher }}</span></div>
-        </a>
-        <a href="{{ url_for('mailchimp_bp.index') }}" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
-          <span class="dash-btn-icon">📬</span>
-          <div class="dash-btn-title">Campaign Analytics</div>
-          <!-- DESCRIPTION ▸ Campaign Analytics -->
-          <div class="editor-note editor-note--love" style="text-align: left; align-self: stretch;"><span class="editor-note-arrow">➤</span>Provides detailed analytics for your email campaigns, including open rates, click-through rates, and conversion metrics. Not for the ones making the newsletter, though.<span class="editor-note-claude">🤖 Claude: {{ q.campaign_analytics }}</span></div>
-        </a>
-        <a href="{{ url_for('schedule_mailchimp_bp.index') }}" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
-          <span class="dash-btn-icon">📅</span>
-          <div class="dash-btn-title">Schedule Mailchimp Newsletter</div>
-          <!-- DESCRIPTION ▸ Schedule Mailchimp Newsletter -->
-          <div class="editor-note editor-note--meh" style="text-align: left; align-self: stretch;"><span class="editor-note-arrow">➤</span>Still under construction — will let you queue a finished newsletter straight into Mailchimp with a send date and audience. Not ready yet.<span class="editor-note-claude">🤖 Claude: {{ q.schedule_mailchimp }}</span></div>
-        </a>
-        <a href="{{ url_for('social_pipeline_bp.dashboard') }}" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
-          <span class="dash-btn-icon">🚀</span>
-          <div class="dash-btn-title">Social Pipeline</div>
-          <!-- DESCRIPTION ▸ Social Pipeline -->
-          <div class="editor-note editor-note--meh" style="text-align: left; align-self: stretch;"><span class="editor-note-arrow">➤</span>Nothing to see here.<span class="editor-note-claude">🤖 Claude: {{ q.social_pipeline }}</span></div>
-        </a>
+
+      <div class="editor-group">
+        <div class="group-tag group-tag--market">
+          <span class="group-tag-dot"></span>Important Tools <span class="group-tag-note">· Daily Drivers</span>
+        </div>
+        <div class="dashboard-grid">
+          <a href="{{ url_for('batch_extractor_bp.index') }}" target="_blank" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <span class="dash-btn-icon">⚡</span>
+            <div class="dash-btn-title">Batch Extractor</div>
+            <!-- DESCRIPTION ▸ Batch Extractor -->
+            <div class="editor-note editor-note--love" style="text-align: left; align-self: stretch;"><span class="editor-note-arrow">➤</span>Extracts and processes multiple news articles at once. This is the place to come when you're starting to make the newsletters — paste all five links, send to template, and this guy's job is done.<span class="editor-note-claude">🤖 Claude: {{ q.batch_extractor }}</span></div>
+          </a>
+          <a href="{{ url_for('schedule_mailchimp_2_bp.index') }}" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <span class="dash-btn-icon">📅</span>
+            <div class="dash-btn-title">Schedule Mailchimp Newsletter</div>
+            <!-- DESCRIPTION ▸ Schedule Mailchimp Newsletter -->
+            <div class="editor-note editor-note--love" style="text-align: left; align-self: stretch;"><span class="editor-note-arrow">➤</span>Upload the newsletter you exported here and ship it straight to a Mailchimp audience — pick the audience, subject and from-details, then schedule it (next day at 9 AM IST by default) or send it right now.<span class="editor-note-claude">🤖 Claude: {{ q.schedule_mailchimp }}</span></div>
+          </a>
+          <a href="{{ url_for('upload_image_bp.index') }}" target="_blank" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <span class="dash-btn-icon">🖼️</span>
+            <div class="dash-btn-title">Image Uploader</div>
+            <!-- DESCRIPTION ▸ Image Uploader -->
+            <div class="editor-note editor-note--love" style="text-align: left; align-self: stretch;"><span class="editor-note-arrow">➤</span>This is the superior image uploader — fast and reliable. One thing to keep in mind: it can't process big files, so compress them and give it to him, or change the photo size.<span class="editor-note-claude">🤖 Claude: {{ q.image_uploader }}</span></div>
+          </a>
+        </div>
+      </div>
+
+      <div class="editor-group" style="margin-top: 28px;">
+        <div class="group-tag group-tag--rest">
+          <span class="group-tag-dot"></span>Other Tools <span class="group-tag-note">· Situational</span>
+        </div>
+        <div class="dashboard-grid">
+          <a href="{{ url_for('codeview_bp.converter') }}" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <span class="dash-btn-icon">💻</span>
+            <div class="dash-btn-title">Code Viewer</div>
+            <!-- DESCRIPTION ▸ Code Viewer -->
+            <div class="editor-note editor-note--good" style="text-align: left; align-self: stretch;"><span class="editor-note-arrow">➤</span>Come here — this is the place to come to after you've clicked Export HTML. It'll give you the raw code you need.<span class="editor-note-claude">🤖 Claude: {{ q.code_viewer }}</span></div>
+          </a>
+          <a href="{{ url_for('extractor_bp.index') }}" target="_blank" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <span class="dash-btn-icon">📰</span>
+            <div class="dash-btn-title">News Extractor Analyzer</div>
+            <!-- DESCRIPTION ▸ News Extractor Analyzer -->
+            <div class="editor-note editor-note--dead" style="text-align: left; align-self: stretch;"><span class="editor-note-arrow">➤</span>Dead weight — don't press this. Not useful unless you're fond of doing things the manual way.<span class="editor-note-claude">🤖 Claude: {{ q.news_extractor }}</span></div>
+          </a>
+          <a href="{{ url_for('git_pusher_bp.index') }}" target="_blank" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <span class="dash-btn-icon">🐙</span>
+            <div class="dash-btn-title">Git Image Pusher</div>
+            <!-- DESCRIPTION ▸ Git Image Pusher -->
+            <div class="editor-note editor-note--meh" style="text-align: left; align-self: stretch;"><span class="editor-note-arrow">➤</span>The inferior image uploader. Slow and inconsistent — might work, might not. High chances of not working.<span class="editor-note-claude">🤖 Claude: {{ q.git_pusher }}</span></div>
+          </a>
+          <a href="{{ url_for('mailchimp_bp.index') }}" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <span class="dash-btn-icon">📬</span>
+            <div class="dash-btn-title">Campaign Analytics</div>
+            <!-- DESCRIPTION ▸ Campaign Analytics -->
+            <div class="editor-note editor-note--love" style="text-align: left; align-self: stretch;"><span class="editor-note-arrow">➤</span>Provides detailed analytics for your email campaigns, including open rates, click-through rates, and conversion metrics. Not for the ones making the newsletter, though.<span class="editor-note-claude">🤖 Claude: {{ q.campaign_analytics }}</span></div>
+          </a>
+          <a href="{{ url_for('social_pipeline_bp.dashboard') }}" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <span class="dash-btn-icon">🚀</span>
+            <div class="dash-btn-title">Social Pipeline</div>
+            <!-- DESCRIPTION ▸ Social Pipeline -->
+            <div class="editor-note editor-note--meh" style="text-align: left; align-self: stretch;"><span class="editor-note-arrow">➤</span>Nothing to see here.<span class="editor-note-claude">🤖 Claude: {{ q.social_pipeline }}</span></div>
+          </a>
+        </div>
       </div>
     </div>
     <div class="footer-note">NEWSBAND JOURNALISM PLATFORM &nbsp;·&nbsp; CONFIDENTIAL</div>
@@ -360,12 +374,20 @@ CLAUDE_QUOTES = {
         "Turns vibes into hard numbers. Closure for the data-hungry, anxiety for everyone else.",
     ],
     'schedule_mailchimp': [
-        "Still in the workshop, sawdust everywhere. Big plans, half a floor, and a 'do not enter' sign nailed to nothing.",
-        "Coming soon™ — the two most load-bearing words in software. Hard hat required, results not yet included.",
-        "A promising blueprint and a lot of optimism. The scheduler exists mostly as vibes for now.",
-        "Under construction, like a highway that's been 'almost done' for three summers. We're getting there.",
-        "The IOU of features. Pours you a drink it can't serve yet — but it's writing the recipe, swear.",
-        "42% of a very good idea. The other 58% is gears spinning and me promising it'll be worth the wait.",
+        "From export to inbox in one breath. Upload, pick a time, walk away looking important.",
+        "The launch button finally works. Point it at an audience and let the newsletter fly.",
+        "Drag, drop, schedule, done. The 'set it and forget it' of journalism — minus the rotisserie.",
+        "Your 9 AM dispatch, queued while you sleep. It does the waiting so you don't have to.",
+        "One file in, two thousand inboxes out. Quietly the most powerful button on this dashboard.",
+        "No more copy-pasting into Mailchimp at midnight. This sends it for you, on schedule, on time.",
+    ],
+    'schedule_mailchimp_2': [
+        "The crash-test dummy of schedulers. Break it here so the real one stays pretty.",
+        "A sandbox with real consequences — it still sends, so aim carefully.",
+        "Where new ideas go to be tried, broken, and occasionally kept.",
+        "The understudy. Same lines as the lead, fewer people watching.",
+        "Your scratch pad for scheduling. Doodle freely, just remember it has a send button.",
+        "The lab bench. Goggles optional, but it does fire live emails — so maybe not.",
     ],
     'social_pipeline': [
         "The breaker box. You only open it when something's already on fire, and you always look a little afraid while doing it.",

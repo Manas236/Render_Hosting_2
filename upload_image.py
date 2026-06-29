@@ -159,6 +159,27 @@ HTML = """
       transition: background 0.3s, border-color 0.3s;
     }
 
+    /* ── Back to dashboard ── */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--label);
+      text-decoration: none;
+      margin-bottom: 20px;
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--badge-bg);
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+    }
+    .back-link:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
     /* ── Theme switcher ── */
     .theme-bar {
       display: flex;
@@ -348,6 +369,8 @@ HTML = """
 </head>
 <body class="theme-light">
 <div class="card">
+
+  <a href="{{ url_for('dashboard_bp.dashboard') }}" class="back-link" id="backLink">&#8592; Back to Dashboard</a>
 
   <!-- Theme switcher -->
   <div class="theme-bar">

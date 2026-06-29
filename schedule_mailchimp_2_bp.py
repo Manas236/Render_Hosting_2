@@ -16,7 +16,7 @@ try:
 except ImportError:
     pass
 
-schedule_mailchimp_bp = Blueprint('schedule_mailchimp_bp', __name__)
+schedule_mailchimp_2_bp = Blueprint('schedule_mailchimp_2_bp', __name__)
 
 # ── Defaults (all overridable from the UI) ──────────────────────────
 DEFAULT_AUDIENCE_NAME = "Push_160"
@@ -149,7 +149,7 @@ def _delete_campaign(base_url, headers, cid):
 # ─────────────────────────────────────────────────────────────────────
 # Routes
 # ─────────────────────────────────────────────────────────────────────
-@schedule_mailchimp_bp.route('/')
+@schedule_mailchimp_2_bp.route('/')
 @require_login
 def index():
     default_date, default_clock = _default_send_time().split("T")
@@ -164,7 +164,7 @@ def index():
     )
 
 
-@schedule_mailchimp_bp.route('/api/audiences')
+@schedule_mailchimp_2_bp.route('/api/audiences')
 @require_login
 def api_audiences():
     try:
@@ -193,7 +193,7 @@ def api_audiences():
     return jsonify({"audiences": audiences, "default_name": DEFAULT_AUDIENCE_NAME})
 
 
-@schedule_mailchimp_bp.route('/api/preview', methods=["POST"])
+@schedule_mailchimp_2_bp.route('/api/preview', methods=["POST"])
 @require_login
 def api_preview():
     """Extract and return the newsletter HTML so the UI can show a live preview."""
@@ -211,7 +211,7 @@ def api_preview():
     return jsonify({"html": html})
 
 
-@schedule_mailchimp_bp.route('/api/schedule', methods=["POST"])
+@schedule_mailchimp_2_bp.route('/api/schedule', methods=["POST"])
 @require_login
 def api_schedule():
     try:
@@ -289,7 +289,7 @@ def api_schedule():
     })
 
 
-@schedule_mailchimp_bp.route('/api/test', methods=["POST"])
+@schedule_mailchimp_2_bp.route('/api/test', methods=["POST"])
 @require_login
 def api_test():
     """Send a test copy of the newsletter to one or more addresses.
@@ -366,278 +366,399 @@ SCHEDULE_MAILCHIMP_HTML = """<!DOCTYPE html>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Schedule Mailchimp Newsletter (Classic) — Newsband</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+  <title>Schedule Mailchimp Newsletter — Newsband</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --ink: #0a0a0a; --paper: #f4f0e8; --accent: #c8102e; --mid: #5a5247;
-      --rule: #1a1a1a; --faint: #e0dbd0;
-      --mc: #ffe01b; --green: #1a7a3c; --green-bg: #e6f4ea;
-      --amber: #92400e; --amber-bg: #fef3c7; --red-bg: #fdecea;
+      --bg: #f7f1ea; --panel: #fffdf9; --line: #eadfdb;
+      --text: #171717; --muted: #77706c; --red: #e1163f; --red-2: #c51436;
+      --ink: #151515;
+      --shadow: 0 18px 50px rgba(20,10,10,.08);
+      --shadow-soft: 0 8px 24px rgba(20,10,10,.05);
+      --radius: 22px;
+      --green: #1a7a3c; --green-bg: #e9f6ee; --red-bg: #fdecea;
     }
     html, body { min-height: 100%; }
     body {
-      background-color: var(--paper);
-      background-image: repeating-linear-gradient(0deg, transparent, transparent 27px, var(--faint) 27px, var(--faint) 28px);
-      min-height: 100vh; display: flex; align-items: flex-start; justify-content: center;
-      font-family: 'Source Sans 3', sans-serif; color: var(--ink); overflow-x: hidden; padding: 30px 0;
+      font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.52), rgba(255,255,255,.52)),
+        repeating-linear-gradient(0deg, #efe4dd 0 1px, var(--bg) 1px 28px);
+      min-height: 100vh;
     }
-    .page-wrap { width: 100%; max-width: 640px; padding: 24px; }
+    .shell { max-width: 1240px; margin: 0 auto; padding: 20px 18px 40px; }
 
-    .masthead { text-align: center; border-top: 4px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 14px 0 12px; margin-bottom: 6px; }
-    .masthead::before { content: ''; display: block; height: 2px; background: var(--accent); margin-bottom: 12px; }
-    .masthead-logo { max-width: 240px; max-height: 70px; display: block; margin: 0 auto; }
-    .masthead-tagline { font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem; letter-spacing: 0.18em; color: var(--mid); text-transform: uppercase; margin-top: 10px; }
-    .dateline {
-      font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; color: var(--mid);
-      padding: 4px 0; border-bottom: 1px solid var(--rule); margin-bottom: 24px;
-      letter-spacing: 0.08em; display: flex; justify-content: space-between; align-items: center;
+    /* ── Top bar ── */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 6px 18px; border-bottom: 1px solid rgba(0,0,0,.08); margin-bottom: 22px;
     }
-    .dateline a { color: var(--accent); text-decoration: none; font-weight: 600; letter-spacing: 0.1em; }
-    .dateline a:hover { text-decoration: underline; }
+    .brand { display: flex; flex-direction: column; gap: 8px; }
+    .brand-logo { max-height: 52px; max-width: 240px; display: block; }
+    .tagline { font-size: 11px; letter-spacing: .32em; color: #9a8f87; text-transform: uppercase; margin-left: 2px; }
+    .navlink {
+      display: inline-flex; align-items: center; gap: 9px; color: var(--red);
+      font-weight: 600; letter-spacing: .04em; text-transform: uppercase; font-size: 13px; text-decoration: none;
+    }
+    .navlink:hover { color: var(--red-2); }
+
+    /* ── Hero ── */
+    .hero { display: grid; grid-template-columns: 1.1fr .9fr; gap: 28px; align-items: center; padding: 20px 6px 30px; }
+    .hero h1 {
+      font-family: 'Playfair Display', serif; font-size: clamp(40px, 5vw, 68px);
+      line-height: .98; margin: 0 0 16px; letter-spacing: -.03em; font-weight: 700;
+    }
+    .hero h1 em { color: var(--red); font-style: italic; }
+    .hero p { font-size: 17px; line-height: 1.75; color: var(--muted); max-width: 520px; margin: 0; }
+
+    .art { position: relative; min-height: 300px; display: flex; align-items: center; justify-content: center; }
+    .halo {
+      position: absolute; width: min(360px, 90%); aspect-ratio: 1; border-radius: 50%;
+      background: radial-gradient(circle at 50% 50%, rgba(225,22,63,.16), rgba(225,22,63,.06) 35%, rgba(225,22,63,0) 70%);
+      filter: blur(2px);
+    }
+    .envelope {
+      width: min(360px, 94%); height: 240px; position: relative; transform: rotate(-3deg);
+      filter: drop-shadow(0 26px 36px rgba(30,10,10,.14));
+    }
+    .envelope .back, .envelope .front, .envelope .paper, .envelope .seal { position: absolute; }
+    .envelope .back {
+      inset: 38px 34px 34px 34px;
+      background: linear-gradient(145deg, rgba(225,22,63,.12), rgba(225,22,63,.03));
+      border-radius: 18px; transform: skewX(-12deg);
+    }
+    .envelope .front {
+      left: 26px; right: 26px; bottom: 18px; top: 96px; border-radius: 18px;
+      background: linear-gradient(180deg, #fff, #fff7f2); border: 1px solid rgba(225,22,63,.3);
+      clip-path: polygon(0 0, 50% 60%, 100% 0, 100% 100%, 0 100%);
+    }
+    .envelope .paper {
+      left: 94px; right: 66px; top: 28px; bottom: 56px; border-radius: 14px;
+      background: #fff; border: 1px solid rgba(0,0,0,.06); transform: rotate(7deg); padding: 16px 18px;
+    }
+    .paper .mark { font-family: 'Playfair Display', serif; font-size: 28px; line-height: 1; margin-bottom: 14px; font-weight: 700; }
+    .paper .mark .red { color: var(--red); }
+    .paper .pline { height: 9px; border-radius: 99px; background: #f0efec; margin: 10px 0; }
+    .paper .pline.short { width: 60%; }
+    .seal {
+      right: 16px; bottom: 18px; width: 84px; height: 84px; border-radius: 50%;
+      background: linear-gradient(180deg, #ff4966, var(--red)); display: grid; place-items: center;
+      box-shadow: 0 18px 30px rgba(225,22,63,.22);
+    }
+    .seal span { font-size: 38px; }
+
+    /* ── Board ── */
+    .board {
+      display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; align-items: start;
+      background: rgba(255,255,255,.42); border: 1px solid rgba(255,255,255,.7);
+      border-radius: 28px; padding: 18px; box-shadow: var(--shadow);
+    }
+    .board-main { display: flex; flex-direction: column; gap: 16px; }
+    .board-side { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 20px; }
 
     .card {
-      position: relative; background: #fff; border: 1px solid #c8c2b5;
-      box-shadow: 6px 6px 0 var(--ink); overflow: hidden;
-      animation: slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+      background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.78));
+      border: 1px solid rgba(235,224,220,.9); border-radius: 22px;
+      box-shadow: var(--shadow-soft); padding: 20px;
     }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
-    .card-accent { height: 4px; background: var(--accent); }
-    .card-body { padding: 32px 38px 38px; }
+    .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
-    .headline {
-      font-family: 'Playfair Display', serif; font-weight: 900;
-      font-size: 1.8rem; line-height: 1.12; text-align: center; margin-bottom: 8px;
+    .section-title {
+      display: flex; align-items: center; gap: 12px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase; font-size: 13px; margin-bottom: 16px;
     }
-    .headline .accent { color: var(--accent); font-style: italic; }
-    .subhead { font-size: 0.86rem; color: var(--mid); line-height: 1.55; font-weight: 300; text-align: center; max-width: 440px; margin: 0 auto 26px; }
+    .badge {
+      width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+      background: rgba(225,22,63,.12); color: var(--red); font-weight: 800; font-size: 13px; flex-shrink: 0;
+    }
+    .opt { color: #9a8f87; font-weight: 600; text-transform: none; letter-spacing: 0; }
 
-    .field { margin-bottom: 18px; }
-    .field-label {
-      display: block; font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem;
-      font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
-      color: var(--mid); margin-bottom: 7px;
+    /* ── Inputs ── */
+    .input, .select {
+      width: 100%; border: 1px solid #ddd4cf; background: #fff; border-radius: 12px;
+      height: 48px; padding: 0 14px; font: inherit; color: var(--text); outline: none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
     }
-    .field-label .req { color: var(--accent); }
-    input[type=text], input[type=email], input[type=date], input[type=datetime-local], select {
-      width: 100%; font-family: 'Source Sans 3', sans-serif; font-size: 0.92rem;
-      color: var(--ink); background: var(--paper); border: 1px solid var(--rule);
-      padding: 10px 12px; box-shadow: 2px 2px 0 var(--faint);
-    }
-    input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 2px 2px 0 var(--accent); }
-    select:disabled { opacity: 0.6; }
+    .input::placeholder { color: #b3aaa4; }
+    .input:focus, .select:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(225,22,63,.12); }
+    .label { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: #6f6864; margin-bottom: 8px; font-weight: 700; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
-    /* Drop zone */
+    /* ── Dropzone ── */
     .dropzone {
-      display: block; border: 2px dashed var(--rule); background: var(--paper); padding: 24px 16px;
-      text-align: center; cursor: pointer; transition: all 0.15s;
+      border: 1.5px dashed #d7ccc6; background: linear-gradient(180deg, #fff, #fff9f5);
+      border-radius: 18px; min-height: 150px; display: grid; place-items: center;
+      text-align: center; padding: 24px; cursor: pointer; transition: .15s;
     }
-    .dropzone:hover, .dropzone.drag { border-color: var(--accent); background: #fff; }
-    .dropzone .dz-icon { font-size: 2rem; display: block; margin-bottom: 6px; line-height: 1; }
-    .dropzone .dz-main { display: block; font-size: 0.9rem; font-weight: 600; }
-    .dropzone .dz-sub { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; color: var(--mid); letter-spacing: 0.08em; margin-top: 5px; text-transform: uppercase; }
+    .dropzone:hover, .dropzone.drag { border-color: var(--red); background: #fff; }
+    .upload-icon {
+      width: 52px; height: 52px; border-radius: 16px; background: rgba(225,22,63,.08);
+      display: grid; place-items: center; margin: 0 auto 12px; color: var(--red);
+    }
+    .dz-main { display: block; font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .dz-sub { display: block; font-size: 11px; color: #a09188; letter-spacing: .1em; text-transform: uppercase; }
+    .dropzone.has-file { border-style: solid; border-color: var(--green); background: var(--green-bg); }
+    .dropzone.has-file .upload-icon { background: rgba(26,122,60,.12); color: var(--green); }
 
-    /* Preview — browser-frame style (scaled to fit width) */
-    .preview-wrap { display: none; margin-bottom: 18px; border: 1px solid var(--rule); box-shadow: 4px 4px 0 var(--faint); background: #fff; }
-    .preview-wrap.show { display: block; animation: slideUp 0.3s ease both; }
-    .preview-bar { display: flex; align-items: center; gap: 9px; background: var(--paper); border-bottom: 1px solid var(--rule); padding: 8px 12px; }
+    /* ── Live preview ── */
+    .preview-wrap {
+      display: none; margin-top: 16px; border: 1px solid var(--line); border-radius: 16px;
+      overflow: hidden; background: #fff; box-shadow: var(--shadow-soft);
+    }
+    .preview-wrap.show { display: block; animation: slideUp .3s ease both; }
+    .preview-bar { display: flex; align-items: center; gap: 9px; background: #faf3ee; border-bottom: 1px solid var(--line); padding: 9px 12px; }
     .preview-lights { display: flex; gap: 6px; flex-shrink: 0; }
     .preview-lights i { width: 11px; height: 11px; border-radius: 50%; display: block; }
     .preview-lights .r { background: #ff5f57; } .preview-lights .y { background: #febc2e; } .preview-lights .g { background: #28c840; }
     .preview-url {
-      flex: 1; min-width: 0; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 0.56rem;
-      letter-spacing: 0.06em; color: var(--mid); background: #fff; border: 1px solid var(--faint); border-radius: 3px;
-      padding: 3px 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      flex: 1; min-width: 0; text-align: center; font-size: 11px; letter-spacing: .04em;
+      color: var(--muted); background: #fff; border: 1px solid var(--line); border-radius: 6px;
+      padding: 4px 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     .preview-bar button {
-      flex-shrink: 0; background: var(--ink); border: 1px solid var(--ink); color: #fff; font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.56rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 9px; cursor: pointer;
+      flex-shrink: 0; background: var(--ink); border: 0; color: #fff; font: inherit; font-size: 11px;
+      font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 5px 10px; border-radius: 8px; cursor: pointer;
     }
-    .preview-bar button:hover { background: var(--accent); border-color: var(--accent); }
-    .preview-stage { position: relative; background: #d6d6d6; max-height: 70vh; overflow-y: auto; overflow-x: hidden; }
+    .preview-bar button:hover { background: var(--red); }
+    .preview-stage { position: relative; background: #e8e4de; max-height: 70vh; overflow-y: auto; overflow-x: hidden; }
     .preview-frame { border: none; background: #fff; transform-origin: top left; display: block; }
-    .preview-loading { padding: 24px; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 0.66rem; color: var(--mid); letter-spacing: 0.08em; }
+    .preview-loading { padding: 22px; text-align: center; font-size: 12px; color: var(--muted); letter-spacing: .04em; }
 
-    /* Fullscreen preview overlay */
-    .pv-overlay { display: none; position: fixed; inset: 0; background: rgba(10,10,10,0.82); z-index: 1000; padding: 22px; }
+    /* ── Fullscreen preview overlay ── */
+    .pv-overlay { display: none; position: fixed; inset: 0; background: rgba(20,10,10,.82); z-index: 1000; padding: 22px; }
     .pv-overlay.show { display: flex; flex-direction: column; }
-    .pv-overlay-bar { display: flex; align-items: center; gap: 9px; background: var(--paper); border: 1px solid var(--rule); padding: 9px 14px; }
-    .pv-overlay-frame { flex: 1; width: 100%; border: 1px solid var(--rule); border-top: none; background: #fff; }
-    .pv-close { flex-shrink: 0; background: var(--accent); border: 1px solid var(--ink); color: #fff; font-family: 'IBM Plex Mono', monospace; font-size: 0.58rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 5px 11px; cursor: pointer; }
-    .dropzone.has-file { border-style: solid; border-color: var(--green); background: var(--green-bg); }
-    .dropzone.has-file .dz-icon { color: var(--green); }
+    .pv-overlay-bar { display: flex; align-items: center; gap: 9px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px 12px 0 0; padding: 10px 14px; }
+    .pv-overlay-frame { flex: 1; width: 100%; border: 1px solid var(--line); border-top: none; border-radius: 0 0 12px 12px; background: #fff; }
+    .pv-close { flex-shrink: 0; background: var(--red); border: 0; color: #fff; font: inherit; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
 
-    .row { display: flex; gap: 16px; }
-    .row .field { flex: 1; }
-
-    /* Send-test row */
-    .test-row { display: flex; gap: 10px; align-items: stretch; }
-    .test-row input { flex: 1; }
-    .btn-test {
-      flex-shrink: 0; white-space: nowrap; min-width: 118px;
-      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-      font-family: 'IBM Plex Mono', monospace; font-size: 0.66rem; font-weight: 600;
-      letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
-      color: #fff; background: var(--ink); border: 1px solid var(--ink);
-      padding: 0 16px; box-shadow: 2px 2px 0 var(--faint); transition: all 0.15s;
+    /* ── Test row ── */
+    .test-wrap { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; }
+    .btn {
+      height: 48px; border-radius: 12px; border: 0; padding: 0 18px; font: inherit; font-weight: 700;
+      cursor: pointer; letter-spacing: .05em; text-transform: uppercase;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: .15s;
     }
-    .btn-test:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); }
-    .btn-test:disabled { opacity: 0.55; cursor: not-allowed; }
-    .field-label .opt { color: var(--mid); font-weight: 400; text-transform: none; letter-spacing: 0; }
-
-    .when-toggle { display: flex; gap: 0; margin-bottom: 16px; border: 1px solid var(--rule); }
-    .when-toggle button {
-      flex: 1; font-family: 'IBM Plex Mono', monospace; font-size: 0.66rem; font-weight: 600;
-      letter-spacing: 0.08em; text-transform: uppercase; padding: 10px; cursor: pointer;
-      background: var(--paper); color: var(--mid); border: none; transition: all 0.15s;
+    .btn.dark { background: var(--ink); color: #fff; white-space: nowrap; }
+    .btn.dark:hover:not(:disabled) { background: var(--red); }
+    .btn.dark:disabled { opacity: .55; cursor: not-allowed; }
+    .btn.red {
+      background: linear-gradient(90deg, #ef3f53, var(--red-2)); color: #fff; width: 100%; height: 54px;
+      font-size: 14px; box-shadow: 0 12px 24px rgba(225,22,63,.26); margin-top: 18px;
     }
-    .when-toggle button.active { background: var(--ink); color: #fff; }
-    .when-toggle button + button { border-left: 1px solid var(--rule); }
+    .btn.red:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 16px 30px rgba(225,22,63,.32); }
+    .btn.red:disabled { opacity: .6; cursor: not-allowed; }
+    .subtle { color: #8f817a; font-size: 13px; line-height: 1.7; margin-top: 10px; }
 
-    .tz-note { font-family: 'IBM Plex Mono', monospace; font-size: 0.58rem; color: var(--mid); letter-spacing: 0.06em; margin-top: 6px; }
-
-    .submit-btn {
-      width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-      font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; font-weight: 600;
-      letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
-      color: #fff; background: var(--accent); border: 1px solid var(--ink);
-      padding: 15px; box-shadow: 4px 4px 0 var(--ink); transition: all 0.15s; margin-top: 6px;
+    /* ── When-to-send switcher ── */
+    .switcher { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .pill {
+      height: 54px; border-radius: 14px; border: 1px solid #dfd4cf; background: #fff;
+      display: flex; align-items: center; justify-content: center; gap: 10px; font: inherit; font-weight: 700;
+      color: #6e6762; cursor: pointer; transition: .15s;
     }
-    .submit-btn:hover:not(:disabled) { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 var(--ink); }
-    .submit-btn:active:not(:disabled) { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--ink); }
-    .submit-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .pill:hover { border-color: rgba(225,22,63,.4); }
+    .pill.active { border-color: rgba(225,22,63,.85); color: var(--red); box-shadow: inset 0 0 0 1px rgba(225,22,63,.15); }
 
-    .result { margin-top: 20px; padding: 16px 18px; font-size: 0.86rem; line-height: 1.5; display: none; }
-    .result.show { display: block; animation: slideUp 0.3s ease both; }
+    /* ── Summary ── */
+    .summary-head { position: relative; font-weight: 800; font-size: 16px; margin-bottom: 16px; padding-bottom: 10px; }
+    .summary-head::after { content: ''; position: absolute; left: 0; bottom: 0; width: 42px; height: 2px; background: var(--red); }
+    .summary .item { padding: 14px 0; border-bottom: 1px solid rgba(0,0,0,.06); }
+    .summary .item:last-of-type { border-bottom: 0; }
+    .summary .k { font-weight: 700; margin-bottom: 4px; font-size: 14px; }
+    .summary .v { color: #6f6864; line-height: 1.55; font-size: 14px; word-break: break-word; }
+    .note { margin-top: 14px; padding: 14px; border: 1px solid rgba(225,22,63,.14); background: rgba(225,22,63,.04); border-radius: 16px; color: #7f5d56; font-size: 13.5px; line-height: 1.6; }
+
+    /* ── Quick tips ── */
+    .tip { display: grid; grid-template-columns: 24px 1fr; gap: 12px; align-items: start; padding: 11px 0; color: #6c655f; font-size: 14px; line-height: 1.5; }
+    .tip .dot { width: 24px; height: 24px; border-radius: 8px; background: rgba(225,22,63,.10); display: grid; place-items: center; color: var(--red); font-size: 12px; }
+
+    /* ── Result ── */
+    .result { display: none; padding: 16px 18px; border-radius: 16px; font-size: 14px; line-height: 1.55; }
+    .result.show { display: block; animation: slideUp .3s ease both; }
     .result.ok { background: var(--green-bg); border: 1px solid var(--green); }
-    .result.err { background: var(--red-bg); border: 1px solid var(--accent); }
+    .result.err { background: var(--red-bg); border: 1px solid var(--red); }
     .result h4 { font-family: 'Playfair Display', serif; font-size: 1.05rem; margin-bottom: 6px; }
     .result.ok h4 { color: var(--green); }
-    .result.err h4 { color: var(--accent); }
-    .result code { font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; background: rgba(0,0,0,0.06); padding: 1px 5px; }
+    .result.err h4 { color: var(--red); }
+    .result code { font-size: .85em; background: rgba(0,0,0,.06); padding: 1px 5px; border-radius: 4px; }
 
-    .back-link { display: block; text-align: center; margin-top: 22px; }
-    .back-link a {
-      font-family: 'IBM Plex Mono', monospace; font-size: 0.66rem; font-weight: 600;
-      letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); text-decoration: none;
-      border-bottom: 1px solid var(--accent); padding-bottom: 2px;
-    }
-    .footer-note { font-family: 'IBM Plex Mono', monospace; font-size: 0.56rem; color: #aaa; text-align: center; margin-top: 22px; letter-spacing: 0.08em; }
-    .spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
+    .footer-link { text-align: center; margin-top: 22px; }
+    .footer-link a { color: var(--red); font-weight: 700; letter-spacing: .04em; text-decoration: none; }
+    .footer-link a:hover { text-decoration: underline; }
+
+    .spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; vertical-align: -2px; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 980px) {
+      .hero, .board { grid-template-columns: 1fr; }
+      .art { order: -1; }
+      .board-side { position: static; }
+    }
+    @media (max-width: 640px) {
+      .topbar { flex-direction: column; align-items: flex-start; gap: 14px; }
+      .row, .test-wrap, .switcher, .duo { grid-template-columns: 1fr; }
+      .shell { padding-inline: 12px; }
+      .board { padding: 12px; }
+      .card { padding: 16px; }
+    }
   </style>
 </head>
 <body>
-  <div class="page-wrap">
-    <div class="masthead">
-      <img src="{{ logo_url }}" alt="Newsband" class="masthead-logo" />
-      <div class="masthead-tagline">Automated Campaign Scheduling</div>
-    </div>
-    <div class="dateline">
-      <span>MAILCHIMP DISPATCH DESK</span>
-      <a href="{{ url_for('dashboard_bp.dashboard') }}">&#8592; DASHBOARD</a>
-    </div>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <img src="{{ logo_url }}" alt="Newsband" class="brand-logo"/>
+        <div class="tagline">Automated Campaign Scheduling</div>
+      </div>
+      <a class="navlink" href="{{ url_for('dashboard_bp.dashboard') }}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <rect x="3" y="3" width="7" height="7" rx="1.6"/><rect x="14" y="3" width="7" height="7" rx="1.6"/>
+          <rect x="3" y="14" width="7" height="7" rx="1.6"/><rect x="14" y="14" width="7" height="7" rx="1.6"/>
+        </svg>
+        Dashboard
+      </a>
+    </header>
 
-    <div class="card">
-      <div class="card-accent"></div>
-      <div class="card-body">
-        <h1 class="headline">Schedule <span class="accent">Mailchimp</span> Newsletter</h1>
-        <p class="subhead">Attach the newsletter you exported from this software and ship it straight to your Mailchimp audience.</p>
+    <section class="hero">
+      <div class="hero-copy">
+        <h1>Schedule your <em>Mailchimp</em> Newsletter</h1>
+        <p>Attach your newsletter exported from this software and ship it straight to your Mailchimp audience.</p>
+      </div>
+      <div class="art" aria-hidden="true">
+        <div class="halo"></div>
+        <div class="envelope">
+          <div class="back"></div>
+          <div class="paper">
+            <div class="mark">news<span class="red">band</span></div>
+            <div class="pline short"></div>
+            <div class="pline"></div>
+            <div class="pline short"></div>
+          </div>
+          <div class="front"></div>
+          <div class="seal"><span>🐵</span></div>
+        </div>
+      </div>
+    </section>
 
-        <form id="schedule-form">
-          <!-- File -->
-          <div class="field">
-            <div class="field-label">Newsletter file <span class="req">*</span></div>
+    <form id="schedule-form">
+      <main class="board">
+        <div class="board-main">
+          <!-- 1. Newsletter file + live preview -->
+          <section class="card">
+            <div class="section-title"><span class="badge">1</span> Newsletter File</div>
             <label class="dropzone" id="dropzone">
-              <span class="dz-icon">📰</span>
-              <span class="dz-main" id="dz-text">Click or drop your ZIP / HTML here</span>
+              <span class="upload-icon" aria-hidden="true">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 13V3"/><path d="m8 7 4-4 4 4"/>
+                  <path d="M20 17.5a4.5 4.5 0 0 0-3-8 6 6 0 0 0-11.5 2A3.5 3.5 0 0 0 6 18.5"/>
+                </svg>
+              </span>
+              <span class="dz-main" id="dz-text">Click or drop your ZIP / HTML file here</span>
               <span class="dz-sub" id="dz-sub">Exported from a Newsband editor</span>
               <input type="file" id="file-input" accept=".zip,.html,.htm" hidden>
             </label>
-          </div>
 
-          <!-- Preview -->
-          <div class="preview-wrap" id="preview-wrap">
-            <div class="preview-bar">
-              <span class="preview-lights"><i class="r"></i><i class="y"></i><i class="g"></i></span>
-              <span class="preview-url">newsband.in · newsletter preview · read-only</span>
-              <button type="button" id="preview-expand">⤢ Expand</button>
-              <button type="button" id="preview-toggle">Hide</button>
+            <div class="preview-wrap" id="preview-wrap">
+              <div class="preview-bar">
+                <span class="preview-lights"><i class="r"></i><i class="y"></i><i class="g"></i></span>
+                <span class="preview-url">newsband.in · newsletter preview · read-only</span>
+                <button type="button" id="preview-expand">⤢ Expand</button>
+                <button type="button" id="preview-toggle">Hide</button>
+              </div>
+              <div class="preview-loading" id="preview-loading">Rendering preview…</div>
+              <div class="preview-stage" id="preview-stage" style="display:none;">
+                <iframe class="preview-frame" id="preview-frame" sandbox="allow-same-origin allow-scripts"></iframe>
+              </div>
             </div>
-            <div class="preview-loading" id="preview-loading">Rendering preview…</div>
-            <div class="preview-stage" id="preview-stage" style="display:none;">
-              <iframe class="preview-frame" id="preview-frame" sandbox="allow-same-origin allow-scripts"></iframe>
-            </div>
-          </div>
+          </section>
 
-          <!-- Audience -->
-          <div class="field">
-            <div class="field-label">Audience <span class="req">*</span></div>
-            <select id="audience" required>
+          <!-- 2. Audience -->
+          <section class="card">
+            <div class="section-title"><span class="badge">2</span> Audience</div>
+            <select id="audience" class="select" required>
               <option value="">Loading audiences…</option>
             </select>
+          </section>
+
+          <!-- 3. Subject line -->
+          <section class="card">
+            <div class="section-title"><span class="badge">3</span> Subject Line</div>
+            <input type="text" id="subject" class="input" value="{{ default_subject }}" required>
+          </section>
+
+          <!-- 4 & 5. From name / email -->
+          <div class="duo">
+            <section class="card">
+              <div class="section-title"><span class="badge">4</span> From Name</div>
+              <input type="text" id="from_name" class="input" value="{{ default_from_name }}" required>
+            </section>
+            <section class="card">
+              <div class="section-title"><span class="badge">5</span> From Email</div>
+              <input type="email" id="from_email" class="input" value="{{ default_from_email }}" required>
+            </section>
           </div>
 
-          <!-- Subject -->
-          <div class="field">
-            <div class="field-label">Subject line <span class="req">*</span></div>
-            <input type="text" id="subject" value="{{ default_subject }}" required>
-          </div>
-
-          <!-- From -->
-          <div class="row">
-            <div class="field">
-              <div class="field-label">From name <span class="req">*</span></div>
-              <input type="text" id="from_name" value="{{ default_from_name }}" required>
+          <!-- 6. Send a test first -->
+          <section class="card">
+            <div class="section-title"><span class="badge">6</span> Send a Test First <span class="opt">(optional)</span></div>
+            <div class="test-wrap">
+              <input type="text" id="test_email" class="input" value="manasgawde@gmail.com, contact@newsband.in" placeholder="you@example.com, teammate@example.com">
+              <button type="button" class="btn dark" id="btn-test">✉ Send Test</button>
             </div>
-            <div class="field">
-              <div class="field-label">From email <span class="req">*</span></div>
-              <input type="email" id="from_email" value="{{ default_from_email }}" required>
-            </div>
-          </div>
+            <div class="subtle">Delivers this exact newsletter to the address(es) above so you can review it before scheduling. Separate multiple with commas.</div>
+          </section>
 
-          <!-- Send a test first -->
-          <div class="field">
-            <div class="field-label">Send a test first <span class="opt">(optional)</span></div>
-            <div class="test-row">
-              <input type="text" id="test_email" value="manasgawde@gmail.com, contact@newsband.in" placeholder="you@example.com, teammate@example.com">
-              <button type="button" class="btn-test" id="btn-test">✉ Send test</button>
+          <!-- 7. When to send -->
+          <section class="card">
+            <div class="section-title"><span class="badge">7</span> When to Send</div>
+            <div class="switcher">
+              <button type="button" id="btn-schedule" class="pill active">📅 Schedule</button>
+              <button type="button" id="btn-now" class="pill">⚡ Send Now</button>
             </div>
-            <div class="tz-note">Delivers this exact newsletter to the address(es) above so you can check it before scheduling. Separate multiple with commas.</div>
-          </div>
-
-          <!-- When -->
-          <div class="field-label">When to send</div>
-          <div class="when-toggle">
-            <button type="button" id="btn-schedule" class="active">📅 Schedule</button>
-            <button type="button" id="btn-now">⚡ Send now</button>
-          </div>
-          <div class="field" id="time-field">
-            <div class="row">
-              <div class="field" style="margin-bottom:0;">
-                <div class="field-label">Delivery date</div>
-                <input type="date" id="send_date" value="{{ default_send_date }}">
+            <div id="time-field">
+              <div class="row" style="margin-top:14px">
+                <div>
+                  <div class="label">Delivery Date</div>
+                  <input type="date" id="send_date" class="input" value="{{ default_send_date }}">
+                </div>
+                <div>
+                  <div class="label">Delivery Time</div>
+                  <select id="send_clock" class="select"></select>
+                </div>
               </div>
-              <div class="field" style="margin-bottom:0;">
-                <div class="field-label">Delivery time</div>
-                <select id="send_clock"></select>
-              </div>
+              <div class="subtle">Interpreted as India Standard Time (IST). Times are sent in 15-minute intervals.</div>
             </div>
-            <div class="tz-note">Interpreted as India Standard Time (IST). Times step every 15&nbsp;minutes.</div>
-          </div>
+            <button type="submit" class="btn red" id="submit-btn"><span id="submit-label">📅 Schedule Campaign</span></button>
+          </section>
 
-          <button type="submit" class="submit-btn" id="submit-btn">
-            <span id="submit-label">📅 Schedule Campaign</span>
-          </button>
-        </form>
+          <div class="result" id="result"></div>
+        </div>
 
-        <div class="result" id="result"></div>
-      </div>
-    </div>
+        <aside class="board-side">
+          <section class="card summary">
+            <div class="summary-head">Campaign Summary</div>
+            <div class="item"><div class="k">Audience</div><div class="v" id="sum-audience">—</div></div>
+            <div class="item"><div class="k">Subject</div><div class="v" id="sum-subject">—</div></div>
+            <div class="item"><div class="k">From</div><div class="v" id="sum-from">—</div></div>
+            <div class="item"><div class="k">Test Email</div><div class="v" id="sum-test">—</div></div>
+            <div class="item"><div class="k">Send On</div><div class="v" id="sum-sendon">—</div></div>
+            <div class="note">You can review all details before confirming the schedule.</div>
+          </section>
 
-    <div class="back-link"><a href="{{ url_for('dashboard_bp.dashboard') }}">&#8592; Back to Dashboard</a></div>
-    <div class="footer-note">NEWSBAND JOURNALISM PLATFORM &nbsp;&middot;&nbsp; CAMPAIGN SCHEDULER</div>
+          <section class="card">
+            <div class="summary-head">💡 Quick Tips</div>
+            <div class="tip"><div class="dot">✦</div><div>Send a test email to preview your newsletter in your inbox.</div></div>
+            <div class="tip"><div class="dot">✦</div><div>Double-check your subject line for better engagement.</div></div>
+            <div class="tip"><div class="dot">✦</div><div>Campaign will be sent to the selected audience at the scheduled time.</div></div>
+          </section>
+        </aside>
+      </main>
+    </form>
+
+    <div class="footer-link"><a href="{{ url_for('dashboard_bp.dashboard') }}">&#8592; Back to Dashboard</a></div>
   </div>
 
   <!-- Fullscreen preview -->
@@ -692,14 +813,53 @@ SCHEDULE_MAILCHIMP_HTML = """<!DOCTYPE html>
       }
     }
 
+    // ── Campaign Summary (live) ──
+    var sumAudience = document.getElementById('sum-audience');
+    var sumSubject = document.getElementById('sum-subject');
+    var sumFrom = document.getElementById('sum-from');
+    var sumTest = document.getElementById('sum-test');
+    var sumSendon = document.getElementById('sum-sendon');
+    var subjectInput = document.getElementById('subject');
+    var fromNameInput = document.getElementById('from_name');
+    var fromEmailInput = document.getElementById('from_email');
+    var sendDateInput = document.getElementById('send_date');
+
+    function escapeHtml(s) {
+      return (s || '').replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+    function fmtSendOn() {
+      if (sendNow) return 'Immediately — Send Now';
+      var d = sendDateInput.value;
+      var dd = d ? d.split('-').reverse().join('-') : '—';
+      var t = clockSel.options[clockSel.selectedIndex];
+      return dd + ' at ' + (t ? t.textContent : '—') + ' IST';
+    }
+    function updateSummary() {
+      var aOpt = audienceSel.options[audienceSel.selectedIndex];
+      sumAudience.textContent = (aOpt && aOpt.value) ? aOpt.textContent : '—';
+      sumSubject.textContent = subjectInput.value || '—';
+      var fn = fromNameInput.value || '—';
+      var fe = fromEmailInput.value || '';
+      sumFrom.innerHTML = escapeHtml(fn) + (fe ? '<br>' + escapeHtml(fe) : '');
+      sumTest.textContent = (testEmail.value || '').trim() || '—';
+      sumSendon.textContent = fmtSendOn();
+    }
+    [subjectInput, fromNameInput, fromEmailInput, testEmail, sendDateInput].forEach(function (el) {
+      el.addEventListener('input', updateSummary);
+    });
+    audienceSel.addEventListener('change', updateSummary);
+    clockSel.addEventListener('change', updateSummary);
+
     // ── Load audiences ──
     fetch('api/audiences')
       .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
       .then(function (res) {
-        if (!res.ok) { audienceSel.innerHTML = '<option value="">⚠ ' + (res.d.error || 'Could not load audiences') + '</option>'; return; }
+        if (!res.ok) { audienceSel.innerHTML = '<option value="">⚠ ' + (res.d.error || 'Could not load audiences') + '</option>'; updateSummary(); return; }
         var want = (res.d.default_name || '').toLowerCase().replace(/[\\s_]+/g, '');
         var list = res.d.audiences || [];
-        if (!list.length) { audienceSel.innerHTML = '<option value="">No audiences found</option>'; return; }
+        if (!list.length) { audienceSel.innerHTML = '<option value="">No audiences found</option>'; updateSummary(); return; }
         audienceSel.innerHTML = '';
         list.forEach(function (a) {
           var opt = document.createElement('option');
@@ -709,8 +869,9 @@ SCHEDULE_MAILCHIMP_HTML = """<!DOCTYPE html>
           if (norm === want) { opt.selected = true; DEFAULT_AUDIENCE = a.id; }
           audienceSel.appendChild(opt);
         });
+        updateSummary();
       })
-      .catch(function () { audienceSel.innerHTML = '<option value="">⚠ Network error loading audiences</option>'; });
+      .catch(function () { audienceSel.innerHTML = '<option value="">⚠ Network error loading audiences</option>'; updateSummary(); });
 
     // ── File picking ──
     function setFile(file) {
@@ -805,6 +966,7 @@ SCHEDULE_MAILCHIMP_HTML = """<!DOCTYPE html>
       btnSchedule.classList.toggle('active', !now);
       timeField.style.display = now ? 'none' : 'block';
       submitLabel.textContent = now ? '⚡ Send Campaign Now' : '📅 Schedule Campaign';
+      updateSummary();
     }
     btnSchedule.addEventListener('click', function () { setMode(false); });
     btnNow.addEventListener('click', function () { setMode(true); });
@@ -888,6 +1050,9 @@ SCHEDULE_MAILCHIMP_HTML = """<!DOCTYPE html>
         .catch(function () { showResult(false, '<h4>Network error</h4>Could not reach the server.'); })
         .finally(function () { submitBtn.disabled = false; submitLabel.textContent = prev; });
     });
+
+    // ── Initial summary render ──
+    updateSummary();
   })();
   </script>
 </body>

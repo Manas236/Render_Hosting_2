@@ -268,6 +268,27 @@ HTML_TEMPLATE = """
             justify-content: center;
         }
         .container { max-width: 860px; width: 100%; }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1.5rem;
+            padding: 0.55rem 1.1rem;
+            background: var(--bg);
+            color: var(--text);
+            border: 3px solid var(--border);
+            box-shadow: 4px 4px 0 var(--border);
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+            transition: all 0.1s;
+        }
+        .back-link:hover { background: var(--yellow); }
+        .back-link:active {
+            transform: translate(4px, 4px);
+            box-shadow: 0 0 0 var(--border);
+        }
         h1 {
             font-size: 2.2rem;
             font-weight: 700;
@@ -411,6 +432,7 @@ HTML_TEMPLATE = """
 </head>
 <body>
 <div class="container">
+    <a href="{{ url_for('dashboard_bp.dashboard') }}" class="back-link">&#8592; Dashboard</a>
     <h1>Batch Extractor</h1>
 
     <div id="url-inputs">

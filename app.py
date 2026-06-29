@@ -24,6 +24,7 @@ def create_app():
     from upload2 import git_pusher_bp
     from mailchimp_bp import mailchimp_bp
     from schedule_mailchimp_bp import schedule_mailchimp_bp
+    from schedule_mailchimp_2_bp import schedule_mailchimp_2_bp
     from social_pipeline_bp import social_pipeline_bp
     # ── Day 8 Editor (v2 — BS4-based) ──
     import importlib.util
@@ -116,6 +117,7 @@ def create_app():
     app.register_blueprint(git_pusher_bp, url_prefix='/git-pusher')
     app.register_blueprint(mailchimp_bp, url_prefix='/mailchimp')
     app.register_blueprint(schedule_mailchimp_bp, url_prefix='/schedule-mailchimp')
+    app.register_blueprint(schedule_mailchimp_2_bp, url_prefix='/schedule-mailchimp-2')
     app.register_blueprint(social_pipeline_bp)
     # ─────────────────────────────────────────────
     # Health Check (required by Render)
