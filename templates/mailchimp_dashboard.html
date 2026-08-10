@@ -106,12 +106,14 @@
     }
 
     /* ── Summary strip (mirrors terminal output) ── */
-    .summary-strip {
+    .summary-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 20px 28px;
       margin-bottom: 20px;
+    }
+    .summary-strip {
       display: flex;
       align-items: stretch;
       gap: 0;
@@ -138,6 +140,28 @@
     .s-rate {
       font-size: 12px; font-weight: 600; margin-top: 2px;
     }
+
+    /* ── Campaign IDs (footer of the summary card) ── */
+    .campaign-ids {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+      margin-top: 18px; padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+    .cid-label {
+      font-size: 12px; font-weight: 500; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      margin-right: 2px;
+    }
+    .cid-chip {
+      display: inline-flex; align-items: center;
+      padding: 3px 10px; border-radius: 6px;
+      background: var(--surface2); border: 1px solid var(--border2);
+      font-family: 'SF Mono','Fira Code',monospace; font-size: 12px;
+      color: var(--text); cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .cid-chip:hover { background: var(--border); }
+    .cid-chip.copied { border-color: #15803d; color: #15803d; background: #dcfce7; }
 
     @media (max-width: 900px) {
       .summary-strip { flex-wrap: wrap; }
@@ -328,31 +352,38 @@
     </div>
 
     <!-- Summary strip — the 5 key totals, prominent -->
-    <div class="summary-strip" id="summaryStrip">
-      <div class="summary-item">
-        <div class="s-label">Total mails sent</div>
-        <div class="s-val" id="s-sent">—</div>
-        <div class="s-rate" style="color:var(--muted)">&nbsp;</div>
+    <div class="summary-card">
+      <div class="summary-strip" id="summaryStrip">
+        <div class="summary-item">
+          <div class="s-label">Total mails sent</div>
+          <div class="s-val" id="s-sent">—</div>
+          <div class="s-rate" style="color:var(--muted)">&nbsp;</div>
+        </div>
+        <div class="summary-item">
+          <div class="s-label">Total mails opened</div>
+          <div class="s-val" id="s-opens">—</div>
+          <div class="s-rate" style="color:#1d4ed8" id="s-open-rate">&nbsp;</div>
+        </div>
+        <div class="summary-item">
+          <div class="s-label">Total mails clicked</div>
+          <div class="s-val" id="s-clicks">—</div>
+          <div class="s-rate" style="color:#15803d" id="s-click-rate">&nbsp;</div>
+        </div>
+        <div class="summary-item">
+          <div class="s-label">Total mails bounced</div>
+          <div class="s-val" id="s-bounces">—</div>
+          <div class="s-rate" style="color:#dc2626" id="s-bounce-rate">&nbsp;</div>
+        </div>
+        <div class="summary-item">
+          <div class="s-label">Unsubscribers</div>
+          <div class="s-val" id="s-unsubs">—</div>
+          <div class="s-rate" style="color:#b45309" id="s-unsub-rate">&nbsp;</div>
+        </div>
       </div>
-      <div class="summary-item">
-        <div class="s-label">Total mails opened</div>
-        <div class="s-val" id="s-opens">—</div>
-        <div class="s-rate" style="color:#1d4ed8" id="s-open-rate">&nbsp;</div>
-      </div>
-      <div class="summary-item">
-        <div class="s-label">Total mails clicked</div>
-        <div class="s-val" id="s-clicks">—</div>
-        <div class="s-rate" style="color:#15803d" id="s-click-rate">&nbsp;</div>
-      </div>
-      <div class="summary-item">
-        <div class="s-label">Total mails bounced</div>
-        <div class="s-val" id="s-bounces">—</div>
-        <div class="s-rate" style="color:#dc2626" id="s-bounce-rate">&nbsp;</div>
-      </div>
-      <div class="summary-item">
-        <div class="s-label">Unsubscribers</div>
-        <div class="s-val" id="s-unsubs">—</div>
-        <div class="s-rate" style="color:#b45309" id="s-unsub-rate">&nbsp;</div>
+
+      <!-- Campaign IDs — click a chip to copy -->
+      <div class="campaign-ids" id="campaignIds">
+        <span class="cid-label">Campaign ID</span>
       </div>
     </div>
 
@@ -465,6 +496,7 @@
     document.getElementById('tableCountDetail').textContent = label;
 
     renderSummary(json.totals);
+    renderCampaignIds(json.campaigns);
     renderDoughnut(json.totals);
     renderBar(json.campaigns);
     _data = json.campaigns;
@@ -493,6 +525,29 @@
       `Total mails clicked: ${pad(t.clicks)}\n` +
       `Total mails bounced: ${pad(t.bounces)}\n` +
       `Unsubscribers:       ${pad(t.unsubscribes)}`;
+  }
+
+  function renderCampaignIds(campaigns) {
+    const label = campaigns.length === 1 ? 'Campaign ID' : 'Campaign IDs';
+    document.getElementById('campaignIds').innerHTML =
+      `<span class="cid-label">${label}</span>` +
+      campaigns.map(c => {
+        const subj = c.subject || c.title || '';
+        return `<button type="button" class="cid-chip" data-id="${esc(c.id)}"` +
+               ` title="${esc(subj)}${subj ? ' — ' : ''}click to copy"` +
+               ` onclick="copyCampaignId(this)">${esc(c.id) || '—'}</button>`;
+      }).join('');
+  }
+
+  function copyCampaignId(btn) {
+    navigator.clipboard.writeText(btn.dataset.id).then(() => {
+      btn.classList.add('copied');
+      btn.textContent = 'Copied!';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.textContent = btn.dataset.id;
+      }, 1500);
+    });
   }
 
   function copyToClipboard() {
@@ -604,6 +659,10 @@
     document.getElementById('tableCount').textContent = '—';
     document.getElementById('tableCountDetail').textContent = '—';
     document.getElementById('copyText').textContent = '—';
+
+    document.getElementById('campaignIds').innerHTML =
+      '<span class="cid-label">Campaign ID</span>' +
+      '<div class="sk" style="width:180px;height:24px"></div>';
 
     ['s-sent','s-opens','s-clicks','s-bounces','s-unsubs'].forEach(id => {
       document.getElementById(id).textContent = '—';
