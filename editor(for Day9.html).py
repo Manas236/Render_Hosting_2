@@ -20,18 +20,6 @@ with open("Day9.html", "r", encoding="utf-8") as f:
 
 _current_html = BASE_HTML   # mutable working copy
 
-# Auto-apply tomorrow's date on startup so it's always fresh
-
-
-def _auto_apply_date():
-    global _current_html
-    from datetime import datetime, timedelta
-    dt = datetime.now() + timedelta(days=1)
-    date_str = dt.strftime("%B %d, %Y").replace(" 0", " ")
-    _current_html = update_html(_current_html, {"date": date_str})
-
-# Deferred call — update_html is defined below, so we call at module tail
-
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -103,7 +91,7 @@ def parse_fields(html: str) -> dict:
     # Header — Date
     date_div = _find_header_date(soup)
     if date_div:
-        result["date"] = date_div.get_text().replace("Date:", "").strip()
+        result["date"] = get_tomorrow_date_str()
 
     # Header — RNI
     rni_div = _find_header_rni(soup)
@@ -305,7 +293,8 @@ def api_import_json():
     """
     Accept a JSON body matching the stories schema and apply it.
     Schema:
-      { "date": "DD/MM/YYYY", "rni": "...", "stories": [ { "category", "headline", "summary", "image", "link" }, ... ] }
+      { "date": "Month DD, YYYY", "rni": "...",
+        "stories": [ { "category", "headline", "summary", "image", "link" }, ... ] }
     Stories are matched by array position (0-indexed).
     """
     global _current_html
@@ -320,10 +309,6 @@ def api_import_json():
 
     _current_html = update_html(_current_html, data)
     return jsonify({"success": True, "html": _current_html, "fields": parse_fields(_current_html)})
-
-
-# ── Auto-apply tomorrow's date at startup ─────────────────────────────────────
-_auto_apply_date()
 
 
 if __name__ == "__main__":

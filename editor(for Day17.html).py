@@ -271,8 +271,7 @@ def parse_fields(html: str) -> dict:
     # Header — Date
     date_div = _find_header_date(soup)
     if date_div:
-        # Default to tomorrow's date format or current parsed date
-        result["date"] = date_div.get_text().replace("Date:", "").strip()
+        result["date"] = get_tomorrow_date_str()
 
     # Header — RNI
     rni_div = _find_header_rni(soup)

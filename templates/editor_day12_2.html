@@ -897,8 +897,8 @@
                             <label>Date</label>
                             <span class="tip-trigger" tabindex="0" role="button" aria-label="About this field">i</span>
                         </div>
-                        <div class="tip-pop"><span class="tip-emoji">📅</span> Issue date printed in the newsletter masthead. Use <b>DD/MM/YYYY</b> — e.g. 21/04/2026.</div>
-                        <input type="text" id="hdrDate" placeholder="DD/MM/YYYY" autocomplete="off"
+                        <div class="tip-pop"><span class="tip-emoji">📅</span> Issue date printed in the newsletter masthead. Use <b>Month DD, YYYY</b> — e.g. April 3, 2026.</div>
+                        <input type="text" id="hdrDate" placeholder="April 3, 2026" autocomplete="off"
                             oninput="scheduleUpdate()" />
                     </div>
                     <div class="field">
@@ -1012,10 +1012,10 @@
                 <div class="modal-hint">
                     Paste a JSON object. Fields map directly to story cards by array position.<br>
                     Example:
-                    <code>{ "date": "21/04/2026", "rni": "...", "stories": [{ "category": "TECH", "headline": "...", "summary": "...", "image": "https://...", "link": "https://..." }] }</code>
+                    <code>{ "date": "April 3, 2026", "rni": "...", "stories": [{ "category": "TECH", "headline": "...", "summary": "...", "image": "https://...", "link": "https://..." }] }</code>
                 </div>
                 <textarea id="jsonInput"
-                    placeholder='{ "date": "21/04/2026", "stories": [ { "category": "TECH", "headline": "...", "summary": "..." } ] }'></textarea>
+                    placeholder='{ "date": "April 3, 2026", "stories": [ { "category": "TECH", "headline": "...", "summary": "..." } ] }'></textarea>
                 <div class="import-error" id="importError"></div>
             </div>
             <div class="modal-footer">

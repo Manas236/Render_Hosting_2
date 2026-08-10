@@ -917,7 +917,8 @@ def api_import_json():
     """
     Accept a JSON body matching the stories schema and apply it.
     Schema:
-      { "date": "DD/MM/YYYY", "rni": "...", "stories": [ { "category", "headline", "summary", "image", "link" }, ... ] }
+      { "date": "Month DD, YYYY", "rni": "...",
+        "stories": [ { "category", "headline", "summary", "image", "link" }, ... ] }
     Stories are matched by array position (0-indexed).
     """
     global _current_html

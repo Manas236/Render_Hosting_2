@@ -894,9 +894,9 @@
                             <label>Date</label>
                             <span class="tip-trigger" tabindex="0" role="button" aria-label="About this field">i</span>
                         </div>
-                        <div class="tip-pop"><span class="tip-emoji">📅</span> Date printed in the masthead. Type it or hit <b>⚡ Auto Date</b> to fill today.</div>
+                        <div class="tip-pop"><span class="tip-emoji">📅</span> Date printed in the masthead. Type it or hit <b>⚡ Auto Date</b> to fill tomorrow's date.</div>
                         <div style="display:flex; gap:6px; align-items:center;">
-                            <input type="text" id="hdrDate" placeholder="May 23, 2026" autocomplete="off"
+                            <input type="text" id="hdrDate" placeholder="April 3, 2026" autocomplete="off"
                                 oninput="scheduleUpdate()" style="flex:1;" />
                             <button class="btn btn-ghost" onclick="setAutoDate()" style="padding:3px 10px; font-size:9px; white-space:nowrap;">⚡ Auto Date</button>
                         </div>
@@ -1025,10 +1025,10 @@
                 <div class="modal-hint">
                     Paste a JSON object. Fields map directly to sections and stories by array position.<br>
                     Example:
-                    <code>{ "date": "21/04/2026", "rni": "...", "weather": { "location": "Navi Mumbai", "desc": "Sunny", "high": "36", "low": "27" }, "stories": [{ "category": "TECH", "headline": "...", "summary": "...", "image": "https://...", "link": "https://..." }] }</code>
+                    <code>{ "date": "April 3, 2026", "rni": "...", "weather": { "location": "Navi Mumbai", "desc": "Sunny", "high": "36", "low": "27" }, "stories": [{ "category": "TECH", "headline": "...", "summary": "...", "image": "https://...", "link": "https://..." }] }</code>
                 </div>
                 <textarea id="jsonInput"
-                    placeholder='{ "date": "21/04/2026", "weather": { "location": "Navi Mumbai" }, "stories": [ { "category": "TECH", "headline": "..." } ] }'></textarea>
+                    placeholder='{ "date": "April 3, 2026", "weather": { "location": "Navi Mumbai" }, "stories": [ { "category": "TECH", "headline": "..." } ] }'></textarea>
                 <div class="import-error" id="importError"></div>
             </div>
             <div class="modal-footer">

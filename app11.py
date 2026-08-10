@@ -6,7 +6,7 @@ This handles the special JS bundler wrapper in Day11.html.
 
 import io
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify, render_template, send_file, Response
 from bs4 import BeautifulSoup, NavigableString
 
@@ -125,6 +125,12 @@ def _get_inner_soup(html_str):
 # ── Parse: extract current editable fields ────────────────────────────────────
 
 
+def get_tomorrow_date_str() -> str:
+    """Return tomorrow's date as Month DD, YYYY."""
+    dt = datetime.now() + timedelta(days=1)
+    return dt.strftime("%B %d, %Y").replace(" 0", " ")
+
+
 def parse_fields(html: str) -> dict:
     outer_soup, soup, _ = _get_inner_soup(html)
     result = {}
@@ -132,7 +138,7 @@ def parse_fields(html: str) -> dict:
     # Header — Date
     date_div = _find_header_date(soup)
     if date_div:
-        result["date"] = date_div.get_text().replace("Date:", "").strip()
+        result["date"] = get_tomorrow_date_str()
 
     # Header — RNI
     rni_div = _find_header_rni(soup)
