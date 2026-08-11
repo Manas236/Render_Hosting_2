@@ -41,6 +41,8 @@ HTML = """
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Image Uploader</title>
+  <link rel="icon" type="image/png" href="/static_files/NB-favicon.png" />
+  <link rel="apple-touch-icon" href="/static_files/NB-favicon.png" />
   <style>
     /* ── Theme variables ── */
     body.theme-dark {

@@ -131,6 +131,14 @@ def create_app():
     def serve_static(filename):
         return send_from_directory('.', filename)
 
+    # Browsers request /favicon.ico automatically; serve the Newsband mark.
+    _root_dir = os.path.dirname(os.path.abspath(__file__))
+
+    @app.route('/favicon.ico')
+    def favicon():
+        return send_from_directory(_root_dir, 'NB-favicon.png',
+                                   mimetype='image/png')
+
     # Serve uploaded images — Nginx intercepts this in production;
     # Flask handles it in dev/fallback.
     _upload_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploaded_images")

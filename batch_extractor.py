@@ -246,6 +246,8 @@ HTML_TEMPLATE = """
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Batch News Extractor</title>
+    <link rel="icon" type="image/png" href="/static_files/NB-favicon.png" />
+    <link rel="apple-touch-icon" href="/static_files/NB-favicon.png" />
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <style>
         :root {

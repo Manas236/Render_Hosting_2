@@ -54,6 +54,8 @@ SOCIAL_PIPELINE_HTML = """<!DOCTYPE html>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Social Pipeline — Newsband</title>
+  <link rel="icon" type="image/png" href="/static_files/NB-favicon.png" />
+  <link rel="apple-touch-icon" href="/static_files/NB-favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
