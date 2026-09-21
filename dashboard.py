@@ -184,8 +184,6 @@ DASHBOARD_HTML = """
           <a href="{{ url_for('batch_extractor_bp.index') }}" target="_blank" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
             <span class="dash-btn-icon">⚡</span>
             <div class="dash-btn-title">Batch Extractor</div>
-            <!-- DESCRIPTION ▸ Batch Extractor -->
-            <div class="editor-note editor-note--love" style="text-align: left; align-self: stretch;"><span class="editor-note-arrow">➤</span>Extracts and processes multiple news articles at once. This is the place to come when you're starting to make the newsletters — paste all five links, send to template, and this guy's job is done.<span class="editor-note-claude">🤖 Claude: {{ q.batch_extractor }}</span></div>
           </a>
           <a href="{{ url_for('schedule_mailchimp_2_bp.index') }}" class="dash-btn" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
             <span class="dash-btn-icon">📅</span>
