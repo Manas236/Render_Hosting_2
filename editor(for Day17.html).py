@@ -1,41 +1,54 @@
 """
-Newsband Newsletter Editor — Day17 Flask Backend
+Newsband Newsletter Editor — Day17 Flask Backend (v3 layout)
 Uses BeautifulSoup4 for controlled, field-level HTML editing.
 Footer, layout structure, CSS, and logo are strictly locked.
+
+Every editable element in Day17.html carries a class hook, so the finders
+below never depend on inline styles:
+    .hdr-date / .hdr-rni            header date + RNI
+    .preheader                      inbox preview text (auto-generated)
+    .edition-day                    "Friday, 3 April" (derived from date)
+    .story[data-story=N]            story container, N = 0..4
+        .story-cat / .story-headline / .story-summary / .story-img
+        every <a> inside gets the story link
+    .wx-temp .wx-loc .wx-desc .wx-high .wx-low .wx-feels .wx-humidity .wx-aqi
+    .mkt-cell  > .mkt-label / .mkt-value / .mkt-change
+    .mkt-stamp                      "03 APR 2026 · 15:30 IST" (set on update)
 """
 
 import io
 import re
+from datetime import datetime, timedelta
 from urllib.parse import quote as _url_quote
 from flask import Blueprint, request, jsonify, render_template, send_file, Response
 from bs4 import BeautifulSoup, NavigableString
 
-# WMO weather code → (description, icon character)
+# WMO weather code → short condition text
 _WMO_CODES = {
-    0:  ("Clear sky",              "☀"),
-    1:  ("Mainly clear",           "☀"),
-    2:  ("Partly cloudy",          "⛅"),
-    3:  ("Overcast",               "☁"),
-    45: ("Foggy",                  "🌫"),
-    48: ("Icy fog",                "🌫"),
-    51: ("Light drizzle",          "☔"),
-    53: ("Drizzle",                "☔"),
-    55: ("Dense drizzle",          "☔"),
-    61: ("Slight rain",            "☔"),
-    63: ("Moderate rain",          "☔"),
-    65: ("Heavy rain",             "☔"),
-    71: ("Light snow",             "❄"),
-    73: ("Snow",                   "❄"),
-    75: ("Heavy snow",             "❄"),
-    77: ("Snow grains",            "❄"),
-    80: ("Rain showers",           "☔"),
-    81: ("Moderate showers",       "☔"),
-    82: ("Heavy showers",          "☔"),
-    85: ("Snow showers",           "❄"),
-    86: ("Heavy snow showers",     "❄"),
-    95: ("Thunderstorm",           "⛈"),
-    96: ("Thunderstorm with hail", "⛈"),
-    99: ("Heavy thunderstorm",     "⛈"),
+    0:  "Clear sky",
+    1:  "Mainly clear",
+    2:  "Partly cloudy",
+    3:  "Overcast",
+    45: "Foggy",
+    48: "Icy fog",
+    51: "Light drizzle",
+    53: "Drizzle",
+    55: "Dense drizzle",
+    61: "Slight rain",
+    63: "Moderate rain",
+    65: "Heavy rain",
+    71: "Light snow",
+    73: "Snow",
+    75: "Heavy snow",
+    77: "Snow grains",
+    80: "Rain showers",
+    81: "Moderate showers",
+    82: "Heavy showers",
+    85: "Snow showers",
+    86: "Heavy snow showers",
+    95: "Thunderstorm",
+    96: "Thunderstorm with hail",
+    99: "Heavy thunderstorm",
 }
 
 day17_editor_bp = Blueprint('day17_editor', __name__)
@@ -56,495 +69,276 @@ def _set_text(tag, text: str):
     tag.append(NavigableString(text))
 
 
-def _find_header_date(soup):
-    for p in soup.find_all("p"):
-        text = p.get_text()
-        if "Date:" in text:
-            return p
-    return None
+def _one(soup, cls):
+    return soup.find(class_=cls)
 
 
-def _find_header_rni(soup):
-    for p in soup.find_all("p"):
-        text = p.get_text()
-        if "RNI:" in text:
-            return p
-    return None
+def _num(text: str) -> str:
+    """First integer/decimal in a string, or ''."""
+    m = re.search(r'-?\d+(?:\.\d+)?', text or "")
+    return m.group() if m else ""
 
 
-# ── Story finders ─────────────────────────────────────────────────────────────
-
-def _find_s1(soup):
-    result = {}
-    # S1 Image
-    img = soup.find("img", alt="Hero Image")
-    if img:
-        result["image"] = img
-    # S1 Category
-    for td in soup.find_all("td"):
-        if "background-color: #c8102e" in td.get("style", "") or td.get("bgcolor") == "#c8102e":
-            span = td.find("span")
-            if span:
-                result["category"] = span
-                break
-    # S1 Headline
-    for p in soup.find_all("p"):
-        style = p.get("style", "")
-        if "font-size: 22px" in style:
-            result["headline"] = p
-            break
-    # S1 Summary
-    for p in soup.find_all("p"):
-        style = p.get("style", "")
-        if "font-size: 14px" in style and "color: #4a4a4a" in style:
-            result["summary"] = p
-            break
-            
-    # S1 Links (Both image link and content link)
-    links = []
-    if img:
-        p_a = img.find_parent("a")
-        if p_a:
-            links.append(p_a)
-    for a in soup.find_all("a"):
-        style = a.get("style", "")
-        if "color: #111111" in style and "display: block" in style:
-            links.append(a)
-            break
-    if links:
-        result["links"] = links
-        
-    return result
+def _story_block(soup, idx: int):
+    return soup.find(class_="story", attrs={"data-story": str(idx)})
 
 
-def _find_s2_s3(soup):
-    stories = []
-    cells = soup.find_all("td", class_="two-col-cell")
-    for i, cell in enumerate(cells[:2]):
-        story = {}
-        # The whole card is wrapped in a single <a>; no second <a> exists
-        a_tags = cell.find_all("a")
-        if a_tags:
-            story["links"] = a_tags
-        # Image
-        img = cell.find("img")
-        if img:
-            story["image"] = img
-        # Paragraphs are inside the one card <a> (index 0)
-        if len(a_tags) >= 1:
-            p_tags = a_tags[0].find_all("p")
-            if len(p_tags) >= 3:
-                story["category"] = p_tags[0]
-                story["headline"] = p_tags[1]
-                story["summary"] = p_tags[2]
-        stories.append(story)
-    return stories
+def _edition_day_from_date(date_val: str) -> str:
+    """'April 3, 2026' → 'Friday, 3 April'. Returns '' if unparseable."""
+    for fmt in ("%B %d, %Y", "%d/%m/%Y", "%Y-%m-%d", "%d %B %Y"):
+        try:
+            dt = datetime.strptime(date_val.strip(), fmt)
+            return f"{dt.strftime('%A')}, {dt.day} {dt.strftime('%B')}"
+        except ValueError:
+            continue
+    return ""
 
 
-def _find_s4_s5(soup):
-    stories = []
-    thumbs = soup.find_all("td", class_="horiz-thumb")
-    contents = soup.find_all("td", class_="horiz-content")
-    for i in range(min(len(thumbs), len(contents))):
-        story = {}
-        t_cell = thumbs[i]
-        c_cell = contents[i]
-
-        # The <a> wraps the outer table, not the inner cells — walk up to find it
-        links = []
-        outer_a = t_cell.find_parent("a")
-        if outer_a:
-            links.append(outer_a)
-        story["links"] = links
-
-        # Image cell + img
-        story["thumb_cell"] = t_cell
-        img = t_cell.find("img")
-        if img:
-            story["image"] = img
-
-        # Paragraphs are directly inside the content cell (no inner <a>)
-        p_tags = c_cell.find_all("p")
-        if len(p_tags) >= 3:
-            story["category"] = p_tags[0]
-            story["headline"] = p_tags[1]
-            story["summary"] = p_tags[2]
-        stories.append(story)
-    return stories
-
-
-def _find_weather_data(soup):
-    weather = {}
-
-    # Description / temps via class attributes
-    desc_today = soup.find(class_="weather-desc-today")
-    if desc_today:
-        weather["today_desc"] = desc_today.get_text().strip()
-
-    high_today = soup.find(class_="weather-high-today")
-    if high_today:
-        m = re.search(r'\d+', high_today.get_text())
-        if m:
-            weather["today_high"] = m.group()
-
-    low_today = soup.find(class_="weather-low-today")
-    if low_today:
-        m = re.search(r'\d+', low_today.get_text())
-        if m:
-            weather["today_low"] = m.group()
-
-    # Location + icon: find weather container
-    for tag in soup.find_all(["table", "td"]):
-        style_val = tag.get("style", "")
-        if "background-color: #fdf8ef" in style_val or tag.get("bgcolor") == "#fdf8ef":
-            # Location from "City · Today's Forecast" paragraph
-            for p in tag.find_all("p"):
-                text = p.get_text().strip()
-                if "·" in text or "・" in text or "·" in text:
-                    parts = re.split(r'\s*[·・·]\s*', text)
-                    weather["location"] = parts[0].strip()
-                    break
-            # Icon from the large-font td
-            for td in tag.find_all("td"):
-                if "font-size: 30px" in td.get("style", ""):
-                    icon_text = td.get_text().strip()
-                    if icon_text:
-                        weather["today_icon"] = icon_text
-                    break
-            break
-
-    weather.setdefault("location", "Navi Mumbai")
-    weather.setdefault("today_icon", "⛅")
-    return weather
-
-
-def _find_market_data(soup):
-    markets = []
-    stat_cells = soup.find_all("td", class_="ticker-cell")
-    for cell in stat_cells:
-        p_tags = cell.find_all("p")
-        pct_span = cell.find("span", class_="mkt-pct")
-        if len(p_tags) >= 3 and pct_span:
-            style = pct_span.get("style", "")
-            pct_text = pct_span.get_text().strip()
-            positive = "color: #16a34a" in style or "▲" in pct_text
-            pct_num = re.sub(r'[▲▼%+\-−\s]', '', pct_text)
-            market = {
-                "label": p_tags[0].get_text().strip(),
-                "value": p_tags[2].get_text().strip(),
-                "pct": pct_num,
-                "positive": positive,
-            }
-            markets.append(market)
-    return markets
-
-
-def _format_abs_change(label: str, value_str: str, pct_float: float, positive: bool) -> str:
+def _format_change(label: str, value_str: str, pct_float: float, positive: bool) -> str:
+    """'▲ 310  +0.42%' — absolute move is back-solved from the closing value."""
+    arrow = "▲" if positive else "▼"
     sign = "+" if positive else "−"
-    clean = value_str.replace("₹", "").replace("₹", "").replace(",", "").strip()
+    pct_txt = f"{sign}{abs(pct_float):.2f}%"
+    clean = value_str.replace("₹", "").replace(",", "").strip()
     try:
         value_num = float(clean)
     except Exception:
-        return "N/A"
-    abs_change = value_num * pct_float / 100
+        return f"{arrow} {pct_txt}"
+    factor = 1 + (pct_float / 100 if positive else -pct_float / 100)
+    abs_change = abs(value_num - value_num / factor) if factor else 0.0
     label_lower = label.lower()
-    if "gold" in label_lower:
-        return f"{sign}₹{int(round(abs_change))}"
-    elif "usd" in label_lower or "/" in label:
-        return f"{sign}{abs(abs_change):.2f}"
+    if "usd" in label_lower or "/" in label:
+        abs_txt = f"{abs_change:.2f}"
     else:
-        return f"{sign}{int(round(abs_change))} pts"
+        abs_txt = f"{abs_change:,.0f}"
+    return f"{arrow} {abs_txt}  {pct_txt}"
+
+
+def _build_preheader(weather: dict) -> str:
+    temp = (weather.get("today_temp") or "").strip()
+    desc = (weather.get("today_desc") or "").strip()
+    loc = (weather.get("location") or "").strip()
+    lead = ""
+    if temp and loc:
+        cond = f" and {desc[0].lower() + desc[1:]}" if desc else ""
+        lead = f"{temp}°{cond} in {loc}. "
+    return lead + "Five stories, and where Gold, the rupee, Nifty and Sensex closed."
 
 
 # ── Parse: extract current editable fields ────────────────────────────────────
 
 def get_tomorrow_date_str() -> str:
-    from datetime import datetime, timedelta
     dt = datetime.now() + timedelta(days=1)
     return dt.strftime("%B %d, %Y").replace(" 0", " ")
+
+
+def _find_weather_data(soup):
+    weather = {}
+    for key, cls in (
+        ("location", "wx-loc"), ("today_desc", "wx-desc"),
+    ):
+        el = _one(soup, cls)
+        if el:
+            weather[key] = el.get_text().strip()
+    for key, cls in (
+        ("today_temp", "wx-temp"), ("today_high", "wx-high"), ("today_low", "wx-low"),
+        ("today_feels", "wx-feels"), ("today_humidity", "wx-humidity"), ("today_aqi", "wx-aqi"),
+    ):
+        el = _one(soup, cls)
+        if el:
+            weather[key] = _num(el.get_text())
+    weather.setdefault("location", "Navi Mumbai")
+    return weather
+
+
+def _find_market_data(soup):
+    markets = []
+    for cell in soup.find_all("td", class_="mkt-cell"):
+        label = cell.find(class_="mkt-label")
+        value = cell.find(class_="mkt-value")
+        change = cell.find(class_="mkt-change")
+        if not (label and value and change):
+            continue
+        change_text = change.get_text()
+        m = re.search(r'(\d+(?:\.\d+)?)\s*%', change_text)
+        positive = "▲" in change_text or ("color: #4cc07a" in change.get("style", "") and "▼" not in change_text)
+        markets.append({
+            "label": label.get_text().strip(),
+            "value": value.get_text().strip(),
+            "pct": m.group(1) if m else "",
+            "positive": positive,
+        })
+    return markets
 
 
 def parse_fields(html: str) -> dict:
     soup = BeautifulSoup(html, "html.parser")
     result = {}
 
-    # Header — Date
-    date_div = _find_header_date(soup)
-    if date_div:
+    # Header — Date (always seeded with tomorrow's date, like the other editors)
+    if _one(soup, "hdr-date"):
         result["date"] = get_tomorrow_date_str()
 
     # Header — RNI
-    rni_div = _find_header_rni(soup)
+    rni_div = _one(soup, "hdr-rni")
     if rni_div:
         result["rni"] = rni_div.get_text().replace("RNI:", "").strip()
 
-    # Stories
+    # Stories 0..4
+    types = {0: "feature", 1: "medium", 2: "medium", 3: "compact", 4: "compact"}
     stories = []
-
-    # Story 0: Feature (S1)
-    s1 = _find_s1(soup)
-    s0 = {"index": 0, "type": "feature"}
-    if "category" in s1:
-        s0["category"] = s1["category"].get_text().strip()
-    if "headline" in s1:
-        s0["headline"] = s1["headline"].get_text().strip()
-    if "summary" in s1:
-        s0["summary"] = s1["summary"].get_text().strip()
-    if "image" in s1:
-        s0["image"] = s1["image"].get("src", "")
-    if "links" in s1 and s1["links"]:
-        s0["link"] = s1["links"][0].get("href", "")
-    stories.append(s0)
-
-    # Stories 1-2: S2-S3
-    twins = _find_s2_s3(soup)
-    for i, tw in enumerate(twins):
-        s = {"index": i + 1, "type": "medium"}
-        if "category" in tw:
-            s["category"] = tw["category"].get_text().strip()
-        if "headline" in tw:
-            s["headline"] = tw["headline"].get_text().strip()
-        if "summary" in tw:
-            s["summary"] = tw["summary"].get_text().strip()
-        if "image" in tw:
-            s["image"] = tw["image"].get("src", "")
-        if "links" in tw and tw["links"]:
-            s["link"] = tw["links"][0].get("href", "")
+    for idx in range(5):
+        block = _story_block(soup, idx)
+        if not block:
+            continue
+        s = {"index": idx, "type": types[idx]}
+        cat = block.find(class_="story-cat")
+        if cat:
+            s["category"] = cat.get_text().strip()
+        hl = block.find(class_="story-headline")
+        if hl:
+            s["headline"] = hl.get_text().strip()
+            s["link"] = hl.get("href", "")
+        summ = block.find(class_="story-summary")
+        if summ:
+            s["summary"] = summ.get_text().strip()
+        img = block.find(class_="story-img")
+        if img:
+            s["image"] = img.get("src", "")
         stories.append(s)
-
-    # Stories 3-4: S4-S5
-    horiz = _find_s4_s5(soup)
-    for i, hz in enumerate(horiz):
-        s = {"index": i + 3, "type": "compact"}
-        if "category" in hz:
-            s["category"] = hz["category"].get_text().strip()
-        if "headline" in hz:
-            s["headline"] = hz["headline"].get_text().strip()
-        if "summary" in hz:
-            s["summary"] = hz["summary"].get_text().strip()
-        if "image" in hz:
-            s["image"] = hz["image"].get("src", "")
-        if "links" in hz and hz["links"]:
-            s["link"] = hz["links"][0].get("href", "")
-        stories.append(s)
-
     result["stories"] = stories
 
-    # Weather
     result["weather"] = _find_weather_data(soup)
-
-    # Markets
     result["markets"] = _find_market_data(soup)
-
     return result
 
+
+# ── Update: write fields back into the HTML ───────────────────────────────────
 
 def update_html(html: str, data: dict) -> str:
     soup = BeautifulSoup(html, "html.parser")
 
-    # Header — Date
+    # Header — Date (+ derived edition-bar day)
     date_val = (data.get("date") or "").strip()
     if date_val:
-        date_div = _find_header_date(soup)
+        date_div = _one(soup, "hdr-date")
         if date_div:
             _set_text(date_div, f"Date: {date_val}")
+        day_txt = _edition_day_from_date(date_val)
+        ed = _one(soup, "edition-day")
+        if ed and day_txt:
+            _set_text(ed, day_txt)
 
     # Header — RNI
     rni_val = (data.get("rni") or "").strip()
     if rni_val:
-        rni_div = _find_header_rni(soup)
+        rni_div = _one(soup, "hdr-rni")
         if rni_div:
             _set_text(rni_div, f"RNI: {rni_val}")
 
     # Stories
-    all_stories = data.get("stories", [])
-    for story_data in all_stories:
+    for story_data in data.get("stories", []):
         idx = story_data.get("index", -1)
+        block = _story_block(soup, idx)
+        if not block:
+            continue
 
-        if idx == 0:
-            feature = _find_s1(soup)
-            cat = (story_data.get("category") or "").strip()
-            if cat and "category" in feature:
-                _set_text(feature["category"], cat)
+        cat = (story_data.get("category") or "").strip()
+        cat_el = block.find(class_="story-cat")
+        if cat and cat_el:
+            _set_text(cat_el, cat)
 
-            hl = (story_data.get("headline") or "").strip()
-            if hl and "headline" in feature:
-                _set_text(feature["headline"], hl)
+        hl = (story_data.get("headline") or "").strip()
+        hl_el = block.find(class_="story-headline")
+        if hl and hl_el:
+            _set_text(hl_el, hl)
 
-            summ = (story_data.get("summary") or "").strip()
-            if summ and "summary" in feature:
-                _set_text(feature["summary"], summ)
+        summ = (story_data.get("summary") or "").strip()
+        summ_el = block.find(class_="story-summary")
+        if summ and summ_el:
+            _set_text(summ_el, summ)
 
-            img_url = (story_data.get("image") or "").strip()
-            if img_url and img_url.startswith(("http://", "https://")) and "image" in feature:
-                feature["image"]["src"] = img_url
+        img_url = (story_data.get("image") or "").strip()
+        img_el = block.find(class_="story-img")
+        if img_url and img_url.startswith(("http://", "https://")) and img_el:
+            img_el["src"] = img_url
+            if hl:
+                img_el["alt"] = hl
 
-            link = (story_data.get("link") or "").strip()
-            if link and "links" in feature:
-                for l in feature["links"]:
-                    l["href"] = link
+        link = (story_data.get("link") or "").strip()
+        if link:
+            for a in block.find_all("a"):
+                a["href"] = link
 
-        elif idx in (1, 2):
-            twins = _find_s2_s3(soup)
-            twin_idx = idx - 1
-            if twin_idx < len(twins):
-                tw = twins[twin_idx]
-                cat = (story_data.get("category") or "").strip()
-                if cat and "category" in tw:
-                    _set_text(tw["category"], cat)
-
-                hl = (story_data.get("headline") or "").strip()
-                if hl and "headline" in tw:
-                    _set_text(tw["headline"], hl)
-
-                summ = (story_data.get("summary") or "").strip()
-                if summ and "summary" in tw:
-                    _set_text(tw["summary"], summ)
-
-                img_url = (story_data.get("image") or "").strip()
-                if img_url and img_url.startswith(("http://", "https://")) and "image" in tw:
-                    tw["image"]["src"] = img_url
-
-                link = (story_data.get("link") or "").strip()
-                if link and "links" in tw:
-                    for l in tw["links"]:
-                        l["href"] = link
-
-        elif idx in (3, 4):
-            horiz = _find_s4_s5(soup)
-            hz_idx = idx - 3
-            if hz_idx < len(horiz):
-                hz = horiz[hz_idx]
-                cat = (story_data.get("category") or "").strip()
-                if cat and "category" in hz:
-                    _set_text(hz["category"], cat)
-
-                hl = (story_data.get("headline") or "").strip()
-                if hl and "headline" in hz:
-                    _set_text(hz["headline"], hl)
-
-                summ = (story_data.get("summary") or "").strip()
-                if summ and "summary" in hz:
-                    _set_text(hz["summary"], summ)
-
-                img_url = (story_data.get("image") or "").strip()
-                if img_url and img_url.startswith(("http://", "https://")) and "image" in hz:
-                    img_tag = hz["image"]
-                    img_tag["src"] = img_url
-                    img_tag["width"] = "220"
-                    img_tag["height"] = "140"
-                    img_tag["style"] = "display: block; border: 0; outline: none; width: 220px; height: 140px; object-fit: cover; object-position: center;"
-                    if "thumb_cell" in hz:
-                        tc = hz["thumb_cell"]
-                        tc["height"] = "140"
-                        tc["style"] = "background-color: #ffffff; padding: 0; width: 220px; height: 140px;"
-                        a_tag = tc.find("a")
-                        if a_tag:
-                            a_tag["style"] = "text-decoration: none; display: block; font-size: 0; line-height: 0;"
-
-                link = (story_data.get("link") or "").strip()
-                if link and "links" in hz:
-                    for l in hz["links"]:
-                        l["href"] = link
-
-    # Weather
-    weather_data = data.get("weather", {})
+    # Weather — accept both the editor's today_* keys and the short JSON-import keys
+    weather_data = data.get("weather") or {}
     if weather_data:
-        weather_container = None
-        for tag in soup.find_all("table"):
-            style_val = tag.get("style", "")
-            if "background-color: #fdf8ef" in style_val or tag.get("bgcolor") == "#fdf8ef":
-                weather_container = tag
-                break
-        if weather_container:
-            loc = (weather_data.get("location") or "").strip()
-            t_desc = (weather_data.get("today_desc") or "").strip()
-            t_high = (weather_data.get("today_high") or "").strip()
-            t_low = (weather_data.get("today_low") or "").strip()
-            t_icon = (weather_data.get("today_icon") or "⛅").strip() or "⛅"
+        aliases = {
+            "today_desc": "desc", "today_high": "high", "today_low": "low",
+            "today_temp": "temp", "today_feels": "feels", "today_humidity": "humidity",
+            "today_aqi": "aqi",
+        }
+        for long_key, short_key in aliases.items():
+            if not weather_data.get(long_key) and weather_data.get(short_key):
+                weather_data[long_key] = weather_data[short_key]
 
-            new_tr_html = f"""
-                                            <tr>
-                                                <td style="padding: 14px 14px 14px 18px; vertical-align: middle;" valign="middle">
-                                                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
-                                                        <tr>
-                                                            <td style="font-size: 30px; line-height: 30px; padding-right: 12px; vertical-align: middle; width: 38px;" valign="middle" width="38">{t_icon}</td>
-                                                            <td style="vertical-align: middle;" valign="middle">
-                                                                <p style="margin: 0 0 3px 0; font-family: Arial, Helvetica, sans-serif; font-size: 9px; font-weight: bold; color: #b8860b; letter-spacing: 1.5px; text-transform: uppercase; line-height: 13px;">{loc} &#183; Today's Forecast</p>
-                                                                <p class="weather-desc-today" style="margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #6b5c3e; line-height: 17px;">{t_desc}</p>
-                                                            </td>
-                                                            <td style="vertical-align: middle; text-align: right; padding-left: 16px; white-space: nowrap;" valign="middle" align="right">
-                                                                <p style="margin: 0 0 2px 0; font-family: Arial, Helvetica, sans-serif; font-size: 8px; font-weight: bold; letter-spacing: 2px; color: #b8860b; text-transform: uppercase; line-height: 11px; text-align: right;">Expected</p>
-                                                                <p style="margin: 0 0 2px 0; line-height: 22px; text-align: right;">
-                                                                    <span class="weather-high-today" style="font-family: 'Courier New', Courier, monospace; font-size: 18px; font-weight: bold; color: #c8102e;">{t_high}&#176;</span>
-                                                                    <span style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #aaaaaa;"> / </span>
-                                                                    <span class="weather-low-today" style="font-family: 'Courier New', Courier, monospace; font-size: 18px; font-weight: bold; color: #1e40af;">{t_low}&#176;</span>
-                                                                    <span style="font-family: Arial, Helvetica, sans-serif; font-size: 9px; color: #999999;"> c</span>
-                                                                </p>
-                                                                <p style="margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 8px; color: #c4a85a; letter-spacing: 1px; text-align: right; line-height: 11px;">High &#183; Low</p>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                </td>
-                                            </tr>
-            """
-            new_tr_soup = BeautifulSoup(new_tr_html, "html.parser")
-            weather_container.clear()
-            weather_container.append(new_tr_soup)
+        for key, cls in (
+            ("location", "wx-loc"), ("today_desc", "wx-desc"), ("today_temp", "wx-temp"),
+            ("today_high", "wx-high"), ("today_low", "wx-low"), ("today_feels", "wx-feels"),
+            ("today_humidity", "wx-humidity"), ("today_aqi", "wx-aqi"),
+        ):
+            val = str(weather_data.get(key) or "").strip()
+            el = _one(soup, cls)
+            if val and el:
+                _set_text(el, val)
+
+        pre = _one(soup, "preheader")
+        if pre:
+            merged = _find_weather_data(soup)
+            _set_text(pre, _build_preheader(merged))
 
     # Markets
     markets_data = data.get("markets", [])
     if markets_data:
-        stat_cells = soup.find_all("td", class_="ticker-cell")
+        cells = soup.find_all("td", class_="mkt-cell")
         for i, mkt in enumerate(markets_data):
-            if i >= len(stat_cells):
+            if i >= len(cells):
                 break
-            cell = stat_cells[i]
-            p_tags = cell.find_all("p")
-            if len(p_tags) < 3:
+            cell = cells[i]
+            label_el = cell.find(class_="mkt-label")
+            value_el = cell.find(class_="mkt-value")
+            change_el = cell.find(class_="mkt-change")
+            if not (label_el and value_el and change_el):
                 continue
 
             label = (mkt.get("label") or "").strip()
             if label:
-                _set_text(p_tags[0], label)
+                _set_text(label_el, label)
             value = (mkt.get("value") or "").strip()
             if value:
-                _set_text(p_tags[2], value)
+                _set_text(value_el, value)
 
-            pct_raw = (mkt.get("pct") or "").strip().replace("%", "")
+            pct_raw = str(mkt.get("pct") or "").strip().replace("%", "")
             positive = mkt.get("positive", True)
-            arrow = "▲" if positive else "▼"
-            color = "#16a34a" if positive else "#dc2626"
-            bg_color = "#edfcf2" if positive else "#fef2f2"
-
-            def _apply_badge(span):
-                if not span:
-                    return
-                new_style = re.sub(r'color:\s*#[0-9a-fA-F]{6}', f'color: {color}', span.get("style", ""))
-                span["style"] = new_style
-                parent_td = span.find_parent("td")
-                if parent_td:
-                    parent_td["bgcolor"] = bg_color
-                    parent_td["style"] = re.sub(
-                        r'background-color:\s*#[0-9a-fA-F]{6}',
-                        f'background-color: {bg_color}',
-                        parent_td.get("style", "")
-                    )
-
-            pct_span = cell.find("span", class_="mkt-pct")
-            if pct_span and pct_raw:
-                _set_text(pct_span, f"{arrow} {pct_raw}%")
-                _apply_badge(pct_span)
-
-            abs_span = cell.find("span", class_="mkt-abs")
-            if abs_span and pct_raw:
+            if pct_raw:
                 try:
                     pct_float = float(pct_raw)
                 except ValueError:
                     pct_float = 0.0
-                abs_text = _format_abs_change(label or p_tags[0].get_text().strip(), value or p_tags[2].get_text().strip(), pct_float, positive)
-                _set_text(abs_span, abs_text)
-                _apply_badge(abs_span)
+                _set_text(change_el, _format_change(
+                    label or label_el.get_text().strip(),
+                    value or value_el.get_text().strip(),
+                    pct_float, positive,
+                ))
+                color = "#4cc07a" if positive else "#ff6b6b"
+                change_el["style"] = re.sub(
+                    r'color:\s*#[0-9a-fA-F]{6}', f'color: {color}', change_el.get("style", "")
+                )
+
+        # Close stamp — markets shut at 15:30 IST on the day the editor is used
+        stamp = _one(soup, "mkt-stamp")
+        if stamp:
+            _set_text(stamp, f"{datetime.now().strftime('%d %b %Y').upper()} · 15:30 IST")
 
     return str(soup)
 
@@ -610,9 +404,12 @@ def api_weather_fetch():
     res_data = {
         "location": location,
         "today_desc": "Partly cloudy",
+        "today_temp": "31",
         "today_high": "35",
         "today_low": "27",
-        "today_icon": "⛅",
+        "today_feels": "35",
+        "today_humidity": "70",
+        "today_aqi": "",
     }
 
     def clean_temp(val, default="27"):
@@ -626,9 +423,18 @@ def api_weather_fetch():
         except Exception:
             return default
 
-    # 1. Open-Meteo (geocoding + forecast — free, no key required)
+    def clean_int(val, default=""):
+        if val is None:
+            return default
+        try:
+            return str(int(round(float(str(val)))))
+        except Exception:
+            return default
+
+    hdrs = {"User-Agent": "Mozilla/5.0"}
+
+    # 1. Open-Meteo (geocoding + forecast + air quality — free, no key required)
     try:
-        hdrs = {"User-Agent": "Mozilla/5.0"}
         geo_url = (
             f"https://geocoding-api.open-meteo.com/v1/search"
             f"?name={_url_quote(location)}&count=1&language=en&format=json"
@@ -644,27 +450,50 @@ def api_weather_fetch():
                 wx_url = (
                     f"https://api.open-meteo.com/v1/forecast"
                     f"?latitude={lat}&longitude={lon}"
+                    f"&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code"
                     f"&daily=temperature_2m_max,temperature_2m_min,weather_code"
                     f"&timezone=auto&forecast_days=2"
                 )
                 wx_resp = _req.get(wx_url, headers=hdrs, timeout=8)
                 if wx_resp.status_code == 200:
-                    daily = wx_resp.json().get("daily", {})
+                    body = wx_resp.json()
+                    daily = body.get("daily", {})
+                    current = body.get("current", {})
                     maxtemps = daily.get("temperature_2m_max", [])
                     mintemps = daily.get("temperature_2m_min", [])
                     # Open-Meteo renamed weathercode → weather_code; support both
                     codes = daily.get("weather_code") or daily.get("weathercode", [])
                     if maxtemps:
-                        wmo = int(codes[0]) if codes else 2
-                        desc, icon = _WMO_CODES.get(wmo, ("Partly cloudy", "⛅"))
+                        wmo = current.get("weather_code")
+                        if wmo is None:
+                            wmo = int(codes[0]) if codes else 2
+                        desc = _WMO_CODES.get(int(wmo), "Partly cloudy")
                         res_data.update({
                             "location": place_name,
                             "today_desc": desc,
+                            "today_temp": clean_temp(current.get("temperature_2m"), "31"),
                             "today_high": clean_temp(maxtemps[0], "35"),
                             "today_low": clean_temp(mintemps[0] if mintemps else None, "27"),
-                            "today_icon": icon,
+                            "today_feels": clean_temp(current.get("apparent_temperature"), "35"),
+                            "today_humidity": clean_int(current.get("relative_humidity_2m"), "70"),
                         })
-                        print(f"DEBUG [Weather]: Open-Meteo OK → {place_name} {desc} {maxtemps[0]}/{mintemps[0] if mintemps else '?'}°C")
+
+                        # AQI is a separate Open-Meteo endpoint; failure here is non-fatal
+                        try:
+                            aq_url = (
+                                f"https://air-quality-api.open-meteo.com/v1/air-quality"
+                                f"?latitude={lat}&longitude={lon}&current=us_aqi&timezone=auto"
+                            )
+                            aq_resp = _req.get(aq_url, headers=hdrs, timeout=8)
+                            if aq_resp.status_code == 200:
+                                aqi = aq_resp.json().get("current", {}).get("us_aqi")
+                                res_data["today_aqi"] = clean_int(aqi, "")
+                        except Exception as e:
+                            print(f"DEBUG [Weather]: Open-Meteo AQI failed ({e})")
+
+                        print(f"DEBUG [Weather]: Open-Meteo OK → {place_name} {desc} "
+                              f"{res_data['today_temp']}°C ({maxtemps[0]}/{mintemps[0] if mintemps else '?'}) "
+                              f"AQI {res_data['today_aqi'] or '?'}")
                         return jsonify(res_data)
     except Exception as e:
         print(f"DEBUG [Weather]: Open-Meteo failed ({e}), trying wttr.in…")
@@ -673,32 +502,29 @@ def api_weather_fetch():
     try:
         loc_query = location.replace(" ", "_")
         url = f"https://wttr.in/{loc_query}?format=j1"
-        hdrs = {"User-Agent": "Mozilla/5.0"}
         resp = _req.get(url, headers=hdrs, timeout=8)
         if resp.status_code == 200:
-            weather_days = resp.json().get("weather", [])
+            body = resp.json()
+            weather_days = body.get("weather", [])
+            current = (body.get("current_condition") or [{}])[0]
             if weather_days:
                 day_data = weather_days[0]  # index 0 = today
                 res_data["today_high"] = clean_temp(day_data.get("maxtempC"), "35")
                 res_data["today_low"] = clean_temp(day_data.get("mintempC"), "27")
+                res_data["today_temp"] = clean_temp(current.get("temp_C"), res_data["today_high"])
+                res_data["today_feels"] = clean_temp(current.get("FeelsLikeC"), res_data["today_temp"])
+                res_data["today_humidity"] = clean_int(current.get("humidity"), "70")
 
-                hourly = day_data.get("hourly", [])
-                desc, wmo_code = "Partly cloudy", None
-                if hourly:
-                    mid = hourly[len(hourly) // 2]
-                    desc_list = mid.get("weatherDesc", [])
-                    if desc_list:
-                        desc = desc_list[0].get("value", desc)
-                    raw_code = mid.get("weatherCode")
-                    if raw_code is not None:
-                        wmo_code = int(raw_code)
+                desc_list = current.get("weatherDesc") or []
+                desc = desc_list[0].get("value") if desc_list else None
+                if not desc:
+                    hourly = day_data.get("hourly", [])
+                    if hourly:
+                        mid_desc = hourly[len(hourly) // 2].get("weatherDesc", [])
+                        desc = mid_desc[0].get("value") if mid_desc else None
+                res_data["today_desc"] = desc or "Partly cloudy"
 
-                res_data["today_desc"] = desc
-                if wmo_code is not None:
-                    _, icon = _WMO_CODES.get(wmo_code, ("", "⛅"))
-                    res_data["today_icon"] = icon
-
-                print(f"DEBUG [Weather]: wttr.in OK → {location} {desc}")
+                print(f"DEBUG [Weather]: wttr.in OK → {location} {res_data['today_desc']}")
                 return jsonify(res_data)
     except Exception as e:
         print(f"DEBUG [Weather]: wttr.in failed ({e})")

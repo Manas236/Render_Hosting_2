@@ -121,7 +121,7 @@ DASHBOARD_HTML = """
             </div>
             <div class="dash-btn-title">Day 17 Editor</div>
             <!-- DESCRIPTION ▸ Day 17 Editor -->
-            <div class="editor-note editor-note--meh"><span class="editor-note-arrow">➤</span>My last pick — meh design, not really the best.<span class="editor-note-claude">🤖 Claude: {{ q.day17 }}</span></div>
+            <div class="editor-note editor-note--good"><span class="editor-note-arrow">➤</span>Redesigned Sept 2026 — new v3 layout with the red weather strip, black lead panel and "At the Close" markets. Give it a run in rotation.<span class="editor-note-claude">🤖 Claude: {{ q.day17 }}</span></div>
           </a>
         </div>
       </div>
@@ -278,12 +278,12 @@ CLAUDE_QUOTES = {
         "Photogenic to a fault. Insists on the square format like it's a personal brand. Which, honestly, it is.",
     ],
     'day17': [
-        "It's trying its best, bless it. Not the one you call first, but it'll answer when everyone else is busy.",
-        "Participation-trophy energy. Showed up, technically functions, we clap politely.",
-        "The 'fine, I guess' of templates. Nobody's first choice, nobody's enemy.",
-        "Like elevator music — it exists, it's inoffensive, you forget it the moment it's gone.",
-        "Off the bench in garbage time. Won't lose the game, won't win it either.",
-        "A solid C+. Could've studied harder, chose not to, still passed.",
+        "Glow-up of the season. Went away for the summer, came back with a black lead panel and a weather strip. We noticed.",
+        "The redemption arc nobody saw coming. Same name, completely new wardrobe — and it actually knows the AQI now.",
+        "Fresh out of the shop. Still has that new-template smell; give it a spin before the others get jealous.",
+        "Went from 'fine, I guess' to 'wait, who is that?' in one commit. Character development.",
+        "Dark lead, red strip, monospace markets. Dresses like it reads the business pages — and it does.",
+        "Newest kid on the dashboard. Hasn't earned a ranking yet, but it turned up dressed for one.",
     ],
     # ===== Newsletter Editors · Saturdays & Non-Market Days =====
     'day11': [

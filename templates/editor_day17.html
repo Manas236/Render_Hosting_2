@@ -184,20 +184,6 @@
             background: var(--surface);
         }
 
-        .icon-pick-btn {
-            font-size: 20px;
-            width: 38px;
-            height: 38px;
-            border: 2px solid transparent;
-            border-radius: 6px;
-            background: var(--bg-2);
-            cursor: pointer;
-            padding: 0;
-            line-height: 1;
-            transition: border-color 0.12s, background 0.12s;
-        }
-        .icon-pick-btn:hover { background: var(--surface); border-color: var(--border); }
-        .icon-pick-btn.active { border-color: #c8102e; background: rgba(200,16,46,0.1); }
 
         .btn-primary {
             background: var(--accent);
@@ -937,7 +923,7 @@
                             <label>Condition</label>
                             <span class="tip-trigger" tabindex="0" role="button" aria-label="About this field">i</span>
                         </div>
-                        <div class="tip-pop"><span class="tip-emoji">🌤️</span> Short condition text shown with the forecast — e.g. “Partly cloudy”.</div>
+                        <div class="tip-pop"><span class="tip-emoji">🌤️</span> Short condition text under the city name — e.g. “Hazy sun”. Also feeds the inbox preview line.</div>
                         <input type="text" id="weatherTodayDesc" placeholder="e.g. Partly cloudy" autocomplete="off"
                             oninput="scheduleUpdate()" />
                     </div>
@@ -961,14 +947,45 @@
                                 oninput="scheduleUpdate()" />
                         </div>
                     </div>
-                    <div class="field" style="margin-top:4px;">
-                        <div class="field-head">
-                            <label>Icon</label>
-                            <span class="tip-trigger" tabindex="0" role="button" aria-label="About this field">i</span>
+                    <div style="display:flex; gap:8px;">
+                        <div class="field" style="flex:1;">
+                            <div class="field-head">
+                                <label>Now (°C)</label>
+                                <span class="tip-trigger" tabindex="0" role="button" aria-label="About this field">i</span>
+                            </div>
+                            <div class="tip-pop"><span class="tip-emoji">🌡️</span> Current temperature — the big number in the red strip.</div>
+                            <input type="number" id="weatherTodayTemp" placeholder="e.g. 33" autocomplete="off"
+                                oninput="scheduleUpdate()" />
                         </div>
-                        <div class="tip-pop"><span class="tip-emoji">🎨</span> Pick the weather symbol shown in the forecast — tap an icon below.</div>
-                        <input type="hidden" id="weatherIcon" value="⛅" />
-                        <div id="weatherIconGrid" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;"></div>
+                        <div class="field" style="flex:1;">
+                            <div class="field-head">
+                                <label>Feels like (°C)</label>
+                                <span class="tip-trigger" tabindex="0" role="button" aria-label="About this field">i</span>
+                            </div>
+                            <div class="tip-pop"><span class="tip-emoji">🥵</span> Apparent temperature with humidity and wind factored in.</div>
+                            <input type="number" id="weatherTodayFeels" placeholder="e.g. 38" autocomplete="off"
+                                oninput="scheduleUpdate()" />
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <div class="field" style="flex:1;">
+                            <div class="field-head">
+                                <label>Humidity (%)</label>
+                                <span class="tip-trigger" tabindex="0" role="button" aria-label="About this field">i</span>
+                            </div>
+                            <div class="tip-pop"><span class="tip-emoji">💧</span> Relative humidity right now, as a percentage.</div>
+                            <input type="number" id="weatherTodayHumidity" placeholder="e.g. 74" autocomplete="off"
+                                oninput="scheduleUpdate()" />
+                        </div>
+                        <div class="field" style="flex:1;">
+                            <div class="field-head">
+                                <label>AQI</label>
+                                <span class="tip-trigger" tabindex="0" role="button" aria-label="About this field">i</span>
+                            </div>
+                            <div class="tip-pop"><span class="tip-emoji">🌫️</span> Air quality index (US AQI scale from Open-Meteo). Leave blank to keep the current value.</div>
+                            <input type="number" id="weatherTodayAqi" placeholder="e.g. 96" autocomplete="off"
+                                oninput="scheduleUpdate()" />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1027,7 +1044,7 @@
                 <div class="modal-hint">
                     Paste a JSON object. Fields map directly to sections and stories by array position.<br>
                     Example:
-                    <code>{ "date": "April 3, 2026", "rni": "...", "weather": { "location": "Navi Mumbai", "desc": "Sunny", "high": "36", "low": "27" }, "stories": [{ "category": "TECH", "headline": "...", "summary": "...", "image": "https://...", "link": "https://..." }] }</code>
+                    <code>{ "date": "April 3, 2026", "rni": "...", "weather": { "location": "Navi Mumbai", "desc": "Hazy sun", "temp": "33", "high": "36", "low": "27", "feels": "38", "humidity": "74", "aqi": "96" }, "stories": [{ "category": "TECH", "headline": "...", "summary": "...", "image": "https://...", "link": "https://..." }] }</code>
                 </div>
                 <textarea id="jsonInput"
                     placeholder='{ "date": "April 3, 2026", "weather": { "location": "Navi Mumbai" }, "stories": [ { "category": "TECH", "headline": "..." } ] }'></textarea>
@@ -1080,7 +1097,10 @@
                 document.getElementById('weatherTodayDesc').value = data.weather.today_desc || '';
                 document.getElementById('weatherTodayHigh').value = data.weather.today_high || '';
                 document.getElementById('weatherTodayLow').value = data.weather.today_low || '';
-                if (data.weather.today_icon) syncWeatherIconPicker(data.weather.today_icon);
+                document.getElementById('weatherTodayTemp').value = data.weather.today_temp || '';
+                document.getElementById('weatherTodayFeels').value = data.weather.today_feels || '';
+                document.getElementById('weatherTodayHumidity').value = data.weather.today_humidity || '';
+                document.getElementById('weatherTodayAqi').value = data.weather.today_aqi || '';
             }
 
             const ml = document.getElementById('marketsList');
@@ -1221,7 +1241,10 @@
                     today_desc: val('weatherTodayDesc'),
                     today_high: val('weatherTodayHigh'),
                     today_low: val('weatherTodayLow'),
-                    today_icon: document.getElementById('weatherIcon')?.value || '⛅',
+                    today_temp: val('weatherTodayTemp'),
+                    today_feels: val('weatherTodayFeels'),
+                    today_humidity: val('weatherTodayHumidity'),
+                    today_aqi: val('weatherTodayAqi'),
                 },
                 stories,
                 markets: getMarketsData(),
@@ -1418,52 +1441,6 @@
             }
         }
 
-        const WEATHER_OPTIONS = [
-            { value: '⛅', label: 'Partly Cloudy',  condition: 'Partly cloudy',  bi: 'bi-cloud-sun' },
-            { value: '☀',  label: 'Clear / Sunny',  condition: 'Clear sky',       bi: 'bi-sun' },
-            { value: '🌤', label: 'Mostly Clear',   condition: 'Mainly clear',    bi: 'bi-cloud-sun-fill' },
-            { value: '☁',  label: 'Cloudy',         condition: 'Overcast',        bi: 'bi-cloud' },
-            { value: '🌫', label: 'Foggy',           condition: 'Foggy',           bi: 'bi-cloud-fog' },
-            { value: '☔', label: 'Rainy',           condition: 'Moderate rain',   bi: 'bi-cloud-rain' },
-            { value: '⛈', label: 'Thunderstorm',    condition: 'Thunderstorm',    bi: 'bi-cloud-lightning-rain' },
-            { value: '❄',  label: 'Snowy / Cold',   condition: 'Snow',            bi: 'bi-snow' },
-        ];
-
-        function buildWeatherIconGrid() {
-            const grid = document.getElementById('weatherIconGrid');
-            if (!grid) return;
-            const current = document.getElementById('weatherIcon')?.value || '⛅';
-            grid.innerHTML = '';
-            WEATHER_OPTIONS.forEach(opt => {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'icon-pick-btn' + (opt.value === current ? ' active' : '');
-                btn.dataset.icon = opt.value;
-                btn.title = opt.label;
-                btn.onclick = () => selectWeatherIcon(opt.value);
-                btn.innerHTML = `<i class="bi ${opt.bi}" style="font-size:18px; pointer-events:none;"></i>`;
-                grid.appendChild(btn);
-            });
-        }
-
-        function selectWeatherIcon(icon) {
-            document.getElementById('weatherIcon').value = icon;
-            document.querySelectorAll('#weatherIconGrid .icon-pick-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.icon === icon);
-            });
-            // Auto-sync condition label
-            const opt = WEATHER_OPTIONS.find(o => o.value === icon);
-            if (opt) document.getElementById('weatherTodayDesc').value = opt.condition;
-            scheduleUpdate();
-        }
-
-        function syncWeatherIconPicker(icon) {
-            document.getElementById('weatherIcon').value = icon;
-            document.querySelectorAll('#weatherIconGrid .icon-pick-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.icon === icon);
-            });
-        }
-
         async function fetchLiveWeather() {
             let loc = val('weatherLocation');
             if (!loc) {
@@ -1485,7 +1462,10 @@
                 document.getElementById('weatherTodayDesc').value = data.today_desc || '';
                 document.getElementById('weatherTodayHigh').value = data.today_high || '';
                 document.getElementById('weatherTodayLow').value = data.today_low || '';
-                if (data.today_icon) syncWeatherIconPicker(data.today_icon);
+                document.getElementById('weatherTodayTemp').value = data.today_temp || '';
+                document.getElementById('weatherTodayFeels').value = data.today_feels || '';
+                document.getElementById('weatherTodayHumidity').value = data.today_humidity || '';
+                if (data.today_aqi) document.getElementById('weatherTodayAqi').value = data.today_aqi;
                 
                 await sendUpdate();
                 setStatus('saved', 'WEATHER UPDATED');
@@ -1571,7 +1551,6 @@
 
         /* ── Boot ──────────────────────────────────────────────────────────────────────────────── */
         (async () => {
-            buildWeatherIconGrid();
             await loadFields();
             setAutoDate();
             await fetchLiveWeather();

@@ -65,7 +65,7 @@ Each editor lets you modify content through a form on the left and see a **live 
 | Day 12 | Standard multi-article layout |
 | Day 12 (2) | + Markets ticker |
 | Day 15 | Standard multi-article layout |
-| Day 17 | + Weather widget + Markets ticker |
+| Day 17 | v3 layout (Sept 2026): weather strip (temp, feels-like, humidity, AQI) + "At the Close" markets |
 | Template 1 | Standard multi-article layout |
 
 </details>

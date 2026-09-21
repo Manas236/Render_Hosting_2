@@ -146,6 +146,38 @@ def _delete_campaign(base_url, headers, cid):
         pass
 
 
+def _campaigns_on_day(base_url, headers, day_start_utc, day_end_utc):
+    """Return campaigns already scheduled/sending/sent within a UTC window.
+
+    Used to enforce a one-newsletter-per-day limit — checks all three
+    statuses since a same-day conflict can be a still-pending schedule,
+    one currently going out, or one already delivered.
+    """
+    since = day_start_utc.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+    before = day_end_utc.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+    found = []
+    for status in ("schedule", "sending", "sent"):
+        try:
+            r = requests.get(
+                f"{base_url}/campaigns",
+                headers=headers,
+                params={
+                    "status": status,
+                    "since_send_time": since,
+                    "before_send_time": before,
+                    "count": 10,
+                    "fields": "campaigns.id,campaigns.settings.subject_line,"
+                              "campaigns.send_time,campaigns.status",
+                },
+                timeout=20,
+            )
+            r.raise_for_status()
+        except requests.RequestException:
+            continue
+        found.extend(r.json().get("campaigns", []))
+    return found
+
+
 # ─────────────────────────────────────────────────────────────────────
 # Routes
 # ─────────────────────────────────────────────────────────────────────
@@ -191,6 +223,41 @@ def api_audiences():
         for l in r.json().get("lists", [])
     ]
     return jsonify({"audiences": audiences, "default_name": DEFAULT_AUDIENCE_NAME})
+
+
+@schedule_mailchimp_2_bp.route('/api/campaigns')
+@require_login
+def api_campaigns():
+    """List not-yet-sent campaigns (scheduled / currently sending).
+
+    Pass ?include_sent=true to also include already-sent campaigns.
+    """
+    try:
+        base_url, headers = _api_config()
+    except RuntimeError as e:
+        return jsonify({"error": str(e)}), 500
+
+    include_sent = request.args.get("include_sent") == "true"
+    statuses = ["schedule", "sending"] + (["sent"] if include_sent else [])
+    fields = ("campaigns.id,campaigns.settings.subject_line,"
+              "campaigns.recipients.list_name,campaigns.recipients.recipient_count,"
+              "campaigns.send_time,campaigns.status")
+    campaigns = []
+    for status in statuses:
+        try:
+            r = requests.get(
+                f"{base_url}/campaigns",
+                headers=headers,
+                params={"status": status, "count": 50, "fields": fields},
+                timeout=20,
+            )
+            r.raise_for_status()
+        except requests.RequestException as e:
+            return jsonify({"error": _mc_err("load campaigns", e)}), 502
+        campaigns.extend(r.json().get("campaigns", []))
+
+    campaigns.sort(key=lambda c: c.get("send_time") or "")
+    return jsonify({"campaigns": campaigns})
 
 
 @schedule_mailchimp_2_bp.route('/api/preview', methods=["POST"])
@@ -255,7 +322,22 @@ def api_schedule():
             return jsonify({"error": "Send time must be in the future."}), 400
         schedule_iso = utc_dt.strftime("%Y-%m-%dT%H:%M:%S+00:00")
 
-    # 1) Create the campaign and push the HTML content
+    # 1) Enforce one newsletter per calendar day (IST)
+    target_ist_date = (utc_dt if not send_now else datetime.now(timezone.utc)).astimezone(IST).date()
+    day_start_ist = datetime(target_ist_date.year, target_ist_date.month, target_ist_date.day, tzinfo=IST)
+    day_start_utc = day_start_ist.astimezone(timezone.utc)
+    day_end_utc = (day_start_ist + timedelta(days=1)).astimezone(timezone.utc)
+    existing = _campaigns_on_day(base_url, headers, day_start_utc, day_end_utc)
+    if existing:
+        c = existing[0]
+        subj = c.get("settings", {}).get("subject_line") or "a newsletter"
+        return jsonify({
+            "error": f"Only one newsletter can be scheduled per day. "
+                     f"\"{subj}\" is already {c.get('status')} for "
+                     f"{target_ist_date.strftime('%d %b %Y')}."
+        }), 409
+
+    # 2) Create the campaign and push the HTML content
     try:
         cid, campaign = _create_campaign(
             base_url, headers, audience_id, subject, from_name, from_email, html)
@@ -265,7 +347,7 @@ def api_schedule():
             body["campaign_id"] = e.campaign_id
         return jsonify(body), e.status
 
-    # 2) Schedule (or send immediately)
+    # 3) Schedule (or send immediately)
     action = "send" if send_now else "schedule"
     body = {} if send_now else {"schedule_time": schedule_iso}
     try:
@@ -572,6 +654,29 @@ SCHEDULE_MAILCHIMP_HTML = """<!DOCTYPE html>
     .summary .v { color: #6f6864; line-height: 1.55; font-size: 14px; word-break: break-word; }
     .note { margin-top: 14px; padding: 14px; border: 1px solid rgba(225,22,63,.14); background: rgba(225,22,63,.04); border-radius: 16px; color: #7f5d56; font-size: 13.5px; line-height: 1.6; }
 
+    /* ── Scheduled campaigns panel ── */
+    .campaigns-panel { margin-top: 20px; }
+    .campaigns-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .sent-toggle { display: flex; align-items: center; gap: 8px; font-size: 12px; text-transform: none; letter-spacing: 0; font-weight: 600; color: #6f6864; cursor: pointer; }
+    .sent-toggle input { accent-color: var(--red); width: 15px; height: 15px; cursor: pointer; }
+    .campaigns-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+    .campaign-row {
+      display: grid; grid-template-columns: 1fr auto auto; gap: 14px; align-items: center;
+      padding: 13px 16px; border: 1px solid var(--line); border-radius: 14px; background: #fff;
+    }
+    .campaign-subject { font-weight: 700; font-size: 14px; margin-bottom: 3px; }
+    .campaign-meta { font-size: 12.5px; color: var(--muted); }
+    .campaign-when { font-size: 13px; color: #6f6864; white-space: nowrap; text-align: right; }
+    .tag { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 5px 10px; border-radius: 999px; white-space: nowrap; }
+    .tag-scheduled { background: rgba(225,22,63,.1); color: var(--red); }
+    .tag-sending { background: #fff4dc; color: #9a6b00; }
+    .tag-sent { background: var(--green-bg); color: var(--green); }
+    .campaigns-empty { padding: 22px; text-align: center; font-size: 13px; color: var(--muted); }
+    @media (max-width: 640px) {
+      .campaign-row { grid-template-columns: 1fr; text-align: left; }
+      .campaign-when { text-align: left; }
+    }
+
     /* ── Quick tips ── */
     .tip { display: grid; grid-template-columns: 24px 1fr; gap: 12px; align-items: start; padding: 11px 0; color: #6c655f; font-size: 14px; line-height: 1.5; }
     .tip .dot { width: 24px; height: 24px; border-radius: 8px; background: rgba(225,22,63,.10); display: grid; place-items: center; color: var(--red); font-size: 12px; }
@@ -759,6 +864,18 @@ SCHEDULE_MAILCHIMP_HTML = """<!DOCTYPE html>
         </aside>
       </main>
     </form>
+
+    <section class="card campaigns-panel">
+      <div class="campaigns-head">
+        <div class="section-title" style="margin-bottom:0;"><span class="badge">📋</span> Scheduled Campaigns</div>
+        <label class="sent-toggle">
+          <input type="checkbox" id="show-sent-toggle"> Show sent
+        </label>
+      </div>
+      <div class="campaigns-list" id="campaigns-list">
+        <div class="campaigns-empty">Loading…</div>
+      </div>
+    </section>
 
     <div class="footer-link"><a href="{{ url_for('dashboard_bp.dashboard') }}">&#8592; Back to Dashboard</a></div>
   </div>
@@ -1048,10 +1165,61 @@ SCHEDULE_MAILCHIMP_HTML = """<!DOCTYPE html>
           if (d.recipients != null) { msg += 'Recipients: <code>' + d.recipients + '</code><br>'; }
           msg += 'Campaign ID: <code>' + d.campaign_id + '</code>';
           showResult(true, msg);
+          loadCampaigns();
         })
         .catch(function () { showResult(false, '<h4>Network error</h4>Could not reach the server.'); })
         .finally(function () { submitBtn.disabled = false; submitLabel.textContent = prev; });
     });
+
+    // ── Scheduled campaigns panel ──
+    var showSentToggle = document.getElementById('show-sent-toggle');
+    var campaignsList = document.getElementById('campaigns-list');
+    var STATUS_LABEL = { schedule: 'Scheduled', sending: 'Sending', sent: 'Sent' };
+    var STATUS_CLASS = { schedule: 'tag-scheduled', sending: 'tag-sending', sent: 'tag-sent' };
+
+    function fmtCampaignWhen(iso) {
+      if (!iso) return '—';
+      var d = new Date(iso);
+      if (isNaN(d.getTime())) return '—';
+      return d.toLocaleString('en-IN', {
+        timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric',
+        hour: 'numeric', minute: '2-digit', hour12: true
+      }) + ' IST';
+    }
+
+    function loadCampaigns() {
+      campaignsList.innerHTML = '<div class="campaigns-empty">Loading…</div>';
+      var url = 'api/campaigns' + (showSentToggle.checked ? '?include_sent=true' : '');
+      fetch(url)
+        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+        .then(function (res) {
+          if (!res.ok) {
+            campaignsList.innerHTML = '<div class="campaigns-empty">⚠ ' + escapeHtml(res.d.error || 'Could not load campaigns.') + '</div>';
+            return;
+          }
+          var list = res.d.campaigns || [];
+          if (!list.length) {
+            campaignsList.innerHTML = '<div class="campaigns-empty">' + (showSentToggle.checked ? 'No campaigns found.' : 'Nothing scheduled right now.') + '</div>';
+            return;
+          }
+          campaignsList.innerHTML = list.map(function (c) {
+            var subj = escapeHtml((c.settings && c.settings.subject_line) || '(no subject)');
+            var aud = escapeHtml((c.recipients && c.recipients.list_name) || '—');
+            var count = (c.recipients && c.recipients.recipient_count != null) ? c.recipients.recipient_count : '—';
+            var status = c.status || '';
+            var label = STATUS_LABEL[status] || status;
+            var cls = STATUS_CLASS[status] || 'tag-scheduled';
+            return '<div class="campaign-row">' +
+              '<div><div class="campaign-subject">' + subj + '</div><div class="campaign-meta">' + aud + ' · ' + count + ' recipients</div></div>' +
+              '<div class="campaign-when">' + fmtCampaignWhen(c.send_time) + '</div>' +
+              '<span class="tag ' + cls + '">' + escapeHtml(label) + '</span>' +
+              '</div>';
+          }).join('');
+        })
+        .catch(function () { campaignsList.innerHTML = '<div class="campaigns-empty">⚠ Network error loading campaigns.</div>'; });
+    }
+    showSentToggle.addEventListener('change', loadCampaigns);
+    loadCampaigns();
 
     // ── Initial summary render ──
     updateSummary();
