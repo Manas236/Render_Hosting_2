@@ -548,25 +548,39 @@ def api_markets_fetch():
             from bs4 import BeautifulSoup as _BS
             headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"}
 
+            def _parse_goodreturns_gold(soup):
+                # goodreturns.in's summary table now combines price+change in
+                # one cell (e.g. "₹1,55,680(-160)"), so pull from its per-day
+                # history table ('Date' | '24K' | '22K') instead — one clean
+                # per-gram price per row.
+                import re
+                tables = soup.find_all('table')
+                if len(tables) < 2:
+                    return None, None
+                per_gram = []
+                for tr in tables[1].find_all('tr'):
+                    cols = [td.get_text(strip=True) for td in tr.find_all(['th', 'td'])]
+                    if len(cols) < 2:
+                        continue
+                    m = re.match(r'₹\s*([\d,]+)', cols[1])
+                    if not m:
+                        continue
+                    per_gram.append(float(m.group(1).replace(',', '')))
+                    if len(per_gram) >= 2:
+                        break
+                if len(per_gram) >= 2:
+                    return per_gram[0] * 10, per_gram[1] * 10
+                return None, None
+
             # Fallback 1: goodreturns.in Mumbai
             try:
                 url = "https://www.goodreturns.in/gold-rates/mumbai.html"
                 resp = _req.get(url, headers=headers, timeout=10)
                 if resp.status_code == 200:
-                    soup = _BS(resp.text, 'html.parser')
-                    tables = soup.find_all('table')
-                    if tables:
-                        table = tables[0]
-                        for tr in table.find_all('tr'):
-                            cols = [td.get_text(strip=True) for td in tr.find_all(['th', 'td'])]
-                            if len(cols) >= 3 and cols[0] == '10':
-                                today_str = cols[1].replace('₹', '').replace(',', '').strip()
-                                yday_str = cols[2].replace('₹', '').replace(',', '').strip()
-                                if today_str and today_str != 'N/A' and yday_str and yday_str != 'N/A':
-                                    today_val, yday_val = float(today_str), float(yday_str)
-                                    if today_val > 0 and yday_val > 0:
-                                        print("DEBUG [Gold]: goodreturns.in Mumbai -> success")
-                                        return today_val, yday_val
+                    today_val, yday_val = _parse_goodreturns_gold(_BS(resp.text, 'html.parser'))
+                    if today_val and yday_val:
+                        print("DEBUG [Gold]: goodreturns.in Mumbai -> success")
+                        return today_val, yday_val
                 print("DEBUG [Gold]: goodreturns.in Mumbai returned N/A, trying fallback...")
             except Exception as e:
                 print(f"DEBUG [Gold]: goodreturns.in Mumbai failed ({e}), trying fallback...")
@@ -576,19 +590,10 @@ def api_markets_fetch():
                 url2 = "https://www.goodreturns.in/gold-rates/"
                 resp2 = _req.get(url2, headers=headers, timeout=10)
                 if resp2.status_code == 200:
-                    soup2 = _BS(resp2.text, 'html.parser')
-                    tables2 = soup2.find_all('table')
-                    if tables2:
-                        for tr in tables2[0].find_all('tr'):
-                            cols = [td.get_text(strip=True) for td in tr.find_all(['th', 'td'])]
-                            if len(cols) >= 3 and cols[0] == '10':
-                                today_str = cols[1].replace('₹', '').replace(',', '').strip()
-                                yday_str = cols[2].replace('₹', '').replace(',', '').strip()
-                                if today_str and today_str != 'N/A' and yday_str and yday_str != 'N/A':
-                                    today_val, yday_val = float(today_str), float(yday_str)
-                                    if today_val > 0 and yday_val > 0:
-                                        print("DEBUG [Gold]: goodreturns.in national -> success")
-                                        return today_val, yday_val
+                    today_val, yday_val = _parse_goodreturns_gold(_BS(resp2.text, 'html.parser'))
+                    if today_val and yday_val:
+                        print("DEBUG [Gold]: goodreturns.in national -> success")
+                        return today_val, yday_val
             except Exception as e:
                 print(f"DEBUG [Gold]: goodreturns.in national failed ({e})")
 
@@ -615,37 +620,45 @@ def api_markets_fetch():
         def fetch_usd_inr():
             """
             Fetch USD/INR exchange rate.
-            Primary:   Frankfurter API (ECB daily rates, free, reliable)
-            Fallback:  Yahoo Finance INR=X
+            Primary:   Yahoo Finance INR=X (live spot rate, matches Google Finance)
+            Fallback:  Frankfurter API (ECB daily reference rate, only updates
+                       once per business day so it can lag/repeat over weekends)
             """
+            try:
+                import requests
+                hdrs = {"User-Agent": "Mozilla/5.0"}
+                resp = requests.get("https://query2.finance.yahoo.com/v8/finance/chart/INR=X?interval=1d&range=5d", headers=hdrs, timeout=10)
+                if resp.status_code == 200:
+                    result = resp.json()['chart']['result'][0]
+                    meta = result.get('meta', {})
+                    today, prev = meta.get('regularMarketPrice'), meta.get('chartPreviousClose')
+                    if today and prev:
+                        print(f"DEBUG [USD/INR]: Yahoo (live) -> today={today}, prev={prev}")
+                        return float(today), float(prev)
+                    closes = [c for c in result['indicators']['quote'][0]['close'] if c is not None]
+                    if len(closes) >= 2:
+                        print(f"DEBUG [USD/INR]: Yahoo (closes) -> today={closes[-1]}, prev={closes[-2]}")
+                        return float(closes[-1]), float(closes[-2])
+            except Exception as e:
+                print(f"DEBUG [USD/INR]: Yahoo failed ({e}), trying Frankfurter...")
+
+            # Frankfurter fallback
             try:
                 import requests
                 resp = requests.get("https://api.frankfurter.dev/v1/latest?base=USD&symbols=INR", timeout=10)
                 if resp.status_code == 200:
                     rate = resp.json()['rates']['INR']
                     from datetime import datetime, timedelta
-                    for idx in range(1, 5):
+                    for idx in range(1, 8):
                         yday_str = (datetime.now() - timedelta(days=idx)).strftime('%Y-%m-%d')
                         y_resp = requests.get(f"https://api.frankfurter.dev/v1/{yday_str}?base=USD&symbols=INR", timeout=10)
                         if y_resp.status_code == 200:
                             y_rate = y_resp.json()['rates']['INR']
-                            print(f"DEBUG [USD/INR]: Frankfurter -> today={rate}, yday={y_rate}")
-                            return rate, y_rate
+                            if y_rate != rate:
+                                print(f"DEBUG [USD/INR]: Frankfurter -> today={rate}, yday={y_rate}")
+                                return rate, y_rate
             except Exception as e:
-                print(f"DEBUG [USD/INR]: Frankfurter failed ({e}), trying Yahoo...")
-
-            # Yahoo fallback
-            try:
-                import requests
-                hdrs = {"User-Agent": "Mozilla/5.0"}
-                resp = requests.get("https://query2.finance.yahoo.com/v8/finance/chart/INR=X?interval=1d&range=5d", headers=hdrs, timeout=10)
-                if resp.status_code == 200:
-                    closes = [c for c in resp.json()['chart']['result'][0]['indicators']['quote'][0]['close'] if c is not None]
-                    if len(closes) >= 2:
-                        print(f"DEBUG [USD/INR]: Yahoo -> today={closes[-1]}, yday={closes[-2]}")
-                        return closes[-1], closes[-2]
-            except Exception as e:
-                print(f"DEBUG [USD/INR]: Yahoo fallback failed ({e})")
+                print(f"DEBUG [USD/INR]: Frankfurter fallback failed ({e})")
             return None, None
 
         def fetch_two(sym):

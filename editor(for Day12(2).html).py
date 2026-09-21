@@ -519,28 +519,40 @@ def api_markets_fetch():
             from datetime import datetime, timedelta
             headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"}
 
+            def _parse_goodreturns_gold(soup):
+                # goodreturns.in's summary table now combines price+change in
+                # one cell (e.g. "₹1,55,680(-160)"), so pull from its per-day
+                # history table ('Date' | '24K' | '22K') instead — one clean
+                # per-gram price per row.
+                import re
+                tables = soup.find_all('table')
+                if len(tables) < 2:
+                    return None, None
+                per_gram = []
+                for tr in tables[1].find_all('tr'):
+                    cols = [td.get_text(strip=True) for td in tr.find_all(['th', 'td'])]
+                    if len(cols) < 2:
+                        continue
+                    m = re.match(r'₹\s*([\d,]+)', cols[1])
+                    if not m:
+                        continue
+                    per_gram.append(float(m.group(1).replace(',', '')))
+                    if len(per_gram) >= 2:
+                        break
+                if len(per_gram) >= 2:
+                    return per_gram[0] * 10, per_gram[1] * 10
+                return None, None
+
             # ── Primary: goodreturns.in (Mumbai) ──────────────────────────────
             try:
                 url = "https://www.goodreturns.in/gold-rates/mumbai.html"
                 resp = _req.get(url, headers=headers, timeout=10)
                 if resp.status_code == 200:
-                    soup = _BS(resp.text, 'html.parser')
-                    tables = soup.find_all('table')
-                    if tables:
-                        table = tables[0]  # Table 0 = 24K
-                        for tr in table.find_all('tr'):
-                            cols = [td.get_text(strip=True) for td in tr.find_all(['th', 'td'])]
-                            if len(cols) >= 3 and cols[0] == '10':
-                                today_str = cols[1].replace('₹', '').replace(',', '').strip()
-                                yday_str = cols[2].replace('₹', '').replace(',', '').strip()
-                                # Check for N/A or empty values
-                                if today_str and today_str != 'N/A' and yday_str and yday_str != 'N/A':
-                                    today_val = float(today_str)
-                                    yday_val = float(yday_str)
-                                    if today_val > 0 and yday_val > 0:
-                                        print("DEBUG [Gold]: goodreturns.in -> success")
-                                        return today_val, yday_val
-                    print("DEBUG [Gold]: goodreturns.in returned N/A or invalid data, trying fallback...")
+                    today_val, yday_val = _parse_goodreturns_gold(_BS(resp.text, 'html.parser'))
+                    if today_val and yday_val:
+                        print("DEBUG [Gold]: goodreturns.in -> success")
+                        return today_val, yday_val
+                print("DEBUG [Gold]: goodreturns.in returned N/A or invalid data, trying fallback...")
             except Exception as e:
                 print(f"DEBUG [Gold]: goodreturns.in failed ({e}), trying fallback...")
 
@@ -549,21 +561,10 @@ def api_markets_fetch():
                 url2 = "https://www.goodreturns.in/gold-rates/"
                 resp2 = _req.get(url2, headers=headers, timeout=10)
                 if resp2.status_code == 200:
-                    soup2 = _BS(resp2.text, 'html.parser')
-                    tables2 = soup2.find_all('table')
-                    if tables2:
-                        table2 = tables2[0]
-                        for tr in table2.find_all('tr'):
-                            cols = [td.get_text(strip=True) for td in tr.find_all(['th', 'td'])]
-                            if len(cols) >= 3 and cols[0] == '10':
-                                today_str = cols[1].replace('₹', '').replace(',', '').strip()
-                                yday_str = cols[2].replace('₹', '').replace(',', '').strip()
-                                if today_str and today_str != 'N/A' and yday_str and yday_str != 'N/A':
-                                    today_val = float(today_str)
-                                    yday_val = float(yday_str)
-                                    if today_val > 0 and yday_val > 0:
-                                        print("DEBUG [Gold]: goodreturns.in (national) fallback -> success")
-                                        return today_val, yday_val
+                    today_val, yday_val = _parse_goodreturns_gold(_BS(resp2.text, 'html.parser'))
+                    if today_val and yday_val:
+                        print("DEBUG [Gold]: goodreturns.in (national) fallback -> success")
+                        return today_val, yday_val
             except Exception as e:
                 print(f"DEBUG [Gold]: goodreturns.in (national) fallback failed ({e})")
 
@@ -630,38 +631,48 @@ def api_markets_fetch():
 
         def fetch_usd_inr():
             """
-            Primary:  Frankfurter API (ECB daily rates, free, reliable)
-            Fallback: Yahoo Finance INR=X
+            Primary:  Yahoo Finance INR=X (live spot rate, matches Google Finance)
+            Fallback: Frankfurter API (ECB daily reference rate, only updates
+                      once per business day so it can lag/repeat over weekends)
             """
             import requests
             from datetime import datetime, timedelta
             headers = {"User-Agent": "Mozilla/5.0"}
+            try:
+                url = "https://query2.finance.yahoo.com/v8/finance/chart/INR=X?interval=1d&range=5d"
+                resp = requests.get(url, headers=headers, timeout=10)
+                if resp.status_code == 200:
+                    result = resp.json()['chart']['result'][0]
+                    meta = result.get('meta', {})
+                    today, prev = meta.get('regularMarketPrice'), meta.get('chartPreviousClose')
+                    if today and prev:
+                        print(f"DEBUG [USD/INR]: Yahoo (live) -> today={today}, prev={prev}")
+                        return float(today), float(prev)
+                    closes = [c for c in result['indicators']['quote'][0]['close'] if c is not None]
+                    if len(closes) >= 2:
+                        print(f"DEBUG [USD/INR]: Yahoo (closes) -> today={closes[-1]}, prev={closes[-2]}")
+                        return float(closes[-1]), float(closes[-2])
+            except Exception as e:
+                print(f"DEBUG [USD/INR]: Yahoo failed ({e}), trying Frankfurter...")
             try:
                 resp = requests.get("https://api.frankfurter.app/latest?from=USD&to=INR", headers=headers, timeout=10)
                 if resp.status_code == 200:
                     data = resp.json()
                     today_rate = float(data['rates']['INR'])
                     today_dt = datetime.strptime(data['date'], "%Y-%m-%d")
-                    prev_dt = today_dt - timedelta(days=1)
-                    resp_prev = requests.get(
-                        f"https://api.frankfurter.app/{prev_dt.strftime('%Y-%m-%d')}?from=USD&to=INR",
-                        headers=headers, timeout=10
-                    )
-                    if resp_prev.status_code == 200:
-                        prev_rate = float(resp_prev.json()['rates']['INR'])
-                        print(f"DEBUG [USD/INR]: Frankfurter -> {today_rate:.2f}")
-                        return today_rate, prev_rate
+                    for idx in range(1, 8):
+                        prev_dt = today_dt - timedelta(days=idx)
+                        resp_prev = requests.get(
+                            f"https://api.frankfurter.app/{prev_dt.strftime('%Y-%m-%d')}?from=USD&to=INR",
+                            headers=headers, timeout=10
+                        )
+                        if resp_prev.status_code == 200:
+                            prev_rate = float(resp_prev.json()['rates']['INR'])
+                            if prev_rate != today_rate:
+                                print(f"DEBUG [USD/INR]: Frankfurter -> {today_rate:.2f}")
+                                return today_rate, prev_rate
             except Exception as e:
-                print(f"DEBUG [USD/INR]: Frankfurter failed ({e}), trying Yahoo...")
-            try:
-                url = "https://query2.finance.yahoo.com/v8/finance/chart/INR=X?interval=1d&range=5d"
-                resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
-                if resp.status_code == 200:
-                    closes = [c for c in resp.json()['chart']['result'][0]['indicators']['quote'][0]['close'] if c is not None]
-                    if len(closes) >= 2:
-                        return float(closes[-1]), float(closes[-2])
-            except Exception:
-                pass
+                print(f"DEBUG [USD/INR]: Frankfurter fallback failed ({e})")
             return None, None
 
         s_now, s_prev = fetch_two("^BSESN")
