@@ -51,34 +51,14 @@
             line-height: inherit !important;
         }
 
-        /* Mobile responsiveness (iPhone / Android mail apps, Gmail app).
-           FALLBACK: the shell is fluid via the inline width:100%/max-width:700px
-           on .shell, so clients that ignore these media-query rules still avoid
-           horizontal scrolling. These rules stack the multi-column rows, let
-           images fill the available width and tighten the side padding. */
-        @media only screen and (max-width: 600px) {
-            .shell          { width: 100% !important; border-radius: 0 !important; }
+        /* Mobile: keep the desktop layout and scale it down to the screen
+           (same approach as Day12) instead of stacking columns. The shell is
+           a fixed 700px, so clients that ignore this rule (Gmail app) still
+           auto-fit the whole email to the screen width. */
+        @media only screen and (max-width: 720px) {
+            body            { overflow-x: hidden !important; margin: 0 !important; }
             .outer-pad      { padding: 0 !important; }
-            .stack          { display: block !important; width: 100% !important; box-sizing: border-box !important; }
-            .stack-img      { width: 100% !important; max-width: 100% !important; height: auto !important; }
-            .cover-img      { height: 220px !important; }
-            .gutter         { display: none !important; }
-            .pad            { padding-left: 18px !important; padding-right: 18px !important; }
-            .logo           { width: 150px !important; max-width: 150px !important; }
-            .hdr-cell       { padding: 14px 18px !important; }
-            .huge           { font-size: 28px !important; line-height: 32px !important; }
-            .lead-text      { padding: 26px 20px 28px 20px !important; }
-            .card-text      { padding: 20px 18px 22px 18px !important; }
-            .wx-left        { padding: 14px 18px 4px 18px !important; }
-            .wx-right       { padding: 6px 18px 14px 18px !important; text-align: left !important; }
-            .wx-stats       { float: none !important; margin: 0 !important; }
-            .wx-stat        { padding: 0 10px !important; }
-            .wx-stat-first  { border-left: 0 !important; padding-left: 0 !important; }
-            .ed-cell        { display: block !important; width: 100% !important; text-align: left !important; letter-spacing: 2px !important; }
-            .ed-right       { padding-top: 4px !important; }
-            .mkt-cell       { display: inline-block !important; width: 48% !important; box-sizing: border-box !important; vertical-align: top !important; padding: 12px 8px 10px 0 !important; }
-            .mkt-stamp      { display: block !important; text-align: left !important; padding-top: 6px !important; }
-            .tile-2         { padding-top: 26px !important; }
+            table.shell     { zoom: calc(100vw / 700) !important; border-radius: 0 !important; }
         }
     </style>
     <!--<![endif]-->
@@ -101,22 +81,22 @@
                 <td>
                 <![endif]-->
 
-                <table role="presentation" class="shell" width="700" align="center" border="0" cellpadding="0" cellspacing="0" style="width: 100%; max-width: 700px; background-color: #faf8f4; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.18);" bgcolor="#faf8f4">
+                <table role="presentation" class="shell" width="700" align="center" border="0" cellpadding="0" cellspacing="0" style="width: 700px; max-width: 700px; background-color: #faf8f4; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.18);" bgcolor="#faf8f4">
 
                     <!-- ====== HEADER ====== -->
                     <tr>
-                        <td class="hdr-cell" style="background-color: #ffffff; padding: 16px 24px; border-bottom: 1px solid #eeeeee;" bgcolor="#ffffff">
+                        <td class="hdr-cell" style="background-color: #ffffff; background-image: url('https://singlecolorimage.com/get/ffffff/600x400'); background-size: cover; padding: 16px 24px; border-bottom: 1px solid #eeeeee;" bgcolor="#ffffff">
                             <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
                                 <tr>
-                                    <td valign="middle" style="vertical-align: middle;">
+                                    <td valign="middle" style="vertical-align: middle; background-color: #ffffff; background-image: url('https://singlecolorimage.com/get/ffffff/200x60'); background-size: cover; background-repeat: no-repeat;" bgcolor="#ffffff">
                                         <a href="https://www.newsband.in/" target="_blank" style="text-decoration: none;">
-                                            <img src="https://raw.githubusercontent.com/Manas236/Newsband/main/newsband-logo-0022.png" width="200" alt="Newsband" class="logo" style="display: block; border: 0; outline: none; width: 200px; max-width: 200px; height: auto;" />
+                                            <img src="https://raw.githubusercontent.com/Manas236/Newsband/main/newsband_white_bg.png" width="200" alt="Newsband" class="logo" style="display: block; border: 0; outline: none; width: 200px; max-width: 200px; height: auto; background-color: #ffffff;" />
                                         </a>
                                     </td>
-                                    <td align="right" valign="middle" style="vertical-align: middle;">
+                                    <td align="right" valign="middle" style="vertical-align: middle; background-color: #ffffff; background-image: url('https://singlecolorimage.com/get/ffffff/100x30'); background-size: cover; background-repeat: no-repeat;" bgcolor="#ffffff">
                                         <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="right">
                                             <tr>
-                                                <td style="background-color: #f5f5f5; border-radius: 6px; padding: 6px 12px; text-align: right;" bgcolor="#f5f5f5">
+                                                <td style="background-color: #f5f5f5; background-image: url('https://singlecolorimage.com/get/f5f5f5/100x100'); background-size: cover; border-radius: 6px; padding: 6px 12px; text-align: right;" bgcolor="#f5f5f5">
                                                     <div class="hdr-date" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; line-height: 15px; font-weight: 600; color: #737373; white-space: nowrap;">Date: April 3, 2026</div>
                                                     <div class="hdr-rni" style="font-family: Arial, Helvetica, sans-serif; font-size: 9px; line-height: 13px; color: #888888; white-space: nowrap;">RNI: MAHENG/2007/21778</div>
                                                 </td>
