@@ -156,7 +156,7 @@ Project Pandora/
 ├── codeview.py             # HTML code viewer + ZIP download
 ├── upload_image.py         # GitHub image pusher
 ├── mailchimp.py            # Mailchimp campaign analytics
-├── day8.py … day17.py      # Per-template editor blueprints
+├── day8.py … day21.py      # Per-template editor blueprints
 ├── templates/              # Jinja2 HTML templates
 ├── *.html                  # Newsletter template source files
 └── requirements.txt

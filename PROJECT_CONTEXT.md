@@ -61,6 +61,8 @@ via `importlib` because their filenames contain parentheses/spaces.
 | `editor(for Day12(2).html).py` | `/day12-2-editor` |
 | `editor(for Day9(2).html).py` | `/day9-2-editor` — includes markets ticker |
 | `editor(for Day17.html).py` | `/day17-editor` — includes market snapshot |
+| `editor(for Day19.html).py` | `/day19-editor` — weather strip + markets card |
+| `editor(for Day21.html).py` | `/day21-editor` — bento cards + weather tile |
 
 > Note: `editor.py`, `editor(for Day8.html).py`, and `editor(for Day12.html).py`'s siblings
 > may exist on disk as older/unregistered variants; only the blueprints listed above are wired

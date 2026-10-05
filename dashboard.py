@@ -115,6 +115,18 @@ DASHBOARD_HTML = """
             </div>
             <div class="dash-btn-title">Day 17 Editor</div>
           </a>
+          <a href="{{ url_for('day19_editor.editor') }}" class="dash-btn">
+            <div class="dash-btn-photo-wrap">
+              <img src="/static_files/Day19.png" class="dash-btn-photo" alt="Day19 Editor" />
+            </div>
+            <div class="dash-btn-title">Day 19 Editor</div>
+          </a>
+          <a href="{{ url_for('day21_editor.editor') }}" class="dash-btn">
+            <div class="dash-btn-photo-wrap">
+              <img src="/static_files/Day21.png" class="dash-btn-photo" alt="Day21 Editor" />
+            </div>
+            <div class="dash-btn-title">Day 21 Editor</div>
+          </a>
         </div>
       </div>
 
@@ -250,6 +262,22 @@ CLAUDE_QUOTES = {
         "Went from 'fine, I guess' to 'wait, who is that?' in one commit. Character development.",
         "Dark lead, red strip, monospace markets. Dresses like it reads the business pages — and it does.",
         "Newest kid on the dashboard. Hasn't earned a ranking yet, but it turned up dressed for one.",
+    ],
+    'day19': [
+        "The new kid. Bright, roomy, and the only one that tells you the weather before the news.",
+        "Clean lines, big lead photo, zero clutter. Dresses like a Sunday supplement on a Tuesday.",
+        "Freshly unboxed. Every photo slot agrees on 1200×650, which is more than most of its siblings can say.",
+        "White space as a personality. Lets the stories breathe and the markets sit in their dark little box.",
+        "Morning-edition energy: forecast up top, five stories, done. No small talk.",
+        "Hasn't been battle-tested yet, but it walked in with the right header and footer, so it's off to a good start.",
+    ],
+    'day21': [
+        "The bento box. Everything in its own neat little compartment, and the weather gets the orange one.",
+        "Rounded corners, sand background, tidy cards. Looks like it was designed by someone who labels their spice jars.",
+        "Cosy and organised. The template equivalent of a well-packed lunch.",
+        "Orange weather tile, green-and-red market pills. Colour-codes its feelings and you always know where you stand.",
+        "Card after card after card, all lined up politely. Very good manners for a newsletter.",
+        "Freshest arrival on the dashboard. Hasn't been stress-tested yet, but it's already wearing the house header.",
     ],
     # ===== Newsletter Editors · Saturdays & Non-Market Days =====
     'day11': [

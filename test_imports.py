@@ -63,6 +63,16 @@ def test_imports():
         day17_module = importlib.util.module_from_spec(spec_day17)
         spec_day17.loader.exec_module(day17_module)
 
+        print("importing day19_editor")
+        spec_day19 = importlib.util.spec_from_file_location("day19_editor", "editor(for Day19.html).py")
+        day19_module = importlib.util.module_from_spec(spec_day19)
+        spec_day19.loader.exec_module(day19_module)
+
+        print("importing day21_editor")
+        spec_day21 = importlib.util.spec_from_file_location("day21_editor", "editor(for Day21.html).py")
+        day21_module = importlib.util.module_from_spec(spec_day21)
+        spec_day21.loader.exec_module(day21_module)
+
         print("Done!")
     except Exception as e:
         print(f"Error: {e}")
