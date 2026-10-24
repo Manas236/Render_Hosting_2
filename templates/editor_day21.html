@@ -343,6 +343,25 @@
             color: var(--text-3);
         }
 
+        /* ── CPCB how-to box ────────────────────────────────────────────────────── */
+        .cpcb-steps {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: 11px;
+            line-height: 1.55;
+            color: var(--text-2);
+        }
+        .cpcb-steps b { color: var(--text-1); }
+        .cpcb-steps ol {
+            margin: 6px 0 0;
+            padding-left: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
         /* ── Field Tooltips ─────────────────────────────────────────────────────── */
         .field-head {
             display: flex;
@@ -845,7 +864,7 @@
         <div class="topbar-right">
             <button class="btn btn-ghost" id="tipsToggle" onclick="toggleAllTips()" data-tip="🛈 Toggle these tips on or off — they explain every field and every button up here.">ⓘ Tips</button>
             <a href="/dashboard" class="btn btn-ghost" data-tip="🏠 Leave the editor and return to the main dashboard.">🏠 Dashboard</a>
-            <button class="btn btn-ghost" onclick="openImportModal()" data-tip="{ } Paste a JSON object to fill the date, weather and every story in one go.">{ } JSON Import</button>
+            <button class="btn btn-ghost" onclick="openImportModal()" data-tip="{ } Paste a JSON object to fill the date, air quality and every story in one go.">{ } JSON Import</button>
             <button class="btn btn-ghost" onclick="refreshPreview()" data-tip="🔄 Re-render the live preview on the right with your latest edits.">🔄 Reload Preview</button>
             <button class="btn btn-danger" onclick="doReset()" data-tip="↺ Restore the original template — this discards all of your changes.">↺ Reset</button>
             <button class="btn btn-primary" onclick="doExport()" data-tip="↓ Done editing? Download the finished newsletter as a single HTML file.">↓ Export HTML</button>
@@ -901,51 +920,69 @@
                 </div>
             </div>
 
-            <!-- WEATHER SECTION -->
+            <!-- AIR QUALITY SECTION -->
             <div class="section">
                 <div class="section-header">
-                    <span class="section-label"><span class="accent-dot">●</span> Weather Forecast</span>
-                    <button class="btn btn-ghost" id="fetchWeatherBtn" onclick="fetchLiveWeather()" style="padding:3px 10px; font-size:9px;">⚡ Fetch Forecasts</button>
+                    <span class="section-label"><span class="accent-dot">●</span> Air Quality (AQI)</span>
+                    <button class="btn btn-ghost" id="openCpcbBtn" onclick="openCpcbPortal()" style="padding:3px 10px; font-size:9px;">↗ Open CPCB Portal</button>
                 </div>
                 <div class="section-body">
+                    <div class="cpcb-steps">
+                        <b>CPCB is captcha-protected — fill the AQI by hand:</b>
+                        <ol>
+                            <li>Click <b>↗ Open CPCB Portal</b> (opens the All-India AQI dashboard in a new tab).</li>
+                            <li>Choose <b>State → Maharashtra</b>, <b>City → Navi Mumbai</b>, set the date, and <b>solve the captcha</b>.</li>
+                            <li>Read the <b>AQI</b>, its <b>category</b> and the <b>prominent pollutant</b>, then type them below — the tile recolours to match.</li>
+                        </ol>
+                    </div>
                     <div class="field">
                         <div class="field-head">
                             <label>Location</label>
                             <span class="tip-trigger" tabindex="0" role="button" aria-label="About this field">i</span>
                         </div>
-                        <div class="tip-pop"><span class="tip-emoji">📍</span> City shown in the orange weather tile under “Today's Weather” — e.g. Navi Mumbai.</div>
-                        <input type="text" id="weatherLocation" placeholder="e.g. Navi Mumbai" autocomplete="off"
-                            oninput="scheduleUpdate()" />
-                    </div>
-                    
-                    <div class="field">
-                        <div class="field-head">
-                            <label>Condition</label>
-                            <span class="tip-trigger" tabindex="0" role="button" aria-label="About this field">i</span>
-                        </div>
-                        <div class="tip-pop"><span class="tip-emoji">🌤️</span> The condition line at the bottom of the weather tile — e.g. “Partly cloudy, light breeze by evening”. Also feeds the inbox preview line.</div>
-                        <input type="text" id="weatherTodayDesc" placeholder="e.g. Partly cloudy, light breeze by evening" autocomplete="off"
+                        <div class="tip-pop"><span class="tip-emoji">📍</span> City shown on the AQI tile — e.g. Navi Mumbai.</div>
+                        <input type="text" id="aqiLocation" placeholder="e.g. Navi Mumbai" autocomplete="off"
                             oninput="scheduleUpdate()" />
                     </div>
                     <div style="display:flex; gap:8px;">
                         <div class="field" style="flex:1;">
                             <div class="field-head">
-                                <label>High (°C)</label>
+                                <label>AQI (0–500)</label>
                                 <span class="tip-trigger" tabindex="0" role="button" aria-label="About this field">i</span>
                             </div>
-                            <div class="tip-pop"><span class="tip-emoji">🌡️</span> Forecast high for the day, in °C.</div>
-                            <input type="number" id="weatherTodayHigh" placeholder="e.g. 36" autocomplete="off"
+                            <div class="tip-pop"><span class="tip-emoji">🔢</span> The India National AQI number shown on the CPCB dashboard for your city.</div>
+                            <input type="number" id="aqiValue" min="0" max="500" placeholder="e.g. 236" autocomplete="off"
                                 oninput="scheduleUpdate()" />
                         </div>
                         <div class="field" style="flex:1;">
                             <div class="field-head">
-                                <label>Low (°C)</label>
+                                <label>Category</label>
                                 <span class="tip-trigger" tabindex="0" role="button" aria-label="About this field">i</span>
                             </div>
-                            <div class="tip-pop"><span class="tip-emoji">🌡️</span> Forecast low for the day, in °C.</div>
-                            <input type="number" id="weatherTodayLow" placeholder="e.g. 30" autocomplete="off"
-                                oninput="scheduleUpdate()" />
+                            <div class="tip-pop"><span class="tip-emoji">🎨</span> Sets the tile colour. Match CPCB's band for the AQI value.</div>
+                            <select id="aqiCategory" onchange="scheduleUpdate()">
+                                <option value="">—</option>
+                                <option>Good</option>
+                                <option>Satisfactory</option>
+                                <option>Moderate</option>
+                                <option>Poor</option>
+                                <option>Very Poor</option>
+                                <option>Severe</option>
+                            </select>
                         </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-head">
+                            <label>Prominent Pollutant</label>
+                            <span class="tip-trigger" tabindex="0" role="button" aria-label="About this field">i</span>
+                        </div>
+                        <div class="tip-pop"><span class="tip-emoji">🏭</span> The lead pollutant CPCB lists for the city — e.g. PM2.5.</div>
+                        <input type="text" id="aqiPollutant" list="pollutantList" placeholder="e.g. PM2.5" autocomplete="off"
+                            oninput="scheduleUpdate()" />
+                        <datalist id="pollutantList">
+                            <option>PM2.5</option><option>PM10</option><option>O3</option><option>NO2</option>
+                            <option>SO2</option><option>CO</option><option>NH3</option><option>Pb</option>
+                        </datalist>
                     </div>
                 </div>
             </div>
@@ -1004,10 +1041,10 @@
                 <div class="modal-hint">
                     Paste a JSON object. Fields map directly to sections and stories by array position.<br>
                     Example:
-                    <code>{ "date": "October 6, 2026", "rni": "...", "weather": { "location": "Navi Mumbai", "desc": "Partly cloudy", "high": "31", "low": "24" }, "stories": [{ "category": "CIVIC", "headline": "...", "summary": "...", "image": "https://...", "link": "https://..." }] }</code>
+                    <code>{ "date": "October 6, 2026", "rni": "...", "aqi": { "location": "Navi Mumbai", "value": "236", "category": "Poor", "pollutant": "PM2.5" }, "stories": [{ "category": "CIVIC", "headline": "...", "summary": "...", "image": "https://...", "link": "https://..." }] }</code>
                 </div>
                 <textarea id="jsonInput"
-                    placeholder='{ "date": "April 3, 2026", "weather": { "location": "Navi Mumbai" }, "stories": [ { "category": "TECH", "headline": "..." } ] }'></textarea>
+                    placeholder='{ "date": "April 3, 2026", "aqi": { "location": "Navi Mumbai", "value": "236", "category": "Poor", "pollutant": "PM2.5" }, "stories": [ { "category": "TECH", "headline": "..." } ] }'></textarea>
                 <div class="import-error" id="importError"></div>
             </div>
             <div class="modal-footer">
@@ -1051,12 +1088,12 @@
             document.getElementById('hdrDate').value = data.date || '';
             document.getElementById('hdrRni').value = data.rni || '';
 
-            // Weather
-            if (data.weather) {
-                document.getElementById('weatherLocation').value = data.weather.location || '';
-                document.getElementById('weatherTodayDesc').value = data.weather.today_desc || '';
-                document.getElementById('weatherTodayHigh').value = data.weather.today_high || '';
-                document.getElementById('weatherTodayLow').value = data.weather.today_low || '';
+            // Air Quality
+            if (data.aqi) {
+                document.getElementById('aqiLocation').value = data.aqi.location || '';
+                document.getElementById('aqiValue').value = data.aqi.value || '';
+                document.getElementById('aqiCategory').value = data.aqi.category || '';
+                document.getElementById('aqiPollutant').value = data.aqi.pollutant || '';
             }
 
             const ml = document.getElementById('marketsList');
@@ -1192,11 +1229,11 @@
             return {
                 date: val('hdrDate'),
                 rni: val('hdrRni'),
-                weather: {
-                    location: val('weatherLocation'),
-                    today_desc: val('weatherTodayDesc'),
-                    today_high: val('weatherTodayHigh'),
-                    today_low: val('weatherTodayLow'),
+                aqi: {
+                    location: val('aqiLocation'),
+                    value: val('aqiValue'),
+                    category: val('aqiCategory'),
+                    pollutant: val('aqiPollutant'),
                 },
                 stories,
                 markets: getMarketsData(),
@@ -1393,40 +1430,12 @@
             }
         }
 
-        async function fetchLiveWeather() {
-            let loc = val('weatherLocation');
-            if (!loc) {
-                loc = "Navi Mumbai";
-                document.getElementById('weatherLocation').value = loc;
-            }
-            
-            const btn = document.getElementById('fetchWeatherBtn');
-            if (btn) btn.disabled = true;
-            const originalText = btn ? btn.textContent : '⚡ Fetch Forecasts';
-            if (btn) btn.textContent = '⏳ Fetching…';
-            
-            try {
-                const res = await fetch(`{{ api_prefix|default('/day21-editor') }}/api/weather/fetch?location=${encodeURIComponent(loc)}`);
-                const data = await res.json();
-                if (data.error) throw new Error(data.error);
-                
-                document.getElementById('weatherLocation').value = data.location || loc;
-                document.getElementById('weatherTodayDesc').value = data.today_desc || '';
-                document.getElementById('weatherTodayHigh').value = data.today_high || '';
-                document.getElementById('weatherTodayLow').value = data.today_low || '';
-                
-                await sendUpdate();
-                setStatus('saved', 'WEATHER UPDATED');
-                setTimeout(() => setStatus('', 'READY'), 2200);
-            } catch (e) {
-                setStatus('error', 'FETCH FAILED: ' + e.message);
-                setTimeout(() => setStatus('', 'READY'), 3500);
-            } finally {
-                if (btn) {
-                    btn.textContent = originalText;
-                    btn.disabled = false;
-                }
-            }
+        /* CPCB is captcha-protected, so we don't scrape it — we open the official
+           portal and the editor fills in the AQI the user reads off it by hand. */
+        function openCpcbPortal() {
+            window.open('https://airquality.cpcb.gov.in/ccr/#/all-india-aqi-portal', '_blank', 'noopener');
+            setStatus('', 'CPCB OPENED — solve the captcha, then type the AQI below');
+            setTimeout(() => setStatus('', 'READY'), 4500);
         }
 
         /* ── Resize handle ───────────────────────────────────────────────────────── */
@@ -1501,7 +1510,6 @@
         (async () => {
             await loadFields();
             setAutoDate();
-            await fetchLiveWeather();
         })();
         </script>
 </body>

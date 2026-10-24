@@ -39,7 +39,7 @@
 
 <!-- Preheader -->
 <div class="preheader" style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#e6e6ea;opacity:0;">
-  Five stories from Navi Mumbai &amp; Thane, the markets close and today's weather, in one quick read.&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;
+  Air quality in Navi Mumbai: AQI 236 (Poor). Five stories from Navi Mumbai &amp; Thane, plus where Sensex, Nifty, the rupee and gold closed.&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;
 </div>
 
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#e6e6ea" style="background-color:#e6e6ea;">
@@ -318,15 +318,17 @@
 
         <td width="14" style="width:14px;font-size:0;line-height:0;">&nbsp;</td>
 
-        <!-- Right column: weather tile, stretches to the height of both cards -->
-        <td valign="middle" width="230" bgcolor="#e8590c" style="width:230px;background-color:#e8590c;border-radius:14px;padding:24px 22px;font-family:'Plus Jakarta Sans','Helvetica Neue',Helvetica,Arial,sans-serif;">
-          <div style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:#ffe3cf;">Today's Weather</div>
-          <div class="wx-loc" style="font-size:15px;line-height:20px;font-weight:800;color:#ffffff;padding-top:2px;">Navi Mumbai</div>
-          <div style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#ffe3cf;padding-top:22px;">High</div>
-          <div style="font-size:60px;line-height:62px;font-weight:800;letter-spacing:-2px;color:#ffffff;"><span class="wx-high">31</span>&deg;</div>
-          <div style="font-size:16px;line-height:22px;font-weight:600;color:#ffe3cf;padding-top:4px;">Low <span class="wx-low">24</span>&deg;C</div>
-          <div style="height:1px;line-height:1px;font-size:0;background-color:#f39a63;margin:18px 0 14px;">&nbsp;</div>
-          <div class="wx-desc" style="font-size:15px;line-height:22px;font-weight:600;color:#ffffff;">Partly cloudy, light breeze by evening</div>
+        <!-- Right column: air-quality tile, stretches to the height of both cards.
+             Colours are driven by the AQI category and set by the editor. -->
+        <td valign="middle" width="230" bgcolor="#e8590c" class="aqi-tile" style="width:230px;background-color:#e8590c;border-radius:14px;padding:24px 22px;font-family:'Plus Jakarta Sans','Helvetica Neue',Helvetica,Arial,sans-serif;">
+          <div class="aqi-accent" style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:#ffe3cf;">Air Quality</div>
+          <div class="aqi-loc" style="font-size:15px;line-height:20px;font-weight:800;color:#ffffff;padding-top:2px;">Navi Mumbai</div>
+          <div class="aqi-accent" style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#ffe3cf;padding-top:22px;">AQI &middot; India</div>
+          <div style="font-size:60px;line-height:62px;font-weight:800;letter-spacing:-2px;color:#ffffff;"><span class="aqi-value">236</span></div>
+          <div class="aqi-cat" style="font-size:18px;line-height:24px;font-weight:800;color:#ffffff;padding-top:2px;">Poor</div>
+          <div class="aqi-rule" style="height:1px;line-height:1px;font-size:0;background-color:#f39a63;margin:18px 0 14px;">&nbsp;</div>
+          <div class="aqi-accent" style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#ffe3cf;">Prominent Pollutant</div>
+          <div class="aqi-pollutant" style="font-size:15px;line-height:22px;font-weight:600;color:#ffffff;padding-top:4px;">PM2.5</div>
         </td>
       </tr>
     </table>

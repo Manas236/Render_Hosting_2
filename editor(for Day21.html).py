@@ -10,44 +10,44 @@ below never depend on inline styles:
     .story[data-story=N]            story card, N = 0..4
         .story-cat / .story-headline / .story-summary / .story-img
         every <a> inside gets the story link
-    .wx-loc .wx-desc .wx-high .wx-low   (orange weather tile)
+    .aqi-tile .aqi-loc .aqi-value .aqi-cat .aqi-pollutant  (AQI tile;
+        .aqi-accent / .aqi-rule recolour with the AQI category)
     .mkt-cell  > .mkt-label / .mkt-value / .mkt-change (coloured pill)
 """
 
 import io
 import re
 from datetime import datetime, timedelta
-from urllib.parse import quote as _url_quote
 from flask import Blueprint, request, jsonify, render_template, send_file, Response
 from bs4 import BeautifulSoup, NavigableString
 
-# WMO weather code → short condition text
-_WMO_CODES = {
-    0:  "Clear sky",
-    1:  "Mainly clear",
-    2:  "Partly cloudy",
-    3:  "Overcast",
-    45: "Foggy",
-    48: "Icy fog",
-    51: "Light drizzle",
-    53: "Drizzle",
-    55: "Dense drizzle",
-    61: "Slight rain",
-    63: "Moderate rain",
-    65: "Heavy rain",
-    71: "Light snow",
-    73: "Snow",
-    75: "Heavy snow",
-    77: "Snow grains",
-    80: "Rain showers",
-    81: "Moderate showers",
-    82: "Heavy showers",
-    85: "Snow showers",
-    86: "Heavy snow showers",
-    95: "Thunderstorm",
-    96: "Thunderstorm with hail",
-    99: "Heavy thunderstorm",
+# CPCB National AQI categories → tile colours.
+#   bg     — tile background (always paired with white text, so these stay dark
+#            enough to read; the yellow/orange bands are deepened accordingly)
+#   accent — the small uppercase labels on the tile
+#   rule   — the thin divider line
+_AQI_PALETTE = {
+    "good":         {"bg": "#049a5b", "accent": "#c4ead8", "rule": "#3bb47e"},
+    "satisfactory": {"bg": "#5b9830", "accent": "#dcecc8", "rule": "#86ba60"},
+    "moderate":     {"bg": "#b07a00", "accent": "#f3e3bf", "rule": "#cf9e2f"},
+    "poor":         {"bg": "#e8590c", "accent": "#ffe3cf", "rule": "#f39a63"},
+    "verypoor":     {"bg": "#d32f2f", "accent": "#ffd6d6", "rule": "#e97070"},
+    "severe":       {"bg": "#7a1620", "accent": "#eac4c9", "rule": "#ab4652"},
 }
+
+
+def _canon_category(cat: str) -> str:
+    """Normalise a category label to an _AQI_PALETTE key, or '' if unknown."""
+    c = re.sub(r"[^a-z]", "", (cat or "").lower())
+    return {
+        "good": "good",
+        "satisfactory": "satisfactory",
+        "moderate": "moderate", "moderatelypolluted": "moderate",
+        "poor": "poor",
+        "verypoor": "verypoor",
+        "severe": "severe",
+    }.get(c, "")
+
 
 day21_editor_bp = Blueprint('day21_editor', __name__)
 
@@ -114,14 +114,14 @@ def _format_change(label: str, value_str: str, pct_float: float, positive: bool)
     return f"{arrow} {abs_txt} · {pct_txt}"
 
 
-def _build_preheader(weather: dict) -> str:
-    high = (weather.get("today_high") or "").strip()
-    desc = (weather.get("today_desc") or "").strip()
-    loc = (weather.get("location") or "").strip()
+def _build_preheader(aqi: dict) -> str:
+    value = (aqi.get("value") or "").strip()
+    category = (aqi.get("category") or "").strip()
+    loc = (aqi.get("location") or "").strip()
     lead = ""
-    if high and loc:
-        cond = f", {desc[0].lower() + desc[1:]}" if desc else ""
-        lead = f"{high}°{cond} in {loc}. "
+    if value and loc:
+        cat = f" ({category})" if category else ""
+        lead = f"Air quality in {loc}: AQI {value}{cat}. "
     return lead + "Five stories from Navi Mumbai & Thane, plus where Sensex, Nifty, the rupee and gold closed."
 
 
@@ -132,18 +132,18 @@ def get_tomorrow_date_str() -> str:
     return dt.strftime("%B %d, %Y").replace(" 0", " ")
 
 
-def _find_weather_data(soup):
-    weather = {}
-    for key, cls in (("location", "wx-loc"), ("today_desc", "wx-desc")):
+def _find_aqi_data(soup):
+    aqi = {}
+    for key, cls in (("location", "aqi-loc"), ("category", "aqi-cat"),
+                     ("pollutant", "aqi-pollutant")):
         el = _one(soup, cls)
         if el:
-            weather[key] = el.get_text().strip()
-    for key, cls in (("today_high", "wx-high"), ("today_low", "wx-low")):
-        el = _one(soup, cls)
-        if el:
-            weather[key] = _num(el.get_text())
-    weather.setdefault("location", "Navi Mumbai")
-    return weather
+            aqi[key] = el.get_text().strip()
+    el = _one(soup, "aqi-value")
+    if el:
+        aqi["value"] = _num(el.get_text())
+    aqi.setdefault("location", "Navi Mumbai")
+    return aqi
 
 
 def _find_market_data(soup):
@@ -202,7 +202,7 @@ def parse_fields(html: str) -> dict:
         stories.append(s)
     result["stories"] = stories
 
-    result["weather"] = _find_weather_data(soup)
+    result["aqi"] = _find_aqi_data(soup)
     result["markets"] = _find_market_data(soup)
     return result
 
@@ -261,27 +261,40 @@ def update_html(html: str, data: dict) -> str:
                 for a in block.find_all("a"):
                     a["href"] = link
 
-    # Weather — accept both the editor's today_* keys and the short JSON-import keys
-    weather_data = data.get("weather") or {}
-    if weather_data:
-        aliases = {"today_desc": "desc", "today_high": "high", "today_low": "low"}
-        for long_key, short_key in aliases.items():
-            if not weather_data.get(long_key) and weather_data.get(short_key):
-                weather_data[long_key] = weather_data[short_key]
-
+    # Air Quality (AQI tile)
+    aqi_data = data.get("aqi") or {}
+    if aqi_data:
         for key, cls in (
-            ("location", "wx-loc"), ("today_desc", "wx-desc"),
-            ("today_high", "wx-high"), ("today_low", "wx-low"),
+            ("location", "aqi-loc"), ("value", "aqi-value"),
+            ("category", "aqi-cat"), ("pollutant", "aqi-pollutant"),
         ):
-            val = str(weather_data.get(key) or "").strip()
+            val = str(aqi_data.get(key) or "").strip()
             el = _one(soup, cls)
             if val and el:
                 _set_text(el, val)
 
+        # Recolour the tile to match the AQI category
+        palette = _AQI_PALETTE.get(_canon_category(aqi_data.get("category", "")))
+        if palette:
+            tile = _one(soup, "aqi-tile")
+            if tile:
+                tile["bgcolor"] = palette["bg"]
+                tile["style"] = re.sub(
+                    r'background-color:\s*#[0-9a-fA-F]{6}',
+                    f'background-color:{palette["bg"]}', tile.get("style", ""))
+            for el in soup.find_all(class_="aqi-accent"):
+                el["style"] = re.sub(
+                    r'(?<![-\w])color:\s*#[0-9a-fA-F]{6}',
+                    f'color:{palette["accent"]}', el.get("style", ""))
+            rule = _one(soup, "aqi-rule")
+            if rule:
+                rule["style"] = re.sub(
+                    r'background-color:\s*#[0-9a-fA-F]{6}',
+                    f'background-color:{palette["rule"]}', rule.get("style", ""))
+
         pre = _one(soup, "preheader")
         if pre:
-            merged = _find_weather_data(soup)
-            _set_text(pre, _build_preheader(merged) + _PREHEADER_FILL)
+            _set_text(pre, _build_preheader(_find_aqi_data(soup)) + _PREHEADER_FILL)
 
     # Markets
     markets_data = data.get("markets", [])
@@ -376,144 +389,6 @@ def api_export_zip():
         download_name="newsband_day21_newsletter.zip",
         mimetype="application/zip",
     )
-
-
-@day21_editor_bp.route("/api/weather/fetch")
-def api_weather_fetch():
-    import requests as _req
-    location = request.args.get("location", "Navi Mumbai").strip()
-
-    res_data = {
-        "location": location,
-        "today_desc": "Partly cloudy",
-        "today_temp": "31",
-        "today_high": "35",
-        "today_low": "27",
-        "today_feels": "35",
-        "today_humidity": "70",
-        "today_aqi": "",
-    }
-
-    def clean_temp(val, default="27"):
-        if val is None:
-            return default
-        try:
-            n = int(round(float(str(val))))
-            if "mumbai" in location.lower() and n < 24:
-                return "24"
-            return str(n)
-        except Exception:
-            return default
-
-    def clean_int(val, default=""):
-        if val is None:
-            return default
-        try:
-            return str(int(round(float(str(val)))))
-        except Exception:
-            return default
-
-    hdrs = {"User-Agent": "Mozilla/5.0"}
-
-    # 1. Open-Meteo (geocoding + forecast + air quality — free, no key required)
-    try:
-        geo_url = (
-            f"https://geocoding-api.open-meteo.com/v1/search"
-            f"?name={_url_quote(location)}&count=1&language=en&format=json"
-        )
-        geo_resp = _req.get(geo_url, headers=hdrs, timeout=8)
-        if geo_resp.status_code == 200:
-            geo_results = geo_resp.json().get("results", [])
-            if geo_results:
-                r = geo_results[0]
-                lat, lon = r["latitude"], r["longitude"]
-                place_name = r.get("name", location)
-
-                wx_url = (
-                    f"https://api.open-meteo.com/v1/forecast"
-                    f"?latitude={lat}&longitude={lon}"
-                    f"&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code"
-                    f"&daily=temperature_2m_max,temperature_2m_min,weather_code"
-                    f"&timezone=auto&forecast_days=2"
-                )
-                wx_resp = _req.get(wx_url, headers=hdrs, timeout=8)
-                if wx_resp.status_code == 200:
-                    body = wx_resp.json()
-                    daily = body.get("daily", {})
-                    current = body.get("current", {})
-                    maxtemps = daily.get("temperature_2m_max", [])
-                    mintemps = daily.get("temperature_2m_min", [])
-                    # Open-Meteo renamed weathercode → weather_code; support both
-                    codes = daily.get("weather_code") or daily.get("weathercode", [])
-                    if maxtemps:
-                        wmo = current.get("weather_code")
-                        if wmo is None:
-                            wmo = int(codes[0]) if codes else 2
-                        desc = _WMO_CODES.get(int(wmo), "Partly cloudy")
-                        res_data.update({
-                            "location": place_name,
-                            "today_desc": desc,
-                            "today_temp": clean_temp(current.get("temperature_2m"), "31"),
-                            "today_high": clean_temp(maxtemps[0], "35"),
-                            "today_low": clean_temp(mintemps[0] if mintemps else None, "27"),
-                            "today_feels": clean_temp(current.get("apparent_temperature"), "35"),
-                            "today_humidity": clean_int(current.get("relative_humidity_2m"), "70"),
-                        })
-
-                        # AQI is a separate Open-Meteo endpoint; failure here is non-fatal
-                        try:
-                            aq_url = (
-                                f"https://air-quality-api.open-meteo.com/v1/air-quality"
-                                f"?latitude={lat}&longitude={lon}&current=us_aqi&timezone=auto"
-                            )
-                            aq_resp = _req.get(aq_url, headers=hdrs, timeout=8)
-                            if aq_resp.status_code == 200:
-                                aqi = aq_resp.json().get("current", {}).get("us_aqi")
-                                res_data["today_aqi"] = clean_int(aqi, "")
-                        except Exception as e:
-                            print(f"DEBUG [Weather]: Open-Meteo AQI failed ({e})")
-
-                        print(f"DEBUG [Weather]: Open-Meteo OK → {place_name} {desc} "
-                              f"{res_data['today_temp']}°C ({maxtemps[0]}/{mintemps[0] if mintemps else '?'}) "
-                              f"AQI {res_data['today_aqi'] or '?'}")
-                        return jsonify(res_data)
-    except Exception as e:
-        print(f"DEBUG [Weather]: Open-Meteo failed ({e}), trying wttr.in…")
-
-    # 2. Fallback — wttr.in JSON API
-    try:
-        loc_query = location.replace(" ", "_")
-        url = f"https://wttr.in/{loc_query}?format=j1"
-        resp = _req.get(url, headers=hdrs, timeout=8)
-        if resp.status_code == 200:
-            body = resp.json()
-            weather_days = body.get("weather", [])
-            current = (body.get("current_condition") or [{}])[0]
-            if weather_days:
-                day_data = weather_days[0]  # index 0 = today
-                res_data["today_high"] = clean_temp(day_data.get("maxtempC"), "35")
-                res_data["today_low"] = clean_temp(day_data.get("mintempC"), "27")
-                res_data["today_temp"] = clean_temp(current.get("temp_C"), res_data["today_high"])
-                res_data["today_feels"] = clean_temp(current.get("FeelsLikeC"), res_data["today_temp"])
-                res_data["today_humidity"] = clean_int(current.get("humidity"), "70")
-
-                desc_list = current.get("weatherDesc") or []
-                desc = desc_list[0].get("value") if desc_list else None
-                if not desc:
-                    hourly = day_data.get("hourly", [])
-                    if hourly:
-                        mid_desc = hourly[len(hourly) // 2].get("weatherDesc", [])
-                        desc = mid_desc[0].get("value") if mid_desc else None
-                res_data["today_desc"] = desc or "Partly cloudy"
-
-                print(f"DEBUG [Weather]: wttr.in OK → {location} {res_data['today_desc']}")
-                return jsonify(res_data)
-    except Exception as e:
-        print(f"DEBUG [Weather]: wttr.in failed ({e})")
-
-    # Both failed — return defaults so the editor still gets a usable response
-    res_data["warning"] = "Live fetch unavailable; showing defaults."
-    return jsonify(res_data), 200
 
 
 @day21_editor_bp.route("/api/markets/fetch")
