@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>Gmail Dark Mode Test</title>
+<!--
+  Gmail-only blend-mode fix (rows 4, 5, 6). Gmail swaps the doctype for an
+  empty <u></u>, so "u + .body" matches only inside Gmail; every other client
+  ignores these rules and renders the inline colours as normal.
+
+  How it works: the card background is pinned with a background image (Gmail
+  never recolours images). Two nested layers (.gx-a, .gx-b) are blended with
+  "difference" over it. All their colours are dark backgrounds / light text,
+  stored pre-inverted against the card colour:
+    - Gmail without dark mode, and Android dark mode (which leaves dark
+      backgrounds and light text alone): the double difference turns the
+      pre-inverted colours back into the real ones.
+    - iPhone dark mode (inverts everything): the inversion of the two layers
+      cancels out, so the result is the same.
+  Kept in its own <style> block so a client that rejects it can't take the
+  rest of the CSS down with it.
+-->
+<style>
+  u + .body .gx-a { background-color:#000000 !important; mix-blend-mode:difference; }
+  u + .body .gx-b { background-color:#000000 !important; mix-blend-mode:difference; }
+
+  /* On a white card: colour = #ffffff - real colour */
+  u + .body .gx-h    { color:#eeebe7 !important; }                                 /* #111418 */
+  u + .body .gx-p    { color:#b5b0a8 !important; }                                 /* #4a4f57 */
+  u + .body .gx-pill { background-color:#021717 !important; color:#4cdfe5 !important; } /* #fde8e8 / #b3201a */
+  u + .body .gx-link { color:#29d7d7 !important; }                                 /* #d62828 */
+
+  /* On a #111418 card: colour = real colour + #111418 */
+  u + .body .gxd-label { color:#dae0e9 !important; }  /* #c9ccd1 */
+  u + .body .gxd-muted { color:#8e97a4 !important; }  /* #7d838c */
+  u + .body .gxd-value { color:#ffffff !important; }  /* renders #eeebe7, as close to white as the maths allows */
+  u + .body .gxd-up    { color:#4ef09c !important; }  /* #3ddc84 */
+</style>
+</head>
+<body class="body" style="margin:0;padding:0;background-color:#eeeeee;">
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#eeeeee" style="background-color:#eeeeee;">
+<tr>
+<td align="center" style="padding:24px 10px;">
+
+  <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">
+
+    <!-- Intro -->
+    <tr>
+      <td style="padding:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:22px;line-height:28px;font-weight:800;color:#111418;">Gmail dark mode test</td>
+    </tr>
+    <tr>
+      <td style="padding:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:21px;color:#333333;">
+        Open this with dark mode ON in each Gmail you use and screenshot the whole email.
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 0 4px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:21px;color:#333333;">
+        <b>The goal:</b> cards 1 to 5 should all look identical: white background, near-black headline, grey summary, pink &ldquo;CIVIC&rdquo; pill with red text, red link. Card 6 should be near-black with light text and a green number. Card 7 should be a red button with white text.
+      </td>
+    </tr>
+
+    <!-- ===== 1 ===== -->
+    <tr><td style="padding:22px 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;font-weight:800;color:#555555;">1 &middot; Control: plain background colour (what Day19/Day21 do now)</td></tr>
+    <tr>
+      <td bgcolor="#ffffff" style="background-color:#ffffff;border:1px solid #dddddd;padding:18px 20px;font-family:Arial,Helvetica,sans-serif;">
+        <span style="display:inline-block;background-color:#fde8e8;border-radius:4px;padding:4px 8px;font-size:11px;line-height:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#b3201a;">Civic</span>
+        <div style="margin-top:10px;font-size:22px;line-height:28px;font-weight:800;color:#111418;">NMMC clears 12 new e-bus routes</div>
+        <div style="margin-top:8px;font-size:14px;line-height:22px;color:#4a4f57;">Routes start rolling out next month, timed to Metro arrivals.</div>
+        <div style="margin-top:10px;font-size:13px;line-height:18px;font-weight:800;"><a href="https://newsband.in/" target="_blank" style="color:#d62828;text-decoration:none;">Read story &rarr;</a></div>
+      </td>
+    </tr>
+
+    <!-- ===== 2 ===== -->
+    <tr><td style="padding:22px 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;font-weight:800;color:#555555;">2 &middot; White pinned with an image (the header trick), no text fix</td></tr>
+    <tr>
+      <td bgcolor="#ffffff" style="background-color:#ffffff;background-image:url('https://singlecolorimage.com/get/ffffff/600x400');background-size:cover;border:1px solid #dddddd;padding:18px 20px;font-family:Arial,Helvetica,sans-serif;">
+        <span style="display:inline-block;background-color:#fde8e8;border-radius:4px;padding:4px 8px;font-size:11px;line-height:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#b3201a;">Civic</span>
+        <div style="margin-top:10px;font-size:22px;line-height:28px;font-weight:800;color:#111418;">NMMC clears 12 new e-bus routes</div>
+        <div style="margin-top:8px;font-size:14px;line-height:22px;color:#4a4f57;">Routes start rolling out next month, timed to Metro arrivals.</div>
+        <div style="margin-top:10px;font-size:13px;line-height:18px;font-weight:800;"><a href="https://newsband.in/" target="_blank" style="color:#d62828;text-decoration:none;">Read story &rarr;</a></div>
+      </td>
+    </tr>
+
+    <!-- ===== 3 ===== -->
+    <tr><td style="padding:22px 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;font-weight:800;color:#555555;">3 &middot; White pinned with a gradient, no text fix</td></tr>
+    <tr>
+      <td bgcolor="#ffffff" style="background-color:#ffffff;background-image:linear-gradient(#ffffff,#ffffff);border:1px solid #dddddd;padding:18px 20px;font-family:Arial,Helvetica,sans-serif;">
+        <span style="display:inline-block;background-color:#fde8e8;border-radius:4px;padding:4px 8px;font-size:11px;line-height:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#b3201a;">Civic</span>
+        <div style="margin-top:10px;font-size:22px;line-height:28px;font-weight:800;color:#111418;">NMMC clears 12 new e-bus routes</div>
+        <div style="margin-top:8px;font-size:14px;line-height:22px;color:#4a4f57;">Routes start rolling out next month, timed to Metro arrivals.</div>
+        <div style="margin-top:10px;font-size:13px;line-height:18px;font-weight:800;"><a href="https://newsband.in/" target="_blank" style="color:#d62828;text-decoration:none;">Read story &rarr;</a></div>
+      </td>
+    </tr>
+
+    <!-- ===== 4 ===== -->
+    <tr><td style="padding:22px 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;font-weight:800;color:#555555;">4 &middot; White pinned with an image + blend-mode text fix</td></tr>
+    <tr>
+      <td bgcolor="#ffffff" style="background-color:#ffffff;background-image:url('https://singlecolorimage.com/get/ffffff/600x400');background-size:cover;border:1px solid #dddddd;padding:0;font-family:Arial,Helvetica,sans-serif;">
+        <div class="gx-a">
+          <div class="gx-b" style="padding:18px 20px;">
+            <span class="gx-pill" style="display:inline-block;background-color:#fde8e8;border-radius:4px;padding:4px 8px;font-size:11px;line-height:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#b3201a;">Civic</span>
+            <div class="gx-h" style="margin-top:10px;font-size:22px;line-height:28px;font-weight:800;color:#111418;">NMMC clears 12 new e-bus routes</div>
+            <div class="gx-p" style="margin-top:8px;font-size:14px;line-height:22px;color:#4a4f57;">Routes start rolling out next month, timed to Metro arrivals.</div>
+            <div style="margin-top:10px;font-size:13px;line-height:18px;font-weight:800;"><a href="https://newsband.in/" target="_blank" class="gx-link" style="color:#d62828;text-decoration:none;">Read story &rarr;</a></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- ===== 5 ===== -->
+    <tr><td style="padding:22px 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;font-weight:800;color:#555555;">5 &middot; White pinned with a gradient + blend-mode text fix</td></tr>
+    <tr>
+      <td bgcolor="#ffffff" style="background-color:#ffffff;background-image:linear-gradient(#ffffff,#ffffff);border:1px solid #dddddd;padding:0;font-family:Arial,Helvetica,sans-serif;">
+        <div class="gx-a">
+          <div class="gx-b" style="padding:18px 20px;">
+            <span class="gx-pill" style="display:inline-block;background-color:#fde8e8;border-radius:4px;padding:4px 8px;font-size:11px;line-height:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#b3201a;">Civic</span>
+            <div class="gx-h" style="margin-top:10px;font-size:22px;line-height:28px;font-weight:800;color:#111418;">NMMC clears 12 new e-bus routes</div>
+            <div class="gx-p" style="margin-top:8px;font-size:14px;line-height:22px;color:#4a4f57;">Routes start rolling out next month, timed to Metro arrivals.</div>
+            <div style="margin-top:10px;font-size:13px;line-height:18px;font-weight:800;"><a href="https://newsband.in/" target="_blank" class="gx-link" style="color:#d62828;text-decoration:none;">Read story &rarr;</a></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- ===== 6 ===== -->
+    <tr><td style="padding:22px 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;font-weight:800;color:#555555;">6 &middot; Dark card (markets / footer) pinned with an image + blend-mode text fix</td></tr>
+    <tr>
+      <td bgcolor="#111418" style="background-color:#111418;background-image:url('https://singlecolorimage.com/get/111418/600x400');background-size:cover;padding:0;font-family:Arial,Helvetica,sans-serif;">
+        <div class="gx-a">
+          <div class="gx-b" style="padding:18px 20px;">
+            <div class="gxd-label" style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#c9ccd1;">Sensex</div>
+            <div class="gxd-muted" style="font-size:11px;line-height:15px;color:#7d838c;">BSE</div>
+            <div class="gxd-value" style="font-size:22px;line-height:30px;font-weight:800;color:#ffffff;padding-top:6px;">81,245.67</div>
+            <div class="gxd-up" style="font-size:13px;line-height:18px;font-weight:600;color:#3ddc84;padding-top:2px;">&#9650; 312.40 (0.39%)</div>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- ===== 7 ===== -->
+    <tr><td style="padding:22px 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;font-weight:800;color:#555555;">7 &middot; Red button pinned with an image, no text fix</td></tr>
+    <tr>
+      <td align="left" style="padding:0;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td bgcolor="#d62828" style="background-color:#d62828;background-image:url('https://singlecolorimage.com/get/d62828/300x80');background-size:cover;border-radius:6px;">
+              <a href="https://newsband.in/" target="_blank" style="display:inline-block;padding:13px 22px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:18px;font-weight:800;color:#ffffff;text-decoration:none;border-radius:6px;">Read the full story &rarr;</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td style="height:30px;line-height:30px;font-size:0;">&nbsp;</td></tr>
+
+  </table>
+
+</td>
+</tr>
+</table>
+</body>
+</html>
