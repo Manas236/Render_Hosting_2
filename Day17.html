@@ -135,13 +135,9 @@
                                                     <div style="font-family: 'Arial Narrow', Arial, Helvetica, sans-serif; font-size: 9px; line-height: 12px; letter-spacing: 2px; color: #f7ccd3; text-transform: uppercase; padding-bottom: 4px; white-space: nowrap;">Feels like</div>
                                                     <div style="font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 16px; font-weight: bold; color: #ffffff; white-space: nowrap;"><span class="wx-feels">38</span>&deg;</div>
                                                 </td>
-                                                <td class="wx-stat" align="center" style="padding: 0 14px; border-left: 1px solid #e0697b; text-align: center;">
+                                                <td class="wx-stat" align="center" style="padding: 0 0 0 14px; border-left: 1px solid #e0697b; text-align: center;">
                                                     <div style="font-family: 'Arial Narrow', Arial, Helvetica, sans-serif; font-size: 9px; line-height: 12px; letter-spacing: 2px; color: #f7ccd3; text-transform: uppercase; padding-bottom: 4px; white-space: nowrap;">Humidity</div>
                                                     <div style="font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 16px; font-weight: bold; color: #ffffff; white-space: nowrap;"><span class="wx-humidity">74</span>%</div>
-                                                </td>
-                                                <td class="wx-stat" align="center" style="padding: 0 0 0 14px; border-left: 1px solid #e0697b; text-align: center;">
-                                                    <div style="font-family: 'Arial Narrow', Arial, Helvetica, sans-serif; font-size: 9px; line-height: 12px; letter-spacing: 2px; color: #f7ccd3; text-transform: uppercase; padding-bottom: 4px; white-space: nowrap;">AQI</div>
-                                                    <div class="wx-aqi" style="font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 16px; font-weight: bold; color: #ffffff; white-space: nowrap;">96</div>
                                                 </td>
                                             </tr>
                                         </table>
@@ -284,6 +280,53 @@
                                                 </td>
                                             </tr>
                                         </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- ====== AIR QUALITY: three CPCB tiles ======
+                         Tile colours are driven by each city's AQI category and set by the editor. -->
+                    <tr>
+                        <td class="pad" style="background-color: #faf8f4; padding: 34px 36px 12px 36px;" bgcolor="#faf8f4">
+                            <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="border-top: 3px solid #111111; padding-top: 10px; font-family: 'Arial Narrow', Arial, Helvetica, sans-serif; font-size: 11px; line-height: 16px; letter-spacing: 4px; color: #111111; text-transform: uppercase; font-weight: bold;">Air Quality</td>
+                                    <td align="right" style="border-top: 3px solid #111111; padding-top: 10px; font-family: 'Courier New', Courier, monospace; font-size: 10px; line-height: 16px; letter-spacing: 1px; color: #8a857c; text-transform: uppercase; text-align: right;">AQI &middot; CPCB</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="pad" style="background-color: #faf8f4; padding: 8px 36px 0 36px;" bgcolor="#faf8f4">
+                            <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td class="aqi-tile" data-aqi="0" width="196" valign="top" bgcolor="#e8590c" style="width: 160px; background-color: #e8590c; padding: 18px 18px 20px 18px; vertical-align: top;">
+                                        <div class="aqi-loc" style="font-family: 'Arial Narrow', Arial, Helvetica, sans-serif; font-size: 11px; line-height: 15px; letter-spacing: 2.5px; color: #ffffff; text-transform: uppercase; font-weight: bold;">Navi Mumbai</div>
+                                        <div class="aqi-value" style="font-family: Georgia, 'Times New Roman', Times, serif; font-size: 46px; line-height: 50px; font-weight: bold; letter-spacing: -1px; color: #ffffff; padding-top: 10px;">236</div>
+                                        <div class="aqi-cat" style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 18px; font-weight: bold; color: #ffffff; padding-top: 8px;">Poor</div>
+                                        <div class="aqi-rule" style="height: 1px; line-height: 1px; font-size: 0; background-color: #f39a63; margin: 14px 0 10px 0;">&nbsp;</div>
+                                        <div class="aqi-accent" style="font-family: 'Arial Narrow', Arial, Helvetica, sans-serif; font-size: 9px; line-height: 12px; letter-spacing: 2px; color: #ffe3cf; text-transform: uppercase;">Prominent pollutant</div>
+                                        <div class="aqi-pollutant" style="font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 18px; font-weight: bold; color: #ffffff; padding-top: 3px;">PM2.5</div>
+                                    </td>
+                                    <td class="gutter" width="20" style="width: 20px; font-size: 0; line-height: 0;">&nbsp;</td>
+                                    <td class="aqi-tile" data-aqi="1" width="196" valign="top" bgcolor="#b07a00" style="width: 160px; background-color: #b07a00; padding: 18px 18px 20px 18px; vertical-align: top;">
+                                        <div class="aqi-loc" style="font-family: 'Arial Narrow', Arial, Helvetica, sans-serif; font-size: 11px; line-height: 15px; letter-spacing: 2.5px; color: #ffffff; text-transform: uppercase; font-weight: bold;">Thane</div>
+                                        <div class="aqi-value" style="font-family: Georgia, 'Times New Roman', Times, serif; font-size: 46px; line-height: 50px; font-weight: bold; letter-spacing: -1px; color: #ffffff; padding-top: 10px;">168</div>
+                                        <div class="aqi-cat" style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 18px; font-weight: bold; color: #ffffff; padding-top: 8px;">Moderate</div>
+                                        <div class="aqi-rule" style="height: 1px; line-height: 1px; font-size: 0; background-color: #cf9e2f; margin: 14px 0 10px 0;">&nbsp;</div>
+                                        <div class="aqi-accent" style="font-family: 'Arial Narrow', Arial, Helvetica, sans-serif; font-size: 9px; line-height: 12px; letter-spacing: 2px; color: #f3e3bf; text-transform: uppercase;">Prominent pollutant</div>
+                                        <div class="aqi-pollutant" style="font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 18px; font-weight: bold; color: #ffffff; padding-top: 3px;">PM10</div>
+                                    </td>
+                                    <td class="gutter" width="20" style="width: 20px; font-size: 0; line-height: 0;">&nbsp;</td>
+                                    <td class="aqi-tile" data-aqi="2" width="196" valign="top" bgcolor="#5b9830" style="width: 160px; background-color: #5b9830; padding: 18px 18px 20px 18px; vertical-align: top;">
+                                        <div class="aqi-loc" style="font-family: 'Arial Narrow', Arial, Helvetica, sans-serif; font-size: 11px; line-height: 15px; letter-spacing: 2.5px; color: #ffffff; text-transform: uppercase; font-weight: bold;">Mumbai</div>
+                                        <div class="aqi-value" style="font-family: Georgia, 'Times New Roman', Times, serif; font-size: 46px; line-height: 50px; font-weight: bold; letter-spacing: -1px; color: #ffffff; padding-top: 10px;">94</div>
+                                        <div class="aqi-cat" style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 18px; font-weight: bold; color: #ffffff; padding-top: 8px;">Satisfactory</div>
+                                        <div class="aqi-rule" style="height: 1px; line-height: 1px; font-size: 0; background-color: #86ba60; margin: 14px 0 10px 0;">&nbsp;</div>
+                                        <div class="aqi-accent" style="font-family: 'Arial Narrow', Arial, Helvetica, sans-serif; font-size: 9px; line-height: 12px; letter-spacing: 2px; color: #dcecc8; text-transform: uppercase;">Prominent pollutant</div>
+                                        <div class="aqi-pollutant" style="font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 18px; font-weight: bold; color: #ffffff; padding-top: 3px;">PM10</div>
                                     </td>
                                 </tr>
                             </table>

@@ -343,6 +343,25 @@
             color: var(--text-3);
         }
 
+        /* ── CPCB how-to box ────────────────────────────────────────────────────── */
+        .cpcb-steps {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: 11px;
+            line-height: 1.55;
+            color: var(--text-2);
+        }
+        .cpcb-steps b { color: var(--text-1); }
+        .cpcb-steps ol {
+            margin: 6px 0 0;
+            padding-left: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
         /* ── Field Tooltips ─────────────────────────────────────────────────────── */
         .field-head {
             display: flex;
@@ -845,7 +864,7 @@
         <div class="topbar-right">
             <button class="btn btn-ghost" id="tipsToggle" onclick="toggleAllTips()" data-tip="🛈 Toggle these tips on or off — they explain every field and every button up here.">ⓘ Tips</button>
             <a href="/dashboard" class="btn btn-ghost" data-tip="🏠 Leave the editor and return to the main dashboard.">🏠 Dashboard</a>
-            <button class="btn btn-ghost" onclick="openImportModal()" data-tip="{ } Paste a JSON object to fill the date, weather and every story in one go.">{ } JSON Import</button>
+            <button class="btn btn-ghost" onclick="openImportModal()" data-tip="{ } Paste a JSON object to fill the date, weather, air quality and every story in one go.">{ } JSON Import</button>
             <button class="btn btn-ghost" onclick="refreshPreview()" data-tip="🔄 Re-render the live preview on the right with your latest edits.">🔄 Reload Preview</button>
             <button class="btn btn-danger" onclick="doReset()" data-tip="↺ Restore the original template — this discards all of your changes.">↺ Reset</button>
             <button class="btn btn-primary" onclick="doExport()" data-tip="↓ Done editing? Download the finished newsletter as a single HTML file.">↓ Export HTML</button>
@@ -967,25 +986,39 @@
                                 oninput="scheduleUpdate()" />
                         </div>
                     </div>
-                    <div style="display:flex; gap:8px;">
-                        <div class="field" style="flex:1;">
-                            <div class="field-head">
-                                <label>Humidity (%)</label>
-                                <span class="tip-trigger" tabindex="0" role="button" aria-label="About this field">i</span>
-                            </div>
-                            <div class="tip-pop"><span class="tip-emoji">💧</span> Relative humidity right now, as a percentage.</div>
-                            <input type="number" id="weatherTodayHumidity" placeholder="e.g. 74" autocomplete="off"
-                                oninput="scheduleUpdate()" />
+                    <div class="field">
+                        <div class="field-head">
+                            <label>Humidity (%)</label>
+                            <span class="tip-trigger" tabindex="0" role="button" aria-label="About this field">i</span>
                         </div>
-                        <div class="field" style="flex:1;">
-                            <div class="field-head">
-                                <label>AQI</label>
-                                <span class="tip-trigger" tabindex="0" role="button" aria-label="About this field">i</span>
-                            </div>
-                            <div class="tip-pop"><span class="tip-emoji">🌫️</span> Air quality index (US AQI scale from Open-Meteo). Leave blank to keep the current value.</div>
-                            <input type="number" id="weatherTodayAqi" placeholder="e.g. 96" autocomplete="off"
-                                oninput="scheduleUpdate()" />
-                        </div>
+                        <div class="tip-pop"><span class="tip-emoji">💧</span> Relative humidity right now, as a percentage.</div>
+                        <input type="number" id="weatherTodayHumidity" placeholder="e.g. 74" autocomplete="off"
+                            oninput="scheduleUpdate()" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- AIR QUALITY SECTION -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-label"><span class="accent-dot">●</span> Air Quality (AQI)</span>
+                    <button class="btn btn-ghost" id="openCpcbBtn" onclick="openCpcbPortal()" style="padding:3px 10px; font-size:9px;">↗ Open CPCB Portal</button>
+                </div>
+                <div class="section-body">
+                    <div class="cpcb-steps">
+                        <b>CPCB is captcha-protected — fill the AQI by hand:</b>
+                        <ol>
+                            <li>Click <b>↗ Open CPCB Portal</b> (opens the All-India AQI dashboard in a new tab).</li>
+                            <li>Choose <b>State → Maharashtra</b>, then each <b>City</b> below in turn, set the date, and <b>solve the captcha</b>.</li>
+                            <li>Type each city's <b>AQI</b> and <b>prominent pollutant</b> — the category is picked from the AQI band and the tile recolours to match.</li>
+                        </ol>
+                    </div>
+                    <datalist id="pollutantList">
+                        <option>PM2.5</option><option>PM10</option><option>O3</option><option>NO2</option>
+                        <option>SO2</option><option>CO</option><option>NH3</option><option>Pb</option>
+                    </datalist>
+                    <div id="aqiList" style="display:flex; flex-direction:column; gap:11px;">
+                        <!-- populated by JS -->
                     </div>
                 </div>
             </div>
@@ -1044,7 +1077,7 @@
                 <div class="modal-hint">
                     Paste a JSON object. Fields map directly to sections and stories by array position.<br>
                     Example:
-                    <code>{ "date": "April 3, 2026", "rni": "...", "weather": { "location": "Navi Mumbai", "desc": "Hazy sun", "temp": "33", "high": "36", "low": "27", "feels": "38", "humidity": "74", "aqi": "96" }, "stories": [{ "category": "TECH", "headline": "...", "summary": "...", "image": "https://...", "link": "https://..." }] }</code>
+                    <code>{ "date": "April 3, 2026", "rni": "...", "weather": { "location": "Navi Mumbai", "desc": "Hazy sun", "temp": "33", "high": "36", "low": "27", "feels": "38", "humidity": "74" }, "aqi": [{ "location": "Navi Mumbai", "value": "236", "pollutant": "PM2.5" }, { "location": "Thane", "value": "168", "pollutant": "PM10" }, { "location": "Mumbai", "value": "94", "pollutant": "PM10" }], "stories": [{ "category": "TECH", "headline": "...", "summary": "...", "image": "https://...", "link": "https://..." }] }</code>
                 </div>
                 <textarea id="jsonInput"
                     placeholder='{ "date": "April 3, 2026", "weather": { "location": "Navi Mumbai" }, "stories": [ { "category": "TECH", "headline": "..." } ] }'></textarea>
@@ -1100,7 +1133,12 @@
                 document.getElementById('weatherTodayTemp').value = data.weather.today_temp || '';
                 document.getElementById('weatherTodayFeels').value = data.weather.today_feels || '';
                 document.getElementById('weatherTodayHumidity').value = data.weather.today_humidity || '';
-                document.getElementById('weatherTodayAqi').value = data.weather.today_aqi || '';
+            }
+
+            const al = document.getElementById('aqiList');
+            if (al) {
+                al.innerHTML = '';
+                (data.aqi || []).forEach((a, i) => buildAqiRow(a, i, al));
             }
 
             const ml = document.getElementById('marketsList');
@@ -1244,8 +1282,8 @@
                     today_temp: val('weatherTodayTemp'),
                     today_feels: val('weatherTodayFeels'),
                     today_humidity: val('weatherTodayHumidity'),
-                    today_aqi: val('weatherTodayAqi'),
                 },
+                aqi: getAqiData(),
                 stories,
                 markets: getMarketsData(),
             };
@@ -1361,6 +1399,85 @@
             }
         }
 
+        /* ── Air Quality ─────────────────────────────────────────────────────────── */
+        const AQI_CATEGORIES = ['Good', 'Satisfactory', 'Moderate', 'Poor', 'Very Poor', 'Severe'];
+
+        function buildAqiRow(aqi, i, container) {
+            const current = (aqi.category || '').toLowerCase();
+            const options = ['', ...AQI_CATEGORIES].map(c =>
+                `<option value="${c}"${c.toLowerCase() === current ? ' selected' : ''}>${c || '—'}</option>`
+            ).join('');
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'border:1px solid var(--border); border-radius:6px; padding:10px 12px; display:flex; flex-direction:column; gap:8px; background:var(--surface);';
+            wrap.innerHTML = `
+                <span style="font-family:var(--mono); font-size:9px; letter-spacing:1.8px; text-transform:uppercase; color:var(--text-3);">Tile ${i + 1}</span>
+                <div class="field" style="gap:3px;">
+                    <label style="font-size:8px;">City</label>
+                    <input type="text" id="aqi${i}_loc" value="${escAttr(aqi.location || '')}" placeholder="e.g. Navi Mumbai"
+                           oninput="scheduleUpdate()" autocomplete="off" style="font-size:12px;" />
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <div class="field" style="width:70px; flex-shrink:0; gap:3px;">
+                        <label style="font-size:8px;">AQI</label>
+                        <input type="number" id="aqi${i}_value" value="${escAttr(aqi.value || '')}" min="0" max="500" placeholder="0–500"
+                               oninput="onAqiValueInput(${i})" autocomplete="off" style="font-size:12px;" />
+                    </div>
+                    <div class="field" style="flex:1; gap:3px;">
+                        <label style="font-size:8px;">Category</label>
+                        <select id="aqi${i}_cat" onchange="scheduleUpdate()" style="font-size:12px;">${options}</select>
+                    </div>
+                    <div class="field" style="width:84px; flex-shrink:0; gap:3px;">
+                        <label style="font-size:8px;">Pollutant</label>
+                        <input type="text" id="aqi${i}_pol" value="${escAttr(aqi.pollutant || '')}" list="pollutantList" placeholder="PM2.5"
+                               oninput="scheduleUpdate()" autocomplete="off" style="font-size:12px;" />
+                    </div>
+                </div>
+            `;
+            container.appendChild(wrap);
+        }
+
+        /* CPCB bands are fixed by the number, so typing an AQI picks its category
+           (it can still be overridden from the dropdown). */
+        function aqiCategoryFor(n) {
+            if (isNaN(n) || n < 0) return '';
+            if (n <= 50) return 'Good';
+            if (n <= 100) return 'Satisfactory';
+            if (n <= 200) return 'Moderate';
+            if (n <= 300) return 'Poor';
+            if (n <= 400) return 'Very Poor';
+            return 'Severe';
+        }
+
+        function onAqiValueInput(i) {
+            const raw = val(`aqi${i}_value`);
+            document.getElementById(`aqi${i}_cat`).value = raw === '' ? '' : aqiCategoryFor(parseFloat(raw));
+            scheduleUpdate();
+        }
+
+        function getAqiData() {
+            const aqi = [];
+            let i = 0;
+            while (document.getElementById(`aqi${i}_loc`)) {
+                aqi.push({
+                    index: i,
+                    location: val(`aqi${i}_loc`),
+                    value: val(`aqi${i}_value`),
+                    category: val(`aqi${i}_cat`),
+                    pollutant: val(`aqi${i}_pol`),
+                });
+                i++;
+            }
+            return aqi;
+        }
+
+        /* CPCB is captcha-protected, so we don't scrape it — we open the official
+           portal and the editor fills in the AQI the user reads off it by hand. */
+        function openCpcbPortal() {
+            window.open('https://airquality.cpcb.gov.in/ccr/#/all-india-aqi-portal', '_blank', 'noopener');
+            setStatus('', 'CPCB OPENED — solve the captcha, then type each city\'s AQI below');
+            setTimeout(() => setStatus('', 'READY'), 4500);
+        }
+
         /* ── Markets ─────────────────────────────────────────────────────────────── */
         function buildMarketRow(mkt, i, container) {
             const isPos = mkt.positive !== false;
@@ -1465,8 +1582,7 @@
                 document.getElementById('weatherTodayTemp').value = data.today_temp || '';
                 document.getElementById('weatherTodayFeels').value = data.today_feels || '';
                 document.getElementById('weatherTodayHumidity').value = data.today_humidity || '';
-                if (data.today_aqi) document.getElementById('weatherTodayAqi').value = data.today_aqi;
-                
+
                 await sendUpdate();
                 setStatus('saved', 'WEATHER UPDATED');
                 setTimeout(() => setStatus('', 'READY'), 2200);

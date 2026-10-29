@@ -12,6 +12,9 @@ below never depend on inline styles:
         .story-cat / .story-headline / .story-summary / .story-img
         every <a> inside gets the story link
     .wx-loc .wx-desc .wx-high .wx-low
+    .aqi-tile[data-aqi=N]           AQI tile, N = 0..2
+        .aqi-loc / .aqi-value / .aqi-cat / .aqi-pollutant
+        (.aqi-accent / .aqi-rule recolour with the AQI category)
     .mkt-cell  > .mkt-label / .mkt-value / .mkt-change
 """
 
@@ -49,6 +52,54 @@ _WMO_CODES = {
     96: "Thunderstorm with hail",
     99: "Heavy thunderstorm",
 }
+
+# CPCB National AQI categories → tile colours (same palette as Day17/Day21).
+#   bg     — tile background (always paired with white text, so these stay dark
+#            enough to read; the yellow/orange bands are deepened accordingly)
+#   accent — the small uppercase "Prominent Pollutant" label
+#   rule   — the thin divider line
+_AQI_PALETTE = {
+    "good":         {"bg": "#049a5b", "accent": "#c4ead8", "rule": "#3bb47e"},
+    "satisfactory": {"bg": "#5b9830", "accent": "#dcecc8", "rule": "#86ba60"},
+    "moderate":     {"bg": "#b07a00", "accent": "#f3e3bf", "rule": "#cf9e2f"},
+    "poor":         {"bg": "#e8590c", "accent": "#ffe3cf", "rule": "#f39a63"},
+    "verypoor":     {"bg": "#d32f2f", "accent": "#ffd6d6", "rule": "#e97070"},
+    "severe":       {"bg": "#7a1620", "accent": "#eac4c9", "rule": "#ab4652"},
+}
+
+# Upper bound of each CPCB band, for when only the AQI number is given
+_AQI_BANDS = (
+    (50, "Good"), (100, "Satisfactory"), (200, "Moderate"),
+    (300, "Poor"), (400, "Very Poor"), (500, "Severe"),
+)
+
+
+def _canon_category(cat: str) -> str:
+    """Normalise a category label to an _AQI_PALETTE key, or '' if unknown."""
+    c = re.sub(r"[^a-z]", "", (cat or "").lower())
+    return {
+        "good": "good",
+        "satisfactory": "satisfactory",
+        "moderate": "moderate", "moderatelypolluted": "moderate",
+        "poor": "poor",
+        "verypoor": "verypoor",
+        "severe": "severe",
+    }.get(c, "")
+
+
+def _category_for_value(value: str) -> str:
+    """CPCB category for an AQI number, or '' if it isn't one."""
+    try:
+        n = float(value)
+    except (TypeError, ValueError):
+        return ""
+    if n < 0:
+        return ""
+    for upper, label in _AQI_BANDS:
+        if n <= upper:
+            return label
+    return "Severe"
+
 
 day19_editor_bp = Blueprint('day19_editor', __name__)
 
@@ -94,6 +145,26 @@ def _story_find(blocks, cls):
         if el:
             return el
     return None
+
+
+def _aqi_tile(soup, idx: int):
+    return soup.find(class_="aqi-tile", attrs={"data-aqi": str(idx)})
+
+
+def _recolour_aqi_tile(tile, palette: dict):
+    tile["bgcolor"] = palette["bg"]
+    tile["style"] = re.sub(
+        r'background-color:\s*#[0-9a-fA-F]{6}',
+        f'background-color:{palette["bg"]}', tile.get("style", ""))
+    for el in tile.find_all(class_="aqi-accent"):
+        el["style"] = re.sub(
+            r'(?<![-\w])color:\s*#[0-9a-fA-F]{6}',
+            f'color:{palette["accent"]}', el.get("style", ""))
+    rule = tile.find(class_="aqi-rule")
+    if rule:
+        rule["style"] = re.sub(
+            r'background-color:\s*#[0-9a-fA-F]{6}',
+            f'background-color:{palette["rule"]}', rule.get("style", ""))
 
 
 def _format_change(label: str, value_str: str, pct_float: float, positive: bool) -> str:
@@ -144,6 +215,25 @@ def _find_weather_data(soup):
             weather[key] = _num(el.get_text())
     weather.setdefault("location", "Navi Mumbai")
     return weather
+
+
+def _find_aqi_data(soup):
+    aqi = []
+    for idx in range(3):
+        tile = _aqi_tile(soup, idx)
+        if not tile:
+            continue
+        entry = {"index": idx}
+        for key, cls in (("location", "aqi-loc"), ("category", "aqi-cat"),
+                         ("pollutant", "aqi-pollutant")):
+            el = tile.find(class_=cls)
+            if el:
+                entry[key] = el.get_text().strip()
+        el = tile.find(class_="aqi-value")
+        if el:
+            entry["value"] = _num(el.get_text())
+        aqi.append(entry)
+    return aqi
 
 
 def _find_market_data(soup):
@@ -203,6 +293,7 @@ def parse_fields(html: str) -> dict:
     result["stories"] = stories
 
     result["weather"] = _find_weather_data(soup)
+    result["aqi"] = _find_aqi_data(soup)
     result["markets"] = _find_market_data(soup)
     return result
 
@@ -282,6 +373,34 @@ def update_html(html: str, data: dict) -> str:
         if pre:
             merged = _find_weather_data(soup)
             _set_text(pre, _build_preheader(merged) + _PREHEADER_FILL)
+
+    # Air Quality — three CPCB tiles. A single object (Day21's JSON shape)
+    # fills the first tile, since the batch sender posts one payload to all editors.
+    aqi_data = data.get("aqi") or []
+    if isinstance(aqi_data, dict):
+        aqi_data = [aqi_data]
+    for i, entry in enumerate(aqi_data):
+        if not isinstance(entry, dict):
+            continue
+        tile = _aqi_tile(soup, entry.get("index", i))
+        if not tile:
+            continue
+
+        # The category is optional — fall back to the CPCB band the number sits in
+        value = _num(str(entry.get("value") or ""))
+        category = str(entry.get("category") or "").strip() or _category_for_value(value)
+        for val, cls in (
+            (entry.get("location"), "aqi-loc"), (value, "aqi-value"),
+            (category, "aqi-cat"), (entry.get("pollutant"), "aqi-pollutant"),
+        ):
+            val = str(val or "").strip()
+            el = tile.find(class_=cls)
+            if val and el:
+                _set_text(el, val)
+
+        palette = _AQI_PALETTE.get(_canon_category(category))
+        if palette:
+            _recolour_aqi_tile(tile, palette)
 
     # Markets
     markets_data = data.get("markets", [])
