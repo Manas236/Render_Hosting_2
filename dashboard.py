@@ -135,6 +135,12 @@ DASHBOARD_HTML = """
           <span class="group-tag-dot"></span>Saturdays <span class="group-tag-note">&amp; Non-Market Days</span>
         </div>
         <div class="dashboard-grid">
+          <a href="{{ url_for('day23_editor.editor') }}" class="dash-btn">
+            <div class="dash-btn-photo-wrap">
+              <img src="/static_files/Day23.png" class="dash-btn-photo" alt="Day23 Saturday Editor" />
+            </div>
+            <div class="dash-btn-title">Day 23 Editor</div>
+          </a>
           <a href="{{ url_for('day11_editor.editor') }}" class="dash-btn">
             <div class="dash-btn-photo-wrap">
               <img src="/static_files/Day11.png" class="dash-btn-photo" alt="Day11 Editor" />

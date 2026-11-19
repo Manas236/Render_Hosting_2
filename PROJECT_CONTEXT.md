@@ -63,6 +63,7 @@ via `importlib` because their filenames contain parentheses/spaces.
 | `editor(for Day17.html).py` | `/day17-editor` — market snapshot + three-city CPCB AQI tiles |
 | `editor(for Day19.html).py` | `/day19-editor` — weather strip + markets card + three-city CPCB AQI tiles |
 | `editor(for Day21.html).py` | `/day21-editor` — bento cards + weather tile |
+| `app_saturday.py` | `/day23-editor` — Saturday edition (`Day23.html`, page `templates/editor_saturday.html`): AQI strip, category themes, pre-send checks; draft kept in `saturday_draft.json` |
 
 > Note: `editor.py`, `editor(for Day8.html).py`, and `editor(for Day12.html).py`'s siblings
 > may exist on disk as older/unregistered variants; only the blueprints listed above are wired

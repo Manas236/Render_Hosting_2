@@ -114,6 +114,9 @@ def create_app():
     spec_day21.loader.exec_module(day21_module)
     day21_editor_bp = day21_module.day21_editor_bp
 
+    # ── Day 23 Editor (Saturday edition, BS4-based) ──
+    from app_saturday import day23_editor_bp
+
     app.register_blueprint(login_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(codeview_bp)
@@ -130,6 +133,7 @@ def create_app():
     app.register_blueprint(day17_editor_bp, url_prefix='/day17-editor')
     app.register_blueprint(day19_editor_bp, url_prefix='/day19-editor')
     app.register_blueprint(day21_editor_bp, url_prefix='/day21-editor')
+    app.register_blueprint(day23_editor_bp, url_prefix='/day23-editor')
     app.register_blueprint(batch_extractor_bp, url_prefix='/batch-extractor')
     app.register_blueprint(upload_image_bp, url_prefix='/upload-image')
     app.register_blueprint(git_pusher_bp, url_prefix='/git-pusher')

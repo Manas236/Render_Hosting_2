@@ -73,6 +73,9 @@ def test_imports():
         day21_module = importlib.util.module_from_spec(spec_day21)
         spec_day21.loader.exec_module(day21_module)
 
+        print("importing day23_editor (Saturday)")
+        from app_saturday import day23_editor_bp  # noqa: F401
+
         print("Done!")
     except Exception as e:
         print(f"Error: {e}")

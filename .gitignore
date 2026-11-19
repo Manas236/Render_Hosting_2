@@ -14,3 +14,7 @@ trial2.html
 social_data/runtime/
 
 uploaded_images/
+
+# Saturday (Day23) editor's auto-saved draft — runtime state, not source
+saturday_draft.json
+saturday_draft.json.tmp

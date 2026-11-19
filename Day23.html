@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newsband Newsletter</title>
+    <!-- Merriweather / Inter load in Apple Mail & iOS; Gmail and Outlook fall back to Georgia / Segoe UI -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Merriweather:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #e0e0e0;
+            margin: 0;
+            padding: 0;
+        }
+
+        a.card-title:hover {
+            text-decoration: underline !important;
+            text-underline-offset: 3px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ================================================================
+         A4 PAGE WRAPPER (794px = A4 width at 96dpi)
+         ================================================================ -->
+    <table width="794" align="center" cellpadding="0" cellspacing="0" border="0"
+        style="width:794px; background:#e0e0e0;">
+        <tr>
+            <td style="padding:40px 20px;">
+
+                <!-- ============================================================
+                     NEWSLETTER SHELL (754px wide, white, 12px rounded corners)
+                     ============================================================ -->
+                <table width="754" align="center" cellpadding="0" cellspacing="0" border="0" style="width:754px; background:#ffffff; border-radius:12px; overflow:hidden;
+               box-shadow:0 4px 20px rgba(0,0,0,0.15);">
+
+                    <!-- ===================== 1. HEADER — START (fixed) ===================== -->
+                    <tr>
+                        <td
+                            style="background:#ffffff; background-image:url('https://singlecolorimage.com/get/ffffff/600x400'); background-size:cover; padding:16px 24px; border-bottom:1px solid #eeeeee;">
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <!-- Header: logo -->
+                                    <td style="font-size:26px; font-weight:700; letter-spacing:3px; color:#1a1a1a;">
+                                        <img src="https://raw.githubusercontent.com/Manas236/Newsband/main/newsband-logo-0022.png"
+                                            width="200" alt="Newsband" style="width: 200px; display:block;">
+                                    </td>
+                                    <!-- Header: date + RNI badge -->
+                                    <td align="right">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr>
+                                                <td
+                                                    style="background:#f5f5f5; background-image:url('https://singlecolorimage.com/get/f5f5f5/100x100'); background-size:cover; border-radius:6px; padding:6px 12px; text-align:right;">
+                                                    <!-- Date (changes every issue) -->
+                                                    <div style="font-size:11px; font-weight:600; color:#666666;">Date:
+                                                        03/04/2026
+                                                    </div>
+                                                    <!-- RNI registration number (fixed) -->
+                                                    <div style="font-size:9px; color:#666666;">RNI: MAHENG/2007/21778
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <!-- ===================== 1. HEADER — END ===================== -->
+
+                    <!-- ============================================================
+                         2. VARIABLE CONTENT AREA — START (changes every issue)
+                         Layout: [01 wide top story]
+                                 [AQI strip | 02 | 03]
+                                 [04: image left, text right]
+                                 [05: text left, image right]
+                         Every image is 1200 x 650. Replace each placehold.co URL
+                         with the issue's image, and each href="#" with the article link.
+                         ============================================================ -->
+                    <tr>
+                        <td style="background:#f4f5f8; padding:24px;">
+                            <table width="706" cellpadding="0" cellspacing="0" border="0" style="width:706px;">
+
+                                <!-- ==================== CARD 01 — TOP STORY (full width) ==================== -->
+                                <tr>
+                                    <td style="background:#ffffff; border:1px solid #e6e8ee; border-radius:14px;">
+                                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                            <tr>
+                                                <td>
+                                                    <a href="#" target="_blank"><img
+                                                            src="https://placehold.co/1200x650/e3e6f8/4b5280?text=Lead+image+1200x650"
+                                                            width="704" alt="New AI Chip Promises Faster, More Efficient Computing"
+                                                            style="display:block; width:100%; height:auto; border:0; border-radius:13px 13px 0 0;"></a>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:22px 26px 6px 26px;">
+                                                    <!-- number + category -->
+                                                    <table cellpadding="0" cellspacing="0" border="0">
+                                                        <tr>
+                                                            <td style="background:#141a2e; color:#ffffff; font-family:Inter, 'Segoe UI', Arial, sans-serif; font-size:11px; font-weight:700; padding:4px 9px; border-radius:999px;">01</td>
+                                                            <td width="8"></td>
+                                                            <td style="background:#e0e7ff; color:#4338ca; font-family:Inter, 'Segoe UI', Arial, sans-serif; font-size:10px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; padding:5px 11px; border-radius:999px;">Technology</td>
+                                                            <td width="8"></td>
+                                                            <td style="color:#5a6178; font-family:Inter, 'Segoe UI', Arial, sans-serif; font-size:10px; font-weight:600; letter-spacing:1.4px; text-transform:uppercase;">&middot; Top story</td>
+                                                        </tr>
+                                                    </table>
+                                                    <!-- headline | summary -->
+                                                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:14px;">
+                                                        <tr>
+                                                            <td width="360" valign="top">
+                                                                <a href="#" target="_blank" class="card-title"
+                                                                    style="font-family:Merriweather, Georgia, 'Times New Roman', serif; font-weight:900; font-size:28px; line-height:1.25; color:#141a2e; text-decoration:none;">New AI Chip Promises Faster, More Efficient Computing</a>
+                                                            </td>
+                                                            <td width="28"></td>
+                                                            <td valign="top" style="padding-top:6px;">
+                                                                <div style="width:44px; height:3px; line-height:3px; font-size:0; background:#4f46e5; border-radius:2px;">&nbsp;</div>
+                                                                <p style="margin:12px 0 0 0; font-family:Inter, 'Segoe UI', Arial, sans-serif; font-size:15px; line-height:1.6; color:#4a5068;">A leading chipmaker unveiled a next-gen AI processor that delivers higher performance with lower power use.</p>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            <!-- corner tab -->
+                                            <tr>
+                                                <td align="right">
+                                                    <table cellpadding="0" cellspacing="0" border="0">
+                                                        <tr>
+                                                            <td style="background:#4f46e5; border-radius:14px 0 13px 0; padding:9px 14px 9px 18px;">
+                                                                <img src="https://raw.githubusercontent.com/Manas236/Newsband/main/icons/technology.png" width="16" height="16" alt="" style="display:block; border:0;">
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <!-- ==================== CARD 01 — END ==================== -->
+
+                                <tr><td height="16" style="font-size:0; line-height:0;">&nbsp;</td></tr>
+
+                                <!-- ==================== ROW: AQI STRIP | CARD 02 | CARD 03 ==================== -->
+                                <tr>
+                                    <td>
+                                        <table width="706" cellpadding="0" cellspacing="0" border="0" style="width:706px;">
+                                            <tr>
+
+                                                <!-- ---------- AQI STRIP (vertical) ---------- -->
+                                                <td width="116" valign="top" align="center"
+                                                    style="width:116px; background:#1b2550; border-radius:14px; padding:18px 10px; text-align:center; font-family:Inter, 'Segoe UI', Arial, sans-serif;">
+                                                    <table cellpadding="0" cellspacing="0" border="0" align="center">
+                                                        <tr>
+                                                            <td width="36" height="36" align="center" valign="middle" style="background:#f5c542; border-radius:9px;">
+                                                                <img src="https://raw.githubusercontent.com/Manas236/Newsband/main/icons/wind.png" width="20" height="20" alt="" style="display:block; margin:0 auto; border:0;">
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                    <div style="margin-top:10px; font-size:9px; font-weight:700; letter-spacing:1.6px; text-transform:uppercase; color:#c7cdea;">Navi Mumbai</div>
+                                                    <div style="margin-top:2px; font-size:13px; font-weight:700; letter-spacing:2px; color:#ffffff;">AQI</div>
+                                                    <!-- AQI value (changes every issue) -->
+                                                    <div style="margin-top:10px; font-size:46px; font-weight:800; line-height:1; color:#ffffff;">86</div>
+                                                    <!-- AQI category: CPCB bands — Good 0-50, Satisfactory 51-100, Moderate 101-200,
+                                                         Poor 201-300, Very Poor 301-400, Severe 401-500 -->
+                                                    <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin-top:10px;">
+                                                        <tr>
+                                                            <td style="background:#a3c853; color:#1b2550; font-size:10px; font-weight:700; padding:5px 9px; border-radius:999px;">Satisfactory</td>
+                                                        </tr>
+                                                    </table>
+
+                                                    <!-- AQI scale: move the ◀ marker to the row of today's band -->
+                                                    <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin-top:18px;">
+                                                        <tr>
+                                                            <td height="20" valign="top" style="font-size:9px; line-height:9px; color:#c7cdea; padding-right:6px; text-align:right;">500</td>
+                                                            <td width="8" height="20" style="background:#af2d24; border-radius:4px 4px 0 0; font-size:0;">&nbsp;</td>
+                                                            <td width="14" style="font-size:10px; color:#ffffff; padding-left:4px;"></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td height="20"></td>
+                                                            <td width="8" height="20" style="background:#e93f33; font-size:0;">&nbsp;</td>
+                                                            <td width="14" style="font-size:10px; color:#ffffff; padding-left:4px;"></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td height="20"></td>
+                                                            <td width="8" height="20" style="background:#f29c33; font-size:0;">&nbsp;</td>
+                                                            <td width="14" style="font-size:10px; color:#ffffff; padding-left:4px;"></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td height="20"></td>
+                                                            <td width="8" height="20" style="background:#fff833; font-size:0;">&nbsp;</td>
+                                                            <td width="14" style="font-size:10px; color:#ffffff; padding-left:4px;"></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td height="20"></td>
+                                                            <td width="8" height="20" style="background:#a3c853; font-size:0;">&nbsp;</td>
+                                                            <td width="14" style="font-size:10px; line-height:10px; color:#ffffff; padding-left:4px;">&#9664;</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td height="20" valign="bottom" style="font-size:9px; line-height:9px; color:#c7cdea; padding-right:6px; text-align:right;">0</td>
+                                                            <td width="8" height="20" style="background:#009865; border-radius:0 0 4px 4px; font-size:0;">&nbsp;</td>
+                                                            <td width="14" style="font-size:10px; color:#ffffff; padding-left:4px;"></td>
+                                                        </tr>
+                                                    </table>
+
+                                                    <div style="margin-top:18px; font-size:8px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; color:#c7cdea;">Recorded</div>
+                                                    <div style="margin-top:2px; font-size:11px; font-weight:600; color:#ffffff;">10:00 AM</div>
+                                                    <div style="margin-top:8px; font-size:8px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; color:#c7cdea;">Source</div>
+                                                    <div style="margin-top:2px; font-size:11px; font-weight:600; color:#ffffff;">CPCB</div>
+                                                </td>
+                                                <!-- ---------- AQI STRIP — END ---------- -->
+
+                                                <td width="16" style="width:16px; font-size:0;">&nbsp;</td>
+
+                                                <!-- ---------- CARD 02 ---------- -->
+                                                <td width="279" valign="top" style="width:279px; background:#ffffff; border:1px solid #e6e8ee; border-radius:14px;">
+                                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                        <tr>
+                                                            <td>
+                                                                <a href="#" target="_blank"><img
+                                                                        src="https://placehold.co/1200x650/dcf3e4/2f6b45?text=1200x650"
+                                                                        width="277" alt="Markets Climb as Earnings Beat Expectations"
+                                                                        style="display:block; width:100%; height:auto; border:0; border-radius:13px 13px 0 0;"></a>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="padding:16px 18px 4px 18px;">
+                                                                <table cellpadding="0" cellspacing="0" border="0">
+                                                                    <tr>
+                                                                        <td style="background:#141a2e; color:#ffffff; font-family:Inter, 'Segoe UI', Arial, sans-serif; font-size:11px; font-weight:700; padding:4px 9px; border-radius:999px;">02</td>
+                                                                        <td width="8"></td>
+                                                                        <td style="background:#dcfce7; color:#15803d; font-family:Inter, 'Segoe UI', Arial, sans-serif; font-size:10px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; padding:5px 11px; border-radius:999px;">Business</td>
+                                                                    </tr>
+                                                                </table>
+                                                                <div style="margin-top:10px;">
+                                                                    <a href="#" target="_blank" class="card-title"
+                                                                        style="font-family:Merriweather, Georgia, 'Times New Roman', serif; font-weight:900; font-size:18px; line-height:1.3; color:#141a2e; text-decoration:none;">Markets Climb as Earnings Beat Expectations</a>
+                                                                </div>
+                                                                <p style="margin:10px 0 0 0; font-family:Inter, 'Segoe UI', Arial, sans-serif; font-size:13px; line-height:1.55; color:#4a5068;">U.S. stocks rose after stronger-than-expected corporate earnings.</p>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td align="right">
+                                                                <table cellpadding="0" cellspacing="0" border="0">
+                                                                    <tr>
+                                                                        <td style="background:#16a34a; border-radius:14px 0 13px 0; padding:9px 13px 9px 17px;">
+                                                                            <img src="https://raw.githubusercontent.com/Manas236/Newsband/main/icons/business.png" width="16" height="16" alt="" style="display:block; border:0;">
+                                                                        </td>
+                                                                    </tr>
+                                                                </table>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                                <!-- ---------- CARD 02 — END ---------- -->
+
+                                                <td width="16" style="width:16px; font-size:0;">&nbsp;</td>
+
+                                                <!-- ---------- CARD 03 ---------- -->
+                                                <td width="279" valign="top" style="width:279px; background:#ffffff; border:1px solid #e6e8ee; border-radius:14px;">
+                                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                        <tr>
+                                                            <td>
+                                                                <a href="#" target="_blank"><img
+                                                                        src="https://placehold.co/1200x650/ece6fd/5b3f9e?text=1200x650"
+                                                                        width="277" alt="Ceasefire Talks Renewed as Pressure Grows"
+                                                                        style="display:block; width:100%; height:auto; border:0; border-radius:13px 13px 0 0;"></a>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="padding:16px 18px 4px 18px;">
+                                                                <table cellpadding="0" cellspacing="0" border="0">
+                                                                    <tr>
+                                                                        <td style="background:#141a2e; color:#ffffff; font-family:Inter, 'Segoe UI', Arial, sans-serif; font-size:11px; font-weight:700; padding:4px 9px; border-radius:999px;">03</td>
+                                                                        <td width="8"></td>
+                                                                        <td style="background:#ede9fe; color:#6d28d9; font-family:Inter, 'Segoe UI', Arial, sans-serif; font-size:10px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; padding:5px 11px; border-radius:999px;">World</td>
+                                                                    </tr>
+                                                                </table>
+                                                                <div style="margin-top:10px;">
+                                                                    <a href="#" target="_blank" class="card-title"
+                                                                        style="font-family:Merriweather, Georgia, 'Times New Roman', serif; font-weight:900; font-size:18px; line-height:1.3; color:#141a2e; text-decoration:none;">Ceasefire Talks Renewed as Pressure Grows</a>
+                                                                </div>
+                                                                <p style="margin:10px 0 0 0; font-family:Inter, 'Segoe UI', Arial, sans-serif; font-size:13px; line-height:1.55; color:#4a5068;">Mediators say new discussions are underway to pause the conflict.</p>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td align="right">
+                                                                <table cellpadding="0" cellspacing="0" border="0">
+                                                                    <tr>
+                                                                        <td style="background:#7c3aed; border-radius:14px 0 13px 0; padding:9px 13px 9px 17px;">
+                                                                            <img src="https://raw.githubusercontent.com/Manas236/Newsband/main/icons/world.png" width="16" height="16" alt="" style="display:block; border:0;">
+                                                                        </td>
+                                                                    </tr>
+                                                                </table>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                                <!-- ---------- CARD 03 — END ---------- -->
+
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <!-- ==================== ROW: AQI | 02 | 03 — END ==================== -->
+
+                                <tr><td height="16" style="font-size:0; line-height:0;">&nbsp;</td></tr>
+
+                                <!-- ==================== CARD 04 — IMAGE LEFT ==================== -->
+                                <tr>
+                                    <td style="background:#ffffff; border:1px solid #e6e8ee; border-radius:14px;">
+                                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                            <tr>
+                                                <td width="340" valign="top" style="width:340px;">
+                                                    <a href="#" target="_blank"><img
+                                                            src="https://placehold.co/1200x650/fde4e4/9b2c2c?text=1200x650"
+                                                            width="340" alt="City Book Final Spot in Champions League"
+                                                            style="display:block; width:340px; height:auto; border:0; border-radius:13px 0 0 13px;"></a>
+                                                </td>
+                                                <td valign="top">
+                                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                        <tr>
+                                                            <td style="padding:20px 22px 2px 22px;">
+                                                                <table cellpadding="0" cellspacing="0" border="0">
+                                                                    <tr>
+                                                                        <td style="background:#141a2e; color:#ffffff; font-family:Inter, 'Segoe UI', Arial, sans-serif; font-size:11px; font-weight:700; padding:4px 9px; border-radius:999px;">04</td>
+                                                                        <td width="8"></td>
+                                                                        <td style="background:#fee2e2; color:#b91c1c; font-family:Inter, 'Segoe UI', Arial, sans-serif; font-size:10px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; padding:5px 11px; border-radius:999px;">Sports</td>
+                                                                    </tr>
+                                                                </table>
+                                                                <div style="margin-top:8px;">
+                                                                    <a href="#" target="_blank" class="card-title"
+                                                                        style="font-family:Merriweather, Georgia, 'Times New Roman', serif; font-weight:900; font-size:19px; line-height:1.3; color:#141a2e; text-decoration:none;">City Book Final Spot in Champions League</a>
+                                                                </div>
+                                                                <p style="margin:8px 0 0 0; font-family:Inter, 'Segoe UI', Arial, sans-serif; font-size:13px; line-height:1.55; color:#4a5068;">Manchester City secured a place in the final with a dominant win.</p>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td align="right">
+                                                                <table cellpadding="0" cellspacing="0" border="0">
+                                                                    <tr>
+                                                                        <td style="background:#dc2626; border-radius:14px 0 13px 0; padding:9px 13px 9px 17px;">
+                                                                            <img src="https://raw.githubusercontent.com/Manas236/Newsband/main/icons/sports.png" width="16" height="16" alt="" style="display:block; border:0;">
+                                                                        </td>
+                                                                    </tr>
+                                                                </table>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <!-- ==================== CARD 04 — END ==================== -->
+
+                                <tr><td height="16" style="font-size:0; line-height:0;">&nbsp;</td></tr>
+
+                                <!-- ==================== CARD 05 — IMAGE RIGHT ==================== -->
+                                <tr>
+                                    <td style="background:#ffffff; border:1px solid #e6e8ee; border-radius:14px;">
+                                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                            <tr>
+                                                <td valign="top">
+                                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                        <tr>
+                                                            <td style="padding:20px 22px 2px 22px;">
+                                                                <table cellpadding="0" cellspacing="0" border="0">
+                                                                    <tr>
+                                                                        <td style="background:#141a2e; color:#ffffff; font-family:Inter, 'Segoe UI', Arial, sans-serif; font-size:11px; font-weight:700; padding:4px 9px; border-radius:999px;">05</td>
+                                                                        <td width="8"></td>
+                                                                        <td style="background:#fef3c7; color:#92400e; font-family:Inter, 'Segoe UI', Arial, sans-serif; font-size:10px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; padding:5px 11px; border-radius:999px;">Entertainment</td>
+                                                                    </tr>
+                                                                </table>
+                                                                <div style="margin-top:8px;">
+                                                                    <a href="#" target="_blank" class="card-title"
+                                                                        style="font-family:Merriweather, Georgia, 'Times New Roman', serif; font-weight:900; font-size:19px; line-height:1.3; color:#141a2e; text-decoration:none;">Oscars 2025 Nominations Highlight a Big Year for Film</a>
+                                                                </div>
+                                                                <p style="margin:8px 0 0 0; font-family:Inter, 'Segoe UI', Arial, sans-serif; font-size:13px; line-height:1.55; color:#4a5068;">The Academy revealed this year's nominations, with a mix of dramas, hits and new talent.</p>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td align="left">
+                                                                <table cellpadding="0" cellspacing="0" border="0">
+                                                                    <tr>
+                                                                        <td style="background:#d97706; border-radius:0 14px 0 13px; padding:9px 17px 9px 13px;">
+                                                                            <img src="https://raw.githubusercontent.com/Manas236/Newsband/main/icons/entertainment.png" width="16" height="16" alt="" style="display:block; border:0;">
+                                                                        </td>
+                                                                    </tr>
+                                                                </table>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                                <td width="340" valign="top" style="width:340px;">
+                                                    <a href="#" target="_blank"><img
+                                                            src="https://placehold.co/1200x650/fdf0d2/8a5a12?text=1200x650"
+                                                            width="340" alt="Oscars 2025 Nominations Highlight a Big Year for Film"
+                                                            style="display:block; width:340px; height:auto; border:0; border-radius:0 13px 13px 0;"></a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <!-- ==================== CARD 05 — END ==================== -->
+
+                            </table>
+                        </td>
+                    </tr>
+                    <!-- ============== 2. VARIABLE CONTENT AREA — END ============== -->
+
+                    <!-- ============================================================
+                         3. FOOTER — START (fixed: same in every issue)
+                         Keep id="footer-cell": the editor app uses it to lock the
+                         footer so it can't be edited (is_in_footer()).
+                         ============================================================ -->
+                    <tr>
+                        <td colspan="2" id="footer-cell" style="border: none; padding: 0;">
+                            <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td align="center"
+                                        style="background-color: #0a0a0a; padding: 38px 24px 30px; text-align: center;">
+
+                                        <!-- Footer a: tagline slot (currently empty) -->
+                                        <p
+                                            style="font-family: Georgia, 'Times New Roman', serif; font-size: 12px; color: #bfbfbf; font-style: italic; margin: 0 0 16px 0;">
+                                        </p>
+
+                                        <!-- Footer b: social icons -->
+                                        <table role="presentation" border="0" cellpadding="0" cellspacing="0"
+                                            align="center" style="margin: 0 auto 16px auto;">
+                                            <tr>
+                                                <td style="padding: 0 5px; border: 0;">
+                                                    <a href="https://www.instagram.com/newsbandofficial/"
+                                                        target="_blank" style="text-decoration: none;">
+                                                        <table role="presentation" border="0" cellpadding="0"
+                                                            cellspacing="0">
+                                                            <tr>
+                                                                <td width="38" height="38"
+                                                                    style="background-color: #ffffff; border-radius: 50%; text-align: center; vertical-align: middle;">
+                                                                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/instagram.svg"
+                                                                        width="17" height="17" alt="Instagram"
+                                                                        style="display: block; margin: 0 auto;">
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </a>
+                                                </td>
+                                                <td style="padding: 0 5px; border: 0;">
+                                                    <a href="https://www.facebook.com/newsband.in" target="_blank"
+                                                        style="text-decoration: none;">
+                                                        <table role="presentation" border="0" cellpadding="0"
+                                                            cellspacing="0">
+                                                            <tr>
+                                                                <td width="38" height="38"
+                                                                    style="background-color: #ffffff; border-radius: 50%; text-align: center; vertical-align: middle;">
+                                                                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/facebook.svg"
+                                                                        width="17" height="17" alt="Facebook"
+                                                                        style="display: block; margin: 0 auto;">
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </a>
+                                                </td>
+                                                <td style="padding: 0 5px; border: 0;">
+                                                    <a href="https://x.com/NewsbandTweets" target="_blank"
+                                                        style="text-decoration: none;">
+                                                        <table role="presentation" border="0" cellpadding="0"
+                                                            cellspacing="0">
+                                                            <tr>
+                                                                <td width="38" height="38"
+                                                                    style="background-color: #ffffff; border-radius: 50%; text-align: center; vertical-align: middle;">
+                                                                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/x.svg"
+                                                                        width="17" height="17" alt="X"
+                                                                        style="display: block; margin: 0 auto;">
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </a>
+                                                </td>
+                                                <td style="padding: 0 5px; border: 0;">
+                                                    <a href="https://www.youtube.com/@Newsband-" target="_blank"
+                                                        style="text-decoration: none;">
+                                                        <table role="presentation" border="0" cellpadding="0"
+                                                            cellspacing="0">
+                                                            <tr>
+                                                                <td width="38" height="38"
+                                                                    style="background-color: #ffffff; border-radius: 50%; text-align: center; vertical-align: middle;">
+                                                                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/youtube.svg"
+                                                                        width="17" height="17" alt="YouTube"
+                                                                        style="display: block; margin: 0 auto;">
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                        <!-- Footer c: links (*|UNSUB|* is Mailchimp's unsubscribe tag — leave as is) -->
+                                        <table role="presentation" border="0" cellpadding="0" cellspacing="0"
+                                            align="center" style="margin: 0 auto 14px auto;">
+                                            <tr>
+                                                <td align="center" valign="middle"
+                                                    style="vertical-align: middle; padding: 0 14px;">
+                                                    <a href="https://www.newsband.in/" target="_blank"
+                                                        style="font-family: Georgia, 'Times New Roman', serif; font-size: 11px; color: #bbbbbb; text-decoration: none;">Visit
+                                                        Website</a>
+                                                </td>
+                                                <td align="center" valign="middle"
+                                                    style="vertical-align: middle; color: #666666; font-size: 14px;">
+                                                    |</td>
+                                                <td align="center" valign="middle"
+                                                    style="vertical-align: middle; padding: 0 14px;">
+                                                    <a href="https://www.newsband.in/privacy-policy" target="_blank"
+                                                        style="font-family: Georgia, 'Times New Roman', serif; font-size: 11px; color: #bbbbbb; text-decoration: none;">Privacy
+                                                        Policy</a>
+                                                </td>
+                                                <td align="center" valign="middle"
+                                                    style="vertical-align: middle; color: #666666; font-size: 14px;">
+                                                    |</td>
+                                                <td align="center" valign="middle"
+                                                    style="vertical-align: middle; padding: 0 14px;">
+                                                    <a href="*|UNSUB|*" target="_blank"
+                                                        style="font-family: Georgia, 'Times New Roman', serif; font-size: 11px; color: #bbbbbb; text-decoration: none;">Unsubscribe</a>
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                        <!-- Footer d: copyright line -->
+                                        <div
+                                            style="font-family: 'Arial Narrow', Arial, sans-serif; font-size: 9px; letter-spacing: 2.5px; color: #999999;">
+                                            All rights reserved
+                                        </div>
+
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <!-- ===================== 3. FOOTER — END ===================== -->
+
+                </table>
+                <!-- ===================== END NEWSLETTER SHELL ===================== -->
+
+            </td>
+        </tr>
+    </table>
+    <!-- ===================== END A4 PAGE WRAPPER ===================== -->
+
+</body>
+
+</html>

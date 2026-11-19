@@ -90,6 +90,7 @@ CONVERTER_HTML = """
                     <option value="/day17-editor/api/preview">Day 17</option>
                     <option value="/day19-editor/api/preview">Day 19</option>
                     <option value="/day21-editor/api/preview">Day 21</option>
+                    <option value="/day23-editor/api/preview">Day 23 (Saturday)</option>
                 </select>
                 <button type="button" class="btn-load-editor" onclick="loadFromEditor()">Load →</button>
             </div>

@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Newsband · Saturday Editor</title>
+    <link rel="icon" type="image/png" href="/static_files/NB-favicon.png" />
+    <link rel="apple-touch-icon" href="/static_files/NB-favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* Palette borrowed from the Saturday template (Day23.html) so this editor
+           is easy to tell apart from the weekday one */
+        :root {
+            --bg: #f4f5f8;
+            --panel: #ffffff;
+            --surface: #f8f9fb;
+            --border: #e6e8ee;
+            --border-soft: #eef0f4;
+            --text-1: #141a2e;
+            --text-2: #4a5068;
+            --text-3: #8a90a6;
+            --navy: #1b2550;
+            --accent: #4338ca;
+            --accent-dim: rgba(67, 56, 202, 0.14);
+            --accent-glow: rgba(67, 56, 202, 0.06);
+            --green: #15803d;
+            --amber: #b45309;
+            --amber-bg: #fef3c7;
+            --red: #c2410c;
+            --radius: 8px;
+            --mono: 'DM Mono', 'Courier New', monospace;
+            --sans: 'DM Sans', system-ui, sans-serif;
+        }
+
+        html, body { height: 100%; overflow: hidden; }
+        body { font-family: var(--sans); background: var(--bg); color: var(--text-1); display: flex; flex-direction: column; }
+
+        /* ── Top bar ── */
+        .topbar {
+            height: 52px; display: flex; align-items: center; justify-content: space-between;
+            padding: 0 18px; background: var(--navy); color: #fff; flex-shrink: 0; gap: 16px; position: relative; z-index: 20;
+        }
+        .topbar-left, .topbar-right { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .topbar-right { gap: 8px; flex-shrink: 0; }
+        .brand { font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; white-space: nowrap; }
+        .brand-accent { color: #f5c542; }
+        .divider-v { width: 1px; height: 18px; background: rgba(255, 255, 255, .18); flex-shrink: 0; }
+
+        .status-pill { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: #c7cdea; white-space: nowrap; }
+        .status-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: #8a90b8; flex-shrink: 0; }
+        .status-pill.saving .dot { background: #f5c542; animation: pulse 1s infinite; }
+        .status-pill.saved { color: #a7f3c4; }
+        .status-pill.saved .dot { background: #4ade80; }
+        .status-pill.error { color: #fca5a5; }
+        .status-pill.error .dot { background: #f87171; }
+        @keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: .35 } }
+
+        .checks-btn {
+            font-family: var(--mono); font-size: 9px; letter-spacing: 1.2px; text-transform: uppercase;
+            border-radius: 999px; padding: 4px 10px; border: 1px solid transparent; cursor: pointer; white-space: nowrap;
+        }
+        .checks-btn.ok { background: rgba(74, 222, 128, .14); color: #a7f3c4; border-color: rgba(74, 222, 128, .3); }
+        .checks-btn.warn { background: rgba(245, 197, 66, .16); color: #fde68a; border-color: rgba(245, 197, 66, .35); }
+        .checks-panel {
+            display: none; position: absolute; top: 46px; left: 18px; width: 380px; max-height: 60vh; overflow-y: auto;
+            background: var(--panel); color: var(--text-1); border: 1px solid var(--border); border-radius: 10px;
+            box-shadow: 0 12px 32px rgba(20, 26, 46, .18); padding: 8px;
+        }
+        .checks-panel.open { display: block; }
+        .check-item { display: block; width: 100%; text-align: left; background: none; border: 0; border-radius: 6px; padding: 8px 10px; font-family: var(--sans); font-size: 12.5px; color: var(--text-2); cursor: pointer; line-height: 1.4; }
+        .check-item:hover { background: var(--surface); color: var(--text-1); }
+        .check-item::before { content: "⚠"; color: var(--amber); margin-right: 8px; }
+        .check-empty { padding: 10px; font-size: 12.5px; color: var(--green); }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border: 1px solid transparent; border-radius: 6px;
+            font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase;
+            cursor: pointer; transition: all .15s; white-space: nowrap; background: none; text-decoration: none;
+        }
+        .topbar .btn-ghost { border-color: rgba(255, 255, 255, .22); color: #e3e6f8; }
+        .topbar .btn-ghost:hover { border-color: rgba(255, 255, 255, .5); background: rgba(255, 255, 255, .06); }
+        .topbar .btn-danger { border-color: rgba(252, 165, 165, .3); color: #fca5a5; }
+        .topbar .btn-danger:hover { border-color: rgba(252, 165, 165, .6); background: rgba(252, 165, 165, .06); }
+        .btn-primary { background: #f5c542; border-color: #f5c542; color: var(--navy); font-weight: 600; }
+        .btn-primary:hover { background: #ffd35c; }
+        .btn-ghost { border-color: var(--border); color: var(--text-2); }
+        .btn-ghost:hover { border-color: var(--text-3); color: var(--text-1); background: var(--surface); }
+        .btn-solid { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .btn-solid:hover { background: #3730a3; }
+
+        /* ── Layout ── */
+        /* Form + preview sit side by side as one centred block. The preview is capped
+           just wider than the 794px newsletter (+ iframe scrollbar), so on wide screens
+           the spare width goes to equal gutters instead of a gap between form and preview */
+        .main { display: flex; flex: 1; overflow: hidden; min-height: 0; justify-content: center; }
+        .editor-panel { width: 430px; min-width: 330px; max-width: 600px; background: var(--panel); overflow-y: auto; flex-shrink: 0; scroll-behavior: smooth; border-left: 1px solid var(--border); }
+        .resize-handle { width: 4px; background: var(--border); cursor: col-resize; flex-shrink: 0; transition: background .15s; }
+        .resize-handle:hover, .resize-handle.dragging { background: var(--accent); }
+
+        /* ── Sections ── */
+        .section { border-bottom: 1px solid var(--border-soft); transition: background .6s; }
+        .section.flash { background: var(--accent-glow); }
+        .section-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 18px; background: var(--surface); border-bottom: 1px solid var(--border-soft); }
+        .section-label { font-family: var(--mono); font-size: 9px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: var(--text-3); display: flex; align-items: center; gap: 7px; }
+        .section-label .accent-dot { color: var(--accent); font-size: 11px; }
+        .section-meta { font-family: var(--mono); font-size: 9px; color: var(--text-3); letter-spacing: 1px; }
+        .section-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+
+        /* ── Fields ── */
+        .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+        .field label { font-family: var(--mono); font-size: 9px; font-weight: 500; letter-spacing: 1.8px; text-transform: uppercase; color: var(--text-3); display: flex; justify-content: space-between; gap: 8px; }
+        .field label .opt { letter-spacing: .5px; text-transform: none; color: #a8adc0; font-weight: 400; }
+        .field input, .field textarea, .field select {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text-1);
+            font-family: var(--sans); font-size: 13px; padding: 8px 10px; outline: none; width: 100%;
+            transition: border-color .15s, box-shadow .15s;
+        }
+        .field select { cursor: pointer; }
+        .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); background: #fff; }
+        .field input.invalid { border-color: var(--red); }
+        .field textarea { resize: vertical; min-height: 64px; line-height: 1.5; }
+        .field input::placeholder, .field textarea::placeholder { color: #b0b5c6; }
+        .inline { display: flex; gap: 6px; }
+        .inline input { flex: 1; min-width: 0; }
+        .mini-btn { flex-shrink: 0; font-family: var(--mono); font-size: 9px; letter-spacing: 1px; text-transform: uppercase; padding: 0 9px; border: 1px solid var(--border); border-radius: 6px; background: #fff; color: var(--text-2); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; }
+        .mini-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .hint { font-size: 11px; color: var(--text-3); }
+        .hint.good { color: var(--green); }
+        .hint.bad { color: var(--amber); }
+
+        /* ── AQI ── */
+        .aqi-chip { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px; color: var(--text-2); }
+        .aqi-chip i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; border: 1px solid rgba(0, 0, 0, .08); }
+        .aqi-chip b { color: var(--text-1); font-weight: 500; }
+
+        /* ── Stories ── */
+        .stories-list { display: flex; flex-direction: column; gap: 8px; padding: 14px 18px 24px; }
+        .story-card { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: box-shadow .4s; }
+        .story-card.flash { box-shadow: 0 0 0 3px var(--accent-dim); }
+        .story-hdr { display: flex; align-items: center; gap: 9px; padding: 10px 12px; background: var(--surface); cursor: pointer; user-select: none; transition: background .15s; }
+        .story-hdr:hover { background: #f0f2f7; }
+        .story-card.open .story-hdr { background: var(--accent-glow); border-bottom: 1px solid var(--border); }
+        .story-num { font-family: var(--mono); font-size: 10px; font-weight: 500; color: #fff; background: var(--text-1); border-radius: 999px; padding: 2px 7px; flex-shrink: 0; }
+        .story-cat { font-family: var(--mono); font-size: 8px; letter-spacing: 1.2px; text-transform: uppercase; border-radius: 999px; padding: 3px 7px; flex-shrink: 0; background: #eef0f4; color: var(--text-2); max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .story-hl { font-size: 12px; color: var(--text-2); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .warn-dot { width: 7px; height: 7px; border-radius: 50%; background: #f59e0b; flex-shrink: 0; display: none; }
+        .story-card.has-warn .warn-dot { display: block; }
+        .chev { color: var(--text-3); font-size: 10px; flex-shrink: 0; transition: transform .2s; }
+        .story-card.open .chev { transform: rotate(180deg); }
+        .story-body { display: none; flex-direction: column; gap: 11px; padding: 14px 13px; }
+        .story-card.open .story-body { display: flex; }
+        .slot-note { font-family: var(--mono); font-size: 9px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-3); }
+
+        .theme-pick { display: flex; align-items: center; gap: 7px; }
+        .swatch { width: 26px; height: 33px; border-radius: 6px; flex-shrink: 0; border: 1px solid rgba(0, 0, 0, .06); display: flex; align-items: center; justify-content: center; }
+        .swatch span { width: 10px; height: 10px; border-radius: 3px; display: block; }
+
+        .thumb { position: relative; width: 100%; aspect-ratio: 1200 / 650; border-radius: 6px; overflow: hidden; background: var(--surface) repeating-linear-gradient(45deg, transparent 0 8px, rgba(20, 26, 46, .03) 8px 16px); border: 1px solid var(--border); }
+        .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .thumb .thumb-msg { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; font-family: var(--mono); font-size: 10px; letter-spacing: 1px; color: var(--text-3); text-transform: uppercase; }
+        .thumb.broken img { display: none; }
+        .thumb.broken .thumb-msg { display: flex; }
+
+        /* ── Preview ── */
+        .preview-panel { flex: 1; min-width: 0; max-width: 880px; background: #d9dbe2; display: flex; flex-direction: column; overflow: hidden; border-right: 1px solid var(--border); }
+        .preview-bar { height: 36px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 14px; gap: 10px; flex-shrink: 0; }
+        .traffic-lights { display: flex; gap: 5px; }
+        .tl { width: 10px; height: 10px; border-radius: 50%; }
+        .tl-r { background: #ff5f57; } .tl-y { background: #febc2e; } .tl-g { background: #28c840; }
+        .preview-url { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 3px 10px; font-family: var(--mono); font-size: 9px; color: var(--text-3); letter-spacing: .5px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .preview-panel iframe { flex: 1; border: none; width: 100%; min-height: 0; }
+
+        /* ── Modal ── */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(20, 26, 46, .55); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: var(--panel); border-radius: 12px; width: 620px; max-width: calc(100vw - 40px); max-height: calc(100vh - 60px); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(20, 26, 46, .3); }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--border); }
+        .modal-title { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-2); }
+        .modal-close { background: none; border: none; cursor: pointer; color: var(--text-3); font-size: 20px; line-height: 1; }
+        .modal-close:hover { color: var(--text-1); }
+        .modal-body { padding: 16px 20px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .modal-body textarea { width: 100%; height: 330px; resize: vertical; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text-1); font-family: var(--mono); font-size: 11px; padding: 12px; outline: none; line-height: 1.5; }
+        .modal-body textarea:focus { border-color: var(--accent); }
+        .modal-hint { font-size: 12px; color: var(--text-2); line-height: 1.55; }
+        .modal-hint code { font-family: var(--mono); font-size: 11px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; }
+        .modal-footer { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--border); }
+        .modal-footer .spacer { flex: 1; }
+        .import-error { font-family: var(--mono); font-size: 10.5px; color: #b91c1c; padding: 8px 12px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; display: none; }
+        .import-error.visible { display: block; }
+
+        /* ── Loader ── */
+        #loading { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; z-index: 2000; transition: opacity .3s; }
+        #loading.hidden { opacity: 0; pointer-events: none; }
+        .loader-brand { font-family: var(--mono); font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--navy); }
+        .loader-bar { width: 120px; height: 2px; background: var(--border); border-radius: 2px; overflow: hidden; }
+        .loader-fill { height: 100%; background: var(--accent); animation: load 1.2s ease-in-out forwards; }
+        .loader-err { font-size: 13px; color: var(--text-2); max-width: 360px; text-align: center; line-height: 1.5; display: none; }
+        @keyframes load { from { width: 0 } to { width: 100% } }
+
+        * { scrollbar-width: thin; scrollbar-color: #d4d7e0 transparent; }
+    </style>
+</head>
+
+<body>
+
+    <div id="loading">
+        <div class="loader-brand">Newsband · Saturday</div>
+        <div class="loader-bar"><div class="loader-fill"></div></div>
+        <div class="loader-err" id="loaderErr">Couldn't reach the editor server. Check the Newsband app is
+            running, then reload.</div>
+    </div>
+
+    <!-- ── Top bar ── -->
+    <div class="topbar">
+        <div class="topbar-left">
+            <div class="brand"><span class="brand-accent">NB</span> · Saturday Edition</div>
+            <div class="divider-v"></div>
+            <div class="status-pill" id="statusPill"><div class="dot"></div><span id="statusText">READY</span></div>
+            <button class="checks-btn ok" id="checksBtn" onclick="toggleChecks(event)">✓ Ready to send</button>
+            <div class="checks-panel" id="checksPanel"></div>
+        </div>
+        <div class="topbar-right">
+            <a href="/dashboard" class="btn btn-ghost" title="Leave the editor and return to the main dashboard">⌂ Dashboard</a>
+            <button class="btn btn-ghost" onclick="openJsonModal()" title="Copy or paste the whole issue as JSON">{ } JSON</button>
+            <button class="btn btn-danger" onclick="doReset()" title="Throw away the draft and go back to Day23.html">↺ Reset</button>
+            <button class="btn btn-primary" onclick="doExport()">↓ Export HTML</button>
+        </div>
+    </div>
+
+    <div class="main">
+
+        <!-- ── LEFT: form ── -->
+        <div class="editor-panel" id="editorPanel">
+
+            <!-- Issue -->
+            <div class="section" id="issueSection">
+                <div class="section-header">
+                    <span class="section-label"><span class="accent-dot">●</span> Issue</span>
+                    <span class="section-meta">LOCKED: logo · layout · footer</span>
+                </div>
+                <div class="section-body">
+                    <div class="row2">
+                        <div class="field">
+                            <label>Date</label>
+                            <div class="inline">
+                                <input type="text" id="hdrDate" placeholder="DD/MM/YYYY" autocomplete="off" oninput="updateDateHint(); scheduleUpdate()" />
+                                <button class="mini-btn" type="button" onclick="fillNextSaturday()" title="Fill in the coming Saturday">Next Sat</button>
+                            </div>
+                            <span class="hint" id="dateHint"></span>
+                        </div>
+                        <div class="field">
+                            <label>RNI number</label>
+                            <input type="text" id="hdrRni" placeholder="MAHENG/2007/XXXXX" autocomplete="off" oninput="scheduleUpdate()" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AQI -->
+            <div class="section" id="aqiSection">
+                <div class="section-header">
+                    <span class="section-label"><span class="accent-dot">●</span> Air Quality strip</span>
+                    <span class="aqi-chip" id="aqiChip"><i></i><b>—</b><span></span></span>
+                </div>
+                <div class="section-body">
+                    <div class="row2">
+                        <div class="field">
+                            <label>Location</label>
+                            <input type="text" id="aqiLocation" placeholder="Navi Mumbai" autocomplete="off" oninput="scheduleUpdate()" />
+                        </div>
+                        <div class="field">
+                            <label>Score <span class="opt">0 – 500</span></label>
+                            <input type="text" id="aqiValue" inputmode="numeric" placeholder="86" autocomplete="off" oninput="refreshAqiUi(); scheduleUpdate()" />
+                        </div>
+                    </div>
+                    <div class="row2">
+                        <div class="field">
+                            <label>Scale</label>
+                            <select id="aqiScale" onchange="onScaleChange()"></select>
+                        </div>
+                        <div class="field">
+                            <label>Category</label>
+                            <select id="aqiBand" onchange="refreshAqiUi(); scheduleUpdate()"></select>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>Pill text <span class="opt">blank = category name</span></label>
+                        <input type="text" id="aqiLabel" autocomplete="off" oninput="refreshAqiUi(); scheduleUpdate()" />
+                    </div>
+                    <div class="row2">
+                        <div class="field">
+                            <label>Recorded</label>
+                            <div class="inline">
+                                <input type="text" id="aqiRecorded" placeholder="10:00 AM" autocomplete="off" oninput="scheduleUpdate()" />
+                                <button class="mini-btn" type="button" onclick="fillNow()" title="Use the current time">Now</button>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label>Source</label>
+                            <input type="text" id="aqiSource" list="aqiSources" placeholder="CPCB" autocomplete="off" oninput="scheduleUpdate()" />
+                            <datalist id="aqiSources">
+                                <option value="CPCB"></option>
+                                <option value="MPCB"></option>
+                                <option value="SAFAR"></option>
+                                <option value="AQI.in"></option>
+                                <option value="IQAir"></option>
+                            </datalist>
+                        </div>
+                    </div>
+                    <span class="hint">Strip colours and the ◀ marker follow the category. Scores that aren't numbers show "N/A".</span>
+                </div>
+            </div>
+
+            <!-- Stories -->
+            <div class="section" id="storiesSection" style="border-bottom:0">
+                <div class="section-header">
+                    <span class="section-label"><span class="accent-dot">●</span> Stories</span>
+                    <span class="section-meta">click a card in the preview to edit it</span>
+                </div>
+                <div class="stories-list" id="storiesList"></div>
+                <datalist id="catList"></datalist>
+            </div>
+        </div>
+
+        <div class="resize-handle" id="resizeHandle"></div>
+
+        <!-- ── RIGHT: preview ── -->
+        <div class="preview-panel">
+            <div class="preview-bar">
+                <div class="traffic-lights"><div class="tl tl-r"></div><div class="tl tl-y"></div><div class="tl tl-g"></div></div>
+                <div class="preview-url" id="previewUrl">newsband · saturday edition · live preview</div>
+            </div>
+            <iframe id="previewFrame" sandbox="allow-same-origin allow-scripts" title="Newsletter preview"></iframe>
+        </div>
+    </div>
+
+    <!-- ── JSON modal ── -->
+    <div class="modal-overlay" id="jsonModal" onclick="if (event.target === this) closeJsonModal()">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">{ } Issue as JSON</span>
+                <button class="modal-close" onclick="closeJsonModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-hint">
+                    This is the whole issue. Copy it to keep a backup, or paste new content and press <b>Apply</b>.
+                    You can paste just part of it: stories are matched by position (or by <code>"index"</code>, 0 – 4).
+                    If a story has a <code>category</code> but no <code>theme</code>, the colour and icon are picked from the category name.
+                    AQI <code>scale</code> is <code>cpcb</code> or <code>us_epa</code>, and <code>band</code> is <code>auto</code> or a category key.
+                </div>
+                <textarea id="jsonInput" spellcheck="false"></textarea>
+                <div class="import-error" id="importError"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="copyJson()" id="copyBtn">Copy</button>
+                <span class="spacer"></span>
+                <button class="btn btn-ghost" onclick="closeJsonModal()">Cancel</button>
+                <button class="btn btn-solid" onclick="applyJson()">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ── State ───────────────────────────────────────────────────────────── */
+        const API = "{{ api_prefix|default('/day23-editor') }}";
+        const SLOTS = ['Top story · full width', 'Beside AQI · left', 'Beside AQI · right', 'Image on the left', 'Image on the right'];
+        let THEMES = {}, SCALES = {}, WARNINGS = [], STORY_COUNT = 0;
+        let activeStory = 0;
+        let debounceTimer = null, inFlight = null, reqSeq = 0;
+        let previewScroll = 0, previewCards = [];
+
+        const $ = id => document.getElementById(id);
+        const val = id => ($(id)?.value || '').trim();
+        const escH = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const escA = s => escH(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        const isUrl = s => /^https?:\/\/\S+$/i.test(s);
+
+        function setStatus(state, text) {
+            $('statusPill').className = 'status-pill ' + state;
+            $('statusText').textContent = text;
+        }
+
+        /* ── Boot ────────────────────────────────────────────────────────────── */
+        async function boot() {
+            try {
+                const res = await fetch(API + '/api/state');
+                const data = await res.json();
+                THEMES = data.themes; SCALES = data.scales;
+                $('previewUrl').textContent = `${data.template} · saturday edition · live preview`;
+                buildStaticOptions();
+                populate(data.state);
+                showPreview(data.html);
+                setWarnings(data.warnings);
+                setStatus(data.draft ? 'saved' : '', data.draft ? 'DRAFT RESTORED' : 'READY');
+                const loader = $('loading');
+                loader.classList.add('hidden');
+                setTimeout(() => loader.remove(), 400);
+            } catch (e) {
+                document.querySelector('.loader-bar').style.display = 'none';
+                $('loaderErr').style.display = 'block';
+            }
+        }
+
+        function buildStaticOptions() {
+            $('aqiScale').innerHTML = Object.entries(SCALES)
+                .map(([k, s]) => `<option value="${k}">${escH(s.label)}</option>`).join('');
+            $('catList').innerHTML = Object.values(THEMES)
+                .map(t => `<option value="${escA(t.label)}"></option>`).join('');
+        }
+
+        function populate(state) {
+            $('hdrDate').value = state.date || '';
+            $('hdrRni').value = state.rni || '';
+            updateDateHint();
+
+            const a = state.aqi || {};
+            $('aqiLocation').value = a.location || '';
+            $('aqiValue').value = a.value || '';
+            $('aqiScale').value = SCALES[a.scale] ? a.scale : 'cpcb';
+            buildBandOptions(a.band || 'auto');
+            $('aqiLabel').value = a.label || '';
+            $('aqiRecorded').value = a.recorded || '';
+            $('aqiSource').value = a.source || '';
+            refreshAqiUi();
+
+            const list = $('storiesList');
+            list.innerHTML = '';
+            const stories = state.stories || [];
+            STORY_COUNT = stories.length;
+            stories.forEach((s, i) => list.appendChild(buildStory(s, i)));
+            if (activeStory >= STORY_COUNT) activeStory = 0;
+            if (activeStory >= 0 && STORY_COUNT) openStory(activeStory, { quiet: true });
+        }
+
+        /* ── Date helpers ────────────────────────────────────────────────────── */
+        const pad = n => String(n).padStart(2, '0');
+        function parseDmy(s) {
+            const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(s.trim());
+            if (!m) return null;
+            const d = new Date(+m[3], +m[2] - 1, +m[1]);
+            return d.getDate() === +m[1] && d.getMonth() === +m[2] - 1 ? d : null;
+        }
+        function updateDateHint() {
+            const hint = $('dateHint');
+            const d = parseDmy(val('hdrDate'));
+            if (!val('hdrDate')) { hint.textContent = ''; hint.className = 'hint'; return; }
+            if (!d) { hint.textContent = 'Use DD/MM/YYYY'; hint.className = 'hint bad'; return; }
+            const day = d.toLocaleDateString('en-GB', { weekday: 'long' });
+            hint.textContent = d.getDay() === 6 ? '✓ Saturday' : `${day}, not a Saturday`;
+            hint.className = 'hint ' + (d.getDay() === 6 ? 'good' : 'bad');
+        }
+        function fillNextSaturday() {
+            const d = new Date();
+            d.setDate(d.getDate() + ((6 - d.getDay() + 7) % 7));
+            $('hdrDate').value = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+            updateDateHint(); scheduleUpdate();
+        }
+        function fillNow() {
+            const d = new Date(), h = d.getHours();
+            $('aqiRecorded').value = `${h % 12 || 12}:${pad(d.getMinutes())} ${h < 12 ? 'AM' : 'PM'}`;
+            scheduleUpdate();
+        }
+
+        /* ── AQI ─────────────────────────────────────────────────────────────── */
+        function currentBands() { return (SCALES[$('aqiScale').value] || SCALES.cpcb).bands; }
+        function scoreOf(s) { return /^\d{1,4}$/.test(s) ? parseInt(s, 10) : null; }
+        function autoBandIndex(score, bands) {
+            if (score === null) return null;
+            const i = bands.findIndex(b => b.max === null || score <= b.max);
+            return i < 0 ? bands.length - 1 : i;
+        }
+        function buildBandOptions(selected) {
+            const bands = currentBands();
+            let lo = 0;
+            const opts = bands.map(b => {
+                const range = b.max === null ? `${lo}+` : `${lo}–${b.max}`;
+                lo = (b.max ?? 0) + 1;
+                return `<option value="${b.key}">${escH(b.name)} (${range})</option>`;
+            });
+            $('aqiBand').innerHTML = `<option value="auto">Auto, from score</option>` + opts.join('');
+            $('aqiBand').value = bands.some(b => b.key === selected) ? selected : 'auto';
+        }
+        function onScaleChange() {
+            buildBandOptions($('aqiBand').value);
+            refreshAqiUi(); scheduleUpdate();
+        }
+        function refreshAqiUi() {
+            const bands = currentBands();
+            const score = scoreOf(val('aqiValue'));
+            const autoIdx = autoBandIndex(score, bands);
+            const sel = $('aqiBand').value;
+            const idx = sel === 'auto' ? autoIdx : bands.findIndex(b => b.key === sel);
+            const band = idx !== null && idx >= 0 ? bands[idx] : null;
+
+            $('aqiBand').options[0].textContent = autoIdx === null ? 'Auto, from score' : `Auto (${bands[autoIdx].name})`;
+            $('aqiLabel').placeholder = band ? band.name : 'N/A';
+            $('aqiValue').classList.toggle('invalid', !!val('aqiValue') && score === null);
+
+            const chip = $('aqiChip');
+            chip.querySelector('i').style.background = band ? band.color : '#c7cdea';
+            chip.querySelector('b').textContent = val('aqiValue') || '—';
+            chip.querySelector('span').textContent = val('aqiLabel') || (band ? band.name : 'N/A');
+        }
+
+        /* ── Stories ─────────────────────────────────────────────────────────── */
+        function themeOptions(selected) {
+            const keep = selected && THEMES[selected] ? '' : `<option value="">Keep template colours</option>`;
+            return keep + Object.entries(THEMES)
+                .map(([k, t]) => `<option value="${k}"${k === selected ? ' selected' : ''}>${escH(t.label)}</option>`).join('');
+        }
+
+        function buildStory(s, i) {
+            const card = document.createElement('div');
+            card.className = 'story-card';
+            card.id = `card_${i}`;
+            const hasTag = Object.prototype.hasOwnProperty.call(s, 'tag');
+            card.innerHTML = `
+            <div class="story-hdr" onclick="toggleStory(${i})">
+              <span class="story-num">${pad(i + 1)}</span>
+              <span class="story-cat" id="badge_${i}"></span>
+              <span class="story-hl" id="hlp_${i}"></span>
+              <span class="warn-dot" title="Something to check: see the top bar"></span>
+              <span class="chev">▾</span>
+            </div>
+            <div class="story-body">
+              <div class="slot-note">${escH(SLOTS[i] || 'Story ' + (i + 1))}</div>
+              <div class="row2">
+                <div class="field">
+                  <label>Category</label>
+                  <input type="text" id="s${i}_cat" list="catList" value="${escA(s.category)}" autocomplete="off"
+                         oninput="onCategoryInput(${i})" placeholder="e.g. Politics" />
+                </div>
+                <div class="field">
+                  <label>Colour &amp; icon</label>
+                  <div class="theme-pick">
+                    <span class="swatch" id="sw_${i}"><span></span></span>
+                    <select id="s${i}_theme" onchange="syncStoryUi(${i}); scheduleUpdate()">${themeOptions(s.theme)}</select>
+                  </div>
+                </div>
+              </div>
+              ${hasTag ? `
+              <div class="field">
+                <label>Kicker <span class="opt">shown after the category pill</span></label>
+                <input type="text" id="s${i}_tag" value="${escA(s.tag)}" autocomplete="off" placeholder="Top story" oninput="scheduleUpdate()" />
+              </div>` : ''}
+              <div class="field">
+                <label>Headline</label>
+                <input type="text" id="s${i}_hl" value="${escA(s.headline)}" autocomplete="off" oninput="syncStoryUi(${i}); scheduleUpdate()" />
+              </div>
+              <div class="field">
+                <label>Summary</label>
+                <textarea id="s${i}_sum" oninput="scheduleUpdate()">${escH(s.summary)}</textarea>
+              </div>
+              <div class="field">
+                <label>Image URL <span class="opt">1200 × 650</span></label>
+                <input type="url" id="s${i}_img" value="${escA(s.image)}" autocomplete="off" placeholder="https://…"
+                       oninput="syncThumb(${i}); scheduleUpdate()" />
+                <div class="thumb" id="th_${i}"><img alt="" onerror="this.parentNode.classList.add('broken')"
+                     onload="this.parentNode.classList.remove('broken')"><span class="thumb-msg" id="thm_${i}">No image</span></div>
+              </div>
+              <div class="field">
+                <label>Article link</label>
+                <div class="inline">
+                  <input type="url" id="s${i}_lnk" value="${escA(s.link === '#' ? '' : s.link)}" autocomplete="off"
+                         placeholder="https://www.newsband.in/…" oninput="syncLink(${i}); scheduleUpdate()" />
+                  <a class="mini-btn" id="open_${i}" target="_blank" rel="noopener" title="Open the link in a new tab">↗</a>
+                </div>
+              </div>
+            </div>`;
+            setTimeout(() => { syncStoryUi(i); syncThumb(i); syncLink(i); });
+            return card;
+        }
+
+        function matchTheme(label) {
+            const k = label.trim().toLowerCase();
+            if (!k) return null;
+            return Object.keys(THEMES).find(key =>
+                key === k || THEMES[key].label.toLowerCase() === k || (THEMES[key].aliases || []).includes(k)) || null;
+        }
+
+        function onCategoryInput(i) {
+            const key = matchTheme(val(`s${i}_cat`));
+            const sel = $(`s${i}_theme`);
+            if (key && sel.value !== key) {
+                if (!THEMES[sel.value]) sel.innerHTML = themeOptions(key);
+                sel.value = key;
+            }
+            syncStoryUi(i); scheduleUpdate();
+        }
+
+        function syncStoryUi(i) {
+            const t = THEMES[$(`s${i}_theme`)?.value];
+            const badge = $(`badge_${i}`);
+            badge.textContent = val(`s${i}_cat`) || '—';
+            badge.style.background = t ? t.pill_bg : '';
+            badge.style.color = t ? t.pill_fg : '';
+            const sw = $(`sw_${i}`);
+            sw.style.background = t ? t.pill_bg : '#eef0f4';
+            sw.firstElementChild.style.background = t ? t.accent : '#c7cdea';
+            $(`hlp_${i}`).textContent = val(`s${i}_hl`) || `Story ${i + 1}`;
+        }
+
+        function syncThumb(i) {
+            const url = val(`s${i}_img`);
+            const box = $(`th_${i}`), img = box.querySelector('img');
+            $(`s${i}_img`).classList.toggle('invalid', !!url && !isUrl(url));
+            if (isUrl(url)) {
+                $(`thm_${i}`).textContent = "Image didn't load";
+                if (img.getAttribute('src') !== url) img.src = url;
+            } else {
+                $(`thm_${i}`).textContent = url ? 'Not a link' : 'No image';
+                img.removeAttribute('src');
+                box.classList.add('broken');
+            }
+        }
+
+        function syncLink(i) {
+            const url = val(`s${i}_lnk`);
+            const a = $(`open_${i}`);
+            const full = !url ? '' : /^https?:/i.test(url) ? url : 'https://' + url;
+            if (full) { a.href = full; a.style.opacity = 1; a.style.pointerEvents = ''; }
+            else { a.removeAttribute('href'); a.style.opacity = .4; a.style.pointerEvents = 'none'; }
+        }
+
+        /* accordion */
+        function toggleStory(i) {
+            if (activeStory === i) { $(`card_${i}`).classList.remove('open'); activeStory = -1; markPreviewActive(); }
+            else openStory(i);
+        }
+        function openStory(i, opts = {}) {
+            document.querySelectorAll('.story-card.open').forEach(c => c.classList.remove('open'));
+            const card = $(`card_${i}`);
+            if (!card) return;
+            card.classList.add('open');
+            activeStory = i;
+            markPreviewActive();
+            if (opts.quiet) return;
+            card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            if (opts.fromPreview) {
+                card.classList.add('flash');
+                setTimeout(() => card.classList.remove('flash'), 700);
+                setTimeout(() => $(`s${i}_hl`)?.focus({ preventScroll: true }), 250);
+            } else {
+                previewCards[i]?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            }
+        }
+        function focusSection(id, inputId) {
+            const sec = $(id);
+            sec.scrollIntoView({ block: 'start', behavior: 'smooth' });
+            sec.classList.add('flash');
+            setTimeout(() => sec.classList.remove('flash'), 800);
+            if (inputId) setTimeout(() => $(inputId)?.focus({ preventScroll: true }), 250);
+        }
+
+        /* ── Collect + send ──────────────────────────────────────────────────── */
+        function getFormData() {
+            const stories = [];
+            for (let i = 0; i < STORY_COUNT; i++) {
+                const s = {
+                    index: i,
+                    category: val(`s${i}_cat`),
+                    theme: $(`s${i}_theme`)?.value || '',
+                    headline: val(`s${i}_hl`),
+                    summary: val(`s${i}_sum`),
+                    image: val(`s${i}_img`),
+                    link: val(`s${i}_lnk`),
+                };
+                if ($(`s${i}_tag`)) s.tag = val(`s${i}_tag`);
+                stories.push(s);
+            }
+            return {
+                date: val('hdrDate'),
+                rni: val('hdrRni'),
+                aqi: {
+                    location: val('aqiLocation'), value: val('aqiValue'), scale: $('aqiScale').value,
+                    band: $('aqiBand').value, label: val('aqiLabel'), recorded: val('aqiRecorded'), source: val('aqiSource'),
+                },
+                stories,
+            };
+        }
+
+        function scheduleUpdate() {
+            clearTimeout(debounceTimer);
+            setStatus('saving', 'SAVING…');
+            debounceTimer = setTimeout(() => sendUpdate().catch(() => { }), 450);
+        }
+
+        async function sendUpdate(payload) {
+            clearTimeout(debounceTimer); debounceTimer = null;
+            const seq = ++reqSeq;
+            const req = fetch(API + '/api/update', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload || getFormData()),
+            }).then(async r => {
+                const data = await r.json();
+                if (!r.ok || !data.success) throw new Error(data.error || 'Server error');
+                return data;
+            });
+            inFlight = req;
+            try {
+                const data = await req;
+                if (seq === reqSeq) {          // ignore late replies from older edits
+                    showPreview(data.html);
+                    setWarnings(data.warnings);
+                    setStatus('saved', 'DRAFT SAVED');
+                }
+                return data;
+            } catch (e) {
+                if (seq === reqSeq) setStatus('error', 'NOT SAVED: server unreachable');
+                throw e;
+            } finally {
+                if (inFlight === req) inFlight = null;
+            }
+        }
+
+        async function flush() {
+            if (debounceTimer) return sendUpdate();
+            if (inFlight) return inFlight;
+        }
+
+        /* ── Preview ─────────────────────────────────────────────────────────── */
+        const frame = $('previewFrame');
+        function showPreview(html) {
+            try { previewScroll = frame.contentWindow.scrollY || previewScroll; } catch (e) { }
+            frame.srcdoc = html;
+        }
+        frame.addEventListener('load', () => {
+            const doc = frame.contentDocument, win = frame.contentWindow;
+            if (!doc || !doc.body) return;
+            win.scrollTo(0, previewScroll);
+            win.addEventListener('scroll', () => { previewScroll = win.scrollY; }, { passive: true });
+
+            const css = doc.createElement('style');
+            css.textContent = `[data-nb]{cursor:pointer;transition:outline-color .15s}
+                [data-nb]:hover{outline:3px solid rgba(67,56,202,.35);outline-offset:3px}
+                [data-nb].nb-active{outline:3px solid #4338ca;outline-offset:3px}`;
+            doc.head.appendChild(css);
+
+            const norm = s => (s || '').replace(/\s+/g, '').toLowerCase();
+            const tds = [...doc.querySelectorAll('td')];
+            previewCards = tds.filter(td => norm(td.getAttribute('style')).includes('border:1pxsolid#e6e8ee'));
+            previewCards.forEach((td, i) => {
+                td.dataset.nb = 'story';
+                td.addEventListener('click', () => openStory(i, { fromPreview: true }));
+            });
+            const strip = tds.find(td => norm(td.getAttribute('style')).includes('background:#1b2550'));
+            if (strip) { strip.dataset.nb = 'aqi'; strip.addEventListener('click', () => focusSection('aqiSection', 'aqiValue')); }
+            const dateDiv = [...doc.querySelectorAll('div')].find(d => d.textContent.trim().startsWith('Date:'));
+            const dateBox = dateDiv && dateDiv.closest('td');
+            if (dateBox) { dateBox.dataset.nb = 'issue'; dateBox.addEventListener('click', () => focusSection('issueSection', 'hdrDate')); }
+            doc.querySelectorAll('a').forEach(a => a.addEventListener('click', e => e.preventDefault()));
+            markPreviewActive();
+        });
+        function markPreviewActive() {
+            previewCards.forEach((td, i) => td.classList.toggle('nb-active', i === activeStory));
+        }
+
+        /* ── Pre-send checks ─────────────────────────────────────────────────── */
+        function setWarnings(list) {
+            WARNINGS = list || [];
+            const btn = $('checksBtn');
+            btn.className = 'checks-btn ' + (WARNINGS.length ? 'warn' : 'ok');
+            btn.textContent = WARNINGS.length ? `⚠ ${WARNINGS.length} to check` : '✓ Ready to send';
+            $('checksPanel').innerHTML = WARNINGS.length
+                ? WARNINGS.map((w, k) => `<button class="check-item" onclick="jumpToWarning(${k})">${escH(w)}</button>`).join('')
+                : `<div class="check-empty">✓ Nothing left to check. Good to export.</div>`;
+            for (let i = 0; i < STORY_COUNT; i++) {
+                const tag = `Story ${pad(i + 1)}`;
+                $(`card_${i}`)?.classList.toggle('has-warn', WARNINGS.some(w => w.startsWith(tag)));
+            }
+        }
+        function toggleChecks(e) { e.stopPropagation(); $('checksPanel').classList.toggle('open'); }
+        document.addEventListener('click', e => {
+            if (!e.target.closest('#checksPanel')) $('checksPanel').classList.remove('open');
+        });
+        function jumpToWarning(k) {
+            const w = WARNINGS[k] || '';
+            $('checksPanel').classList.remove('open');
+            const m = /^Story (\d+)/.exec(w);
+            if (m) {
+                const i = parseInt(m[1], 10) - 1;
+                openStory(i);
+                const field = /image/i.test(w) ? 'img' : /link/i.test(w) ? 'lnk' : 'hl';
+                setTimeout(() => $(`s${i}_${field}`)?.focus({ preventScroll: true }), 300);
+            } else if (/^AQI/.test(w)) {
+                focusSection('aqiSection', /source/i.test(w) ? 'aqiSource' : 'aqiValue');
+            } else {
+                focusSection('issueSection', 'hdrDate');
+            }
+        }
+
+        /* ── Actions ─────────────────────────────────────────────────────────── */
+        async function doExport() {
+            try { await flush(); } catch (e) { alert("Couldn't save the latest edits, so nothing was exported. Check the server is reachable and try again."); return; }
+            if (WARNINGS.length && !confirm('Still to check:\n\n• ' + WARNINGS.join('\n• ') + '\n\nExport anyway?')) return;
+            window.location.href = API + '/api/export';
+        }
+
+        async function doReset() {
+            if (!confirm('Go back to the original Day23.html content? This deletes the saved draft.')) return;
+            clearTimeout(debounceTimer); debounceTimer = null;
+            setStatus('saving', 'RESETTING…');
+            try {
+                const data = await (await fetch(API + '/api/reset', { method: 'POST' })).json();
+                activeStory = 0;
+                populate(data.state);
+                showPreview(data.html);
+                setWarnings(data.warnings);
+                setStatus('saved', 'RESET');
+            } catch (e) { setStatus('error', 'RESET FAILED'); }
+        }
+
+        /* JSON */
+        function openJsonModal() {
+            $('jsonInput').value = JSON.stringify(stripIndexes(getFormData()), null, 2);
+            $('importError').classList.remove('visible');
+            $('jsonModal').classList.add('open');
+            $('copyBtn').textContent = 'Copy';
+        }
+        function stripIndexes(d) { d.stories.forEach(s => delete s.index); return d; }
+        function closeJsonModal() { $('jsonModal').classList.remove('open'); }
+        async function copyJson() {
+            try { await navigator.clipboard.writeText($('jsonInput').value); }
+            catch (e) { $('jsonInput').select(); document.execCommand('copy'); }
+            $('copyBtn').textContent = 'Copied ✓';
+        }
+        async function applyJson() {
+            const err = $('importError');
+            err.classList.remove('visible');
+            let parsed;
+            try { parsed = JSON.parse($('jsonInput').value); }
+            catch (e) { err.textContent = 'Not valid JSON: ' + e.message; err.classList.add('visible'); return; }
+            if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+                err.textContent = 'Paste a JSON object ({ … }), not a list or a single value.'; err.classList.add('visible'); return;
+            }
+            try {
+                await flush().catch(() => { });
+                const data = await sendUpdate(parsed);
+                populate(data.state);
+                closeJsonModal();
+                setStatus('saved', 'JSON APPLIED');
+            } catch (e) { err.textContent = 'Could not apply: ' + e.message; err.classList.add('visible'); }
+        }
+
+        /* Ctrl/Cmd+S saves now instead of opening the browser's save dialog */
+        document.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                sendUpdate().catch(() => { });
+            }
+            if (e.key === 'Escape') { closeJsonModal(); $('checksPanel').classList.remove('open'); }
+        });
+
+        /* Don't lose the last few keystrokes if the tab is closed mid-debounce */
+        window.addEventListener('beforeunload', () => {
+            if (!debounceTimer) return;
+            fetch(API + '/api/update', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(getFormData()), keepalive: true,
+            });
+        });
+
+        /* ── Resizable editor panel ──────────────────────────────────────────── */
+        (function () {
+            const handle = $('resizeHandle'), panel = $('editorPanel');
+            let dragging = false, startX = 0, startW = 0;
+            handle.addEventListener('mousedown', e => {
+                dragging = true; startX = e.clientX; startW = panel.offsetWidth;
+                handle.classList.add('dragging');
+                document.body.style.cursor = 'col-resize'; document.body.style.userSelect = 'none';
+                frame.style.pointerEvents = 'none';
+            });
+            document.addEventListener('mousemove', e => {
+                if (dragging) panel.style.width = Math.min(600, Math.max(330, startW + e.clientX - startX)) + 'px';
+            });
+            document.addEventListener('mouseup', () => {
+                if (!dragging) return;
+                dragging = false; handle.classList.remove('dragging');
+                document.body.style.cursor = ''; document.body.style.userSelect = ''; frame.style.pointerEvents = '';
+            });
+        })();
+
+        boot();
+    </script>
+</body>
+
+</html>

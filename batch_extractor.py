@@ -767,6 +767,7 @@ def api_send():
         "/day17-editor/api/import_json",
         "/day19-editor/api/import_json",
         "/day21-editor/api/import_json",
+        "/day23-editor/api/import_json",
     ]
 
     results = []
